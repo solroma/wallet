@@ -31,6 +31,16 @@ class ProviderApiPrivate extends ProviderApiBase {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   notifyDappAccountsChanged(info: IProviderBaseBackgroundNotifyInfo): void {
     // noop
+    console.log('$privide provide ===> notifyDappAccountsChanged');
+    const data = ({ origin }: { origin: string }) => {
+      console.log(origin);
+      const result = {
+        method: '$private_mock_method',
+        params: {},
+      };
+      return result;
+    };
+    info.send(data);
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars

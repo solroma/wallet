@@ -12,12 +12,13 @@ import {
   useLocation,
 } from 'react-router-dom';
 
-import { Box, Provider } from '@onekeyhq/components';
+import { Box, Button, Provider } from '@onekeyhq/components';
 import { wait } from '@onekeyhq/kit/src/utils/helper';
 import { ONBOARDING_WEBVIEW_METHODS } from '@onekeyhq/kit/src/views/Onboarding/screens/CreateWallet/BehindTheScene/consts';
 import ProcessAutoTyping, {
   IProcessAutoTypingRef,
 } from '@onekeyhq/kit/src/views/Onboarding/screens/CreateWallet/BehindTheScene/ProcessAutoTyping';
+import { div } from '@onekeyhq/kit/src/views/Swap/utils';
 import platformEnv from '@onekeyhq/shared/src/platformEnv';
 // css should be imported at last
 import '@onekeyhq/shared/src/web/index.css';
@@ -74,6 +75,7 @@ function OnboardingAutoTyping() {
       return;
     }
     const handler = (payload: IJsonRpcRequest) => {
+      console.log('OnboardingAutoTyping handler: ', payload);
       if (
         payload &&
         payload.method === ONBOARDING_WEBVIEW_METHODS.onboardingWalletCreated
@@ -129,6 +131,40 @@ function OnboardingAutoTyping() {
   );
 }
 
+function CardanoProvider() {
+  useEffect(() => {
+    console.log('will Register !');
+    console.log('window.$onekey: ', window.$onekey);
+    if (!window.$onekey) {
+      return;
+    }
+    const handler = (payload: IJsonRpcRequest) => {
+      console.log('CardanoProvider Recive Message: ', payload);
+      return Promise.resolve(11111);
+    };
+    console.log('Register Message Handler for $private');
+    window.$onekey.$private.on('message_low_level', handler);
+    return () => {
+      console.log('cancel registe');
+      window.$onekey.$private.off('message_low_level', handler);
+    };
+  }, []);
+
+  return (
+    <Box>
+      Hello World
+      <Button
+        onPress={() => {
+          console.log('Hello World');
+          register();
+        }}
+      >
+        Button
+      </Button>
+    </Box>
+  );
+}
+
 // @ts-ignore
 const appSettings = window.WEB_EMBED_ONEKEY_APP_SETTINGS || {
   themeVariant: 'light',
@@ -154,6 +190,7 @@ const App: FC = function () {
             path="/onboarding/auto_typing"
             element={<OnboardingAutoTyping />}
           />
+          <Route path="/cardano" element={<CardanoProvider />} />
         </Routes>
       </HashRouter>
     </Provider>

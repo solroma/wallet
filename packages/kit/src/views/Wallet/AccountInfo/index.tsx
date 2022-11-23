@@ -30,6 +30,7 @@ import {
   RootRoutes,
   TabRoutes,
 } from '@onekeyhq/kit/src/routes/types';
+import { CardanoWebView } from '@onekeyhq/kit/src/views/ReceiveToken/CardanoProvider';
 import { SendRoutesParams } from '@onekeyhq/kit/src/views/Send/types';
 
 import backgroundApiProxy from '../../../background/instance/backgroundApiProxy';
@@ -312,6 +313,8 @@ const AccountInfo = () => {
         bgColor="background-default"
         h={FIXED_VERTICAL_HEADER_HEIGHT}
       >
+        111
+        <CardanoWebView />
         <AccountAmountInfo />
         <Box mt={8}>
           <AccountOption isSmallView={isSmallView} />

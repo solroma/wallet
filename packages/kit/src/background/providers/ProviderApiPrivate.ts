@@ -70,9 +70,8 @@ class ProviderApiPrivate extends ProviderApiBase {
     this.backgroundApi.servicePromise.resolveCallback({
       // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       id: payload?.data?.promiseId,
-      data: {
-        foo: 'bar',
-      },
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+      data: { ...(payload?.data?.data ?? {}) },
     });
   }
 

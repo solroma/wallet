@@ -11,6 +11,7 @@
     "lint": "tsc --noEmit && eslint . --ext .ts,.tsx"
   },
   "dependencies": {
+    "@emurgo/cardano-serialization-lib-asmjs": "^11.1.0",
     "@onekeyhq/components": "*",
     "@onekeyhq/kit": "*",
     "expo": "^45.0.5",

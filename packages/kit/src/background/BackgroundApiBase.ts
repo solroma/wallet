@@ -340,7 +340,11 @@ class BackgroundApiBase implements IBackgroundApiBridge {
 
       // this.bridge.requestSync({ scope, data });
       if (this.bridge.globalOnMessageEnabled) {
-        console.log('sendMessagesToInjectedBridge  send requestSync: ', scope);
+        console.log(
+          'sendMessagesToInjectedBridge  send requestSync: ',
+          scope,
+          data,
+        );
         this.bridge.requestSync({ scope, data });
       }
     }

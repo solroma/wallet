@@ -140,9 +140,11 @@ function CardanoProvider() {
     }
     const handler = async (payload: IJsonRpcRequest) => {
       console.log('CardanoProvider Recive Message: ', payload);
+      console.log('params: ', JSON.stringify(payload.params));
       if (payload.method === '$private_mock_method') {
         await window.$onekey.$private.request({
-          method: 'fake_call_provider_method',
+          method: 'fakeResponseMethod',
+          promiseId: (payload.params as any).promiseId,
         });
       }
       return Promise.resolve(11111);

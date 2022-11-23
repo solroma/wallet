@@ -15,14 +15,11 @@ export function CardanoWebView() {
     webviewRef.current = ref;
   }, []);
 
-  const onBridge = () => {
-    console.log('background: ', backgroundApiProxy.providers);
-    backgroundApiProxy.serviceHardware.testPrivateMessage();
-    // backgroundApiProxy.providers.$private.notifyDappAccountsChanged({
-    //   send: backgroundApiProxy.sendForProvider('$private'),
-    // });
+  const onBridge = async () => {
+    const result =
+      await backgroundApiProxy.serviceHardware.sendPrivateMessage();
+    console.log('onBridge result $$$$$$$$$$=====> : ', result);
   };
-
   useEffect(() => {
     if (!platformEnv.isNative) {
       return;

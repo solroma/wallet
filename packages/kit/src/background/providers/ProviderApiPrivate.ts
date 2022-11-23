@@ -44,9 +44,36 @@ class ProviderApiPrivate extends ProviderApiBase {
   }
 
   @providerApiMethod()
-  fake_call_provider_method(payload: any) {
+  fakeCallMethod(payload: any) {
+    console.log('$privide provide request ===> fakeCallMethod');
     console.log('fake_call_provider_method =====>>>>>>>');
     console.log(payload);
+    const data = ({ origin }: { origin: string }) => {
+      console.log(origin);
+      const result = {
+        method: '$private_mock_method',
+        params: {
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+          promiseId: payload.data?.promiseId,
+        },
+      };
+      return result;
+    };
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
+    payload.data?.send?.(data);
+  }
+
+  @providerApiMethod()
+  fakeResponseMethod(payload: any) {
+    console.log('fake_response_provider_method =====<<<<<<<');
+    console.log(payload);
+    this.backgroundApi.servicePromise.resolveCallback({
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+      id: payload?.data?.promiseId,
+      data: {
+        foo: 'bar',
+      },
+    });
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars

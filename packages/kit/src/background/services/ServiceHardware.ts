@@ -635,9 +635,19 @@ class ServiceHardware extends ServiceBase {
   }
 
   @backgroundMethod()
-  testPrivateMessage() {
-    this.backgroundApi.providers.$private.notifyDappAccountsChanged({
-      send: this.backgroundApi.sendForProvider('$private'),
+  sendPrivateMessage() {
+    return new Promise((resolve, reject) => {
+      const id = this.backgroundApi.servicePromise.createCallback({
+        resolve,
+        reject,
+      });
+      this.backgroundApi.providers.$private.handleMethods({
+        data: {
+          method: 'fakeCallMethod',
+          send: this.backgroundApi.sendForProvider('$private'),
+          promiseId: id,
+        },
+      });
     });
   }
 }

@@ -138,8 +138,13 @@ function CardanoProvider() {
     if (!window.$onekey) {
       return;
     }
-    const handler = (payload: IJsonRpcRequest) => {
+    const handler = async (payload: IJsonRpcRequest) => {
       console.log('CardanoProvider Recive Message: ', payload);
+      if (payload.method === '$private_mock_method') {
+        await window.$onekey.$private.request({
+          method: 'fake_call_provider_method',
+        });
+      }
       return Promise.resolve(11111);
     };
     console.log('Register Message Handler for $private');
@@ -156,7 +161,6 @@ function CardanoProvider() {
       <Button
         onPress={() => {
           console.log('Hello World');
-          register();
         }}
       >
         Button

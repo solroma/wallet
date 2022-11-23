@@ -1,8 +1,9 @@
-import { forwardRef, useCallback, useRef } from 'react';
+import { forwardRef, useCallback, useEffect, useRef } from 'react';
 
 import { IWebViewWrapperRef } from '@onekeyfe/onekey-cross-webview';
 
 import { Box, Button } from '@onekeyhq/components';
+import backgroundApiProxy from '@onekeyhq/kit/src/background/instance/backgroundApiProxy';
 import { WebViewWebEmbed } from '@onekeyhq/kit/src/components/WebView/WebViewWebEmbed';
 import platformEnv from '@onekeyhq/shared/src/platformEnv';
 
@@ -14,16 +15,27 @@ export function CardanoWebView() {
     webviewRef.current = ref;
   }, []);
 
-  const onBridge = async () => {
-    console.log('onBridge');
-    const res = await webviewRef.current?.jsBridge?.request({
-      data: {
-        method: 'FAKE METHOD',
-      },
-      scope: '$private',
-    });
-    console.log('bridge ====> ', res);
+  const onBridge = () => {
+    console.log('background: ', backgroundApiProxy.providers);
+    backgroundApiProxy.serviceHardware.testPrivateMessage();
+    // backgroundApiProxy.providers.$private.notifyDappAccountsChanged({
+    //   send: backgroundApiProxy.sendForProvider('$private'),
+    // });
   };
+
+  useEffect(() => {
+    if (!platformEnv.isNative) {
+      return;
+    }
+
+    const jsBridge = webviewRef?.current?.jsBridge;
+    if (!jsBridge) {
+      return;
+    }
+    jsBridge.globalOnMessageEnabled = true;
+    backgroundApiProxy.connectBridge(jsBridge);
+    console.log('connect bridge! =====>');
+  }, [webviewRef]);
 
   const routePath = '/cardano';
 

@@ -633,6 +633,13 @@ class ServiceHardware extends ServiceBase {
         return response;
       });
   }
+
+  @backgroundMethod()
+  testPrivateMessage() {
+    this.backgroundApi.providers.$private.notifyDappAccountsChanged({
+      send: this.backgroundApi.sendForProvider('$private'),
+    });
+  }
 }
 
 export default ServiceHardware;

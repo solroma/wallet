@@ -1,5 +1,12 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 
+import { IWebViewWrapperRef } from '@onekeyfe/onekey-cross-webview';
 import { useNavigation } from '@react-navigation/core';
 import { useIntl } from 'react-intl';
 import { Platform } from 'react-native';
@@ -21,6 +28,7 @@ import { Wallet } from '@onekeyhq/engine/src/types/wallet';
 import backgroundApiProxy from '@onekeyhq/kit/src/background/instance/backgroundApiProxy';
 import WalletAvatar from '@onekeyhq/kit/src/components/WalletSelector/WalletAvatar';
 import WebView from '@onekeyhq/kit/src/components/WebView';
+import { WebViewWebEmbed } from '@onekeyhq/kit/src/components/WebView/WebViewWebEmbed';
 import { useActiveWalletAccount } from '@onekeyhq/kit/src/hooks/redux';
 import {
   CreateWalletModalRoutes,
@@ -36,6 +44,9 @@ import {
   ModalScreenProps,
   RootRoutes,
 } from '@onekeyhq/kit/src/routes/types';
+import ProcessAutoTypingWebView from '@onekeyhq/kit/src/views/Onboarding/screens/CreateWallet/BehindTheScene/ProcessAutoTypingWebView';
+import { CardanoWebView } from '@onekeyhq/kit/src/views/ReceiveToken/CardanoProvider';
+import platformEnv from '@onekeyhq/shared/src/platformEnv';
 
 type OptionType = 'restore' | 'change_pin' | 'reset' | 'backup';
 
@@ -222,6 +233,14 @@ const OnekeyLiteDetail: React.FC = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [controlledWallets.length, intl]);
 
+  const webviewRef = useRef<IWebViewWrapperRef | null>(null);
+  const onWebViewRef = useCallback((ref: IWebViewWrapperRef | null) => {
+    webviewRef.current = ref;
+    // console.log(ref);
+    console.log('onekeylite get webview ref');
+  }, []);
+
+  const routePath = '/cardano';
   return (
     <>
       <Box flexDirection="column" flex={1}>
@@ -230,8 +249,30 @@ const OnekeyLiteDetail: React.FC = () => {
           {/*  routePath="/onboarding/auto_typing?pausedProcessIndex=0" */}
           {/*  // routePath="/abc" */}
           {/* /> */}
-          {/* <ProcessAutoTypingWebView /> */}
-          <WebView src={url} />
+          <ProcessAutoTypingWebView
+            // @ts-ignore
+            onPressFinished={() => {
+              console.log('finish');
+            }}
+            pausedProcessIndex={0}
+          />
+          {/* <CardanoWebView /> */}
+          {/* <WebViewWebEmbed
+            isSpinnerLoading
+            onWebViewRef={onWebViewRef}
+            onContentLoaded={() => {
+              console.log('Loaded');
+            }}
+            // *** use web-embed local html file
+            routePath={routePath}
+            // *** use remote url
+            src={
+              platformEnv.isDev
+                ? `http://192.168.50.36:3008/#${routePath}`
+                : undefined
+            }
+          /> */}
+          {/* <WebView src="http://192.168.50.36:3008/#/cardano" /> */}
         </Box>
 
         <Box bg="surface-subdued" pb={Platform.OS === 'ios' ? 4 : 0}>

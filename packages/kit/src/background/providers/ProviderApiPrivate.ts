@@ -43,6 +43,12 @@ class ProviderApiPrivate extends ProviderApiBase {
     info.send(data);
   }
 
+  @providerApiMethod()
+  fake_call_provider_method(payload: any) {
+    console.log('fake_call_provider_method =====>>>>>>>');
+    console.log(payload);
+  }
+
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   notifyDappChainChanged(info: IProviderBaseBackgroundNotifyInfo): void {
     // noop

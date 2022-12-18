@@ -1,7 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
 
-import { useAsync } from 'react-async-hook';
-
 import { isCoinTypeCompatibleWithImpl } from '@onekeyhq/engine/src/managers/impl';
 import type {
   AccountDynamicItem,
@@ -15,7 +13,6 @@ import {
 } from '@onekeyhq/engine/src/managers/revoke';
 import type { Account } from '@onekeyhq/engine/src/types/account';
 import type { Wallet } from '@onekeyhq/engine/src/types/wallet';
-import { makeTimeoutPromise } from '@onekeyhq/shared/src/background/backgroundUtils';
 import { IMPL_EVM } from '@onekeyhq/shared/src/engine/engineConsts';
 
 import backgroundApiProxy from '../../background/instance/backgroundApiProxy';
@@ -118,11 +115,8 @@ const isBurnAddress = (address: string) =>
     address,
   );
 
-export const checkAccountCanSubscribe = async (
-  account: Account | null,
-  networkId?: string,
-) => {
-  if (!account || !networkId) {
+export const checkAccountCanSubscribe = (account: Account | null) => {
+  if (!account) {
     return false;
   }
   const { address, coinType } = account || {};
@@ -132,22 +126,8 @@ export const checkAccountCanSubscribe = async (
   if (!isCoinTypeCompatibleWithImpl(coinType, IMPL_EVM)) {
     return false;
   }
-  const isContract = await makeTimeoutPromise({
-    asyncFunc: async () =>
-      backgroundApiProxy.validator.isContractAddress(networkId, address),
-    timeout: 600,
-    timeoutResult: false,
-  });
-  return !isContract;
+  return true;
 };
 
-export const useAddressCanSubscribe = (
-  account: Account | null,
-  networkId?: string,
-) => {
-  const { result } = useAsync(
-    async () => checkAccountCanSubscribe(account, networkId ?? ''),
-    [account, networkId],
-  );
-  return result ?? false;
-};
+export const useAddressCanSubscribe = (account: Account | null) =>
+  checkAccountCanSubscribe(account);

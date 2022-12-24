@@ -12,7 +12,6 @@ import { CardanoWebEmbedView } from './CardanoWebEmbedView';
 
 function ChainWebEmbed() {
   const { activeNetworkId } = useGeneral();
-  const [webEmbedDisabled, setWebEmbedDisabled] = useState(false);
   const [lazyLoad, setLazyLoad] = useState(false);
 
   useEffect(() => {
@@ -23,7 +22,12 @@ function ChainWebEmbed() {
 
   useEffect(() => {
     const onCloseChainWebEmbed = (disabled: boolean) => {
-      setWebEmbedDisabled(disabled);
+      setTimeout(
+        () => {
+          setLazyLoad(!disabled);
+        },
+        disabled ? 0 : 3000,
+      );
     };
     appUIEventBus.on(
       AppUIEventBusNames.ChainWebEmbedDisabled,
@@ -40,12 +44,12 @@ function ChainWebEmbed() {
   const content = useMemo(() => {
     if (!platformEnv.isNative) return null;
 
-    debugLogger.common.debug('chainWebEmbed Rerender ========>>>>>');
+    debugLogger.common.debug('chain parent Rerender ========>>>>>');
 
-    if (webEmbedDisabled) {
-      debugLogger.common.debug('distroy webview');
-      return null;
-    }
+    // if (webEmbedDisabled) {
+    //   debugLogger.common.debug('distroy webview');
+    //   return null;
+    // }
 
     if (!activeNetworkId) return null;
 
@@ -54,7 +58,7 @@ function ChainWebEmbed() {
       return <CardanoWebEmbedView />;
     }
     return null;
-  }, [activeNetworkId, lazyLoad, webEmbedDisabled]);
+  }, [activeNetworkId, lazyLoad]);
 
   return content;
 }

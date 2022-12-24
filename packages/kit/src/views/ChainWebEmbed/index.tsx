@@ -1,6 +1,10 @@
 import { memo, useEffect, useMemo, useState } from 'react';
 
 import { useGeneral } from '@onekeyhq/kit/src/hooks/redux';
+import {
+  AppUIEventBusNames,
+  appUIEventBus,
+} from '@onekeyhq/shared/src/eventBus/appUIEventBus';
 import debugLogger from '@onekeyhq/shared/src/logger/debugLogger';
 import platformEnv from '@onekeyhq/shared/src/platformEnv';
 
@@ -8,6 +12,7 @@ import { CardanoWebEmbedView } from './CardanoWebEmbedView';
 
 function ChainWebEmbed() {
   const { activeNetworkId } = useGeneral();
+  const [webEmbedDisabled, setWebEmbedDisabled] = useState(false);
   const [lazyLoad, setLazyLoad] = useState(false);
 
   useEffect(() => {
@@ -16,10 +21,31 @@ function ChainWebEmbed() {
     }, 3000);
   }, []);
 
+  useEffect(() => {
+    const onCloseChainWebEmbed = (disabled: boolean) => {
+      setWebEmbedDisabled(disabled);
+    };
+    appUIEventBus.on(
+      AppUIEventBusNames.ChainWebEmbedDisabled,
+      onCloseChainWebEmbed,
+    );
+    return () => {
+      appUIEventBus.off(
+        AppUIEventBusNames.ChainWebEmbedDisabled,
+        onCloseChainWebEmbed,
+      );
+    };
+  }, []);
+
   const content = useMemo(() => {
     if (!platformEnv.isNative) return null;
 
     debugLogger.common.debug('chainWebEmbed Rerender ========>>>>>');
+
+    if (webEmbedDisabled) {
+      debugLogger.common.debug('distroy webview');
+      return null;
+    }
 
     if (!activeNetworkId) return null;
 
@@ -28,7 +54,7 @@ function ChainWebEmbed() {
       return <CardanoWebEmbedView />;
     }
     return null;
-  }, [activeNetworkId, lazyLoad]);
+  }, [activeNetworkId, lazyLoad, webEmbedDisabled]);
 
   return content;
 }

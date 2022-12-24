@@ -13,7 +13,6 @@ enum AppUIEventBusNames {
   StoreInitedFromPersistor = 'StoreInitedFromPersistor',
   AccountChanged = 'AccountChanged',
   SwapRefresh = 'SwapRefresh',
-  ChainWebEmbedDisabled = 'ChainWebEmbedDisabled',
 }
 
 if (isExtensionBackground) {

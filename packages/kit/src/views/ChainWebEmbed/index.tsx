@@ -13,7 +13,7 @@ function ChainWebEmbed() {
   useEffect(() => {
     setTimeout(() => {
       setLazyLoad(true);
-    }, 500);
+    }, 3000);
   }, []);
 
   const content = useMemo(() => {

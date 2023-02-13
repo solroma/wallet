@@ -242,7 +242,7 @@ function SideChainSelector({
         ref={flatListRef}
         data={data}
         contentContainerStyle={{
-          flex: 1,
+          flex: data?.length ? undefined : 1,
         }}
         keyExtractor={(item: INetwork) => item.id}
         renderItem={renderItem}

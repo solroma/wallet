@@ -199,7 +199,7 @@ export const Listing: FC = () => {
       <List
         data={data}
         contentContainerStyle={{
-          flex: 1,
+          flex: data.length ? undefined : 1,
         }}
         renderItem={renderItem}
         keyExtractor={(item) => item.id}

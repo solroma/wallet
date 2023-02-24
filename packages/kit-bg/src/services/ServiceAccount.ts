@@ -10,6 +10,7 @@ import {
 } from '@onekeyhq/engine/src/managers/network';
 import type { IAccount, INetwork, IWallet } from '@onekeyhq/engine/src/types';
 import type { Account, DBAccount } from '@onekeyhq/engine/src/types/account';
+import type { Network } from '@onekeyhq/engine/src/types/network';
 import type { Wallet, WalletType } from '@onekeyhq/engine/src/types/wallet';
 import { getActiveWalletAccount } from '@onekeyhq/kit/src/hooks/redux';
 import { getManageNetworks } from '@onekeyhq/kit/src/hooks/useManageNetworks';
@@ -1198,6 +1199,34 @@ class ServiceAccount extends ServiceBase {
     }
 
     dispatch(changeActiveExternalWalletName(activeExternalWalletName ?? ''));
+  }
+
+  @backgroundMethod()
+  async shouldChangeAccountWhenNetworkChanged({
+    previousNetwork,
+    newNetwork,
+    activeAccountId,
+  }: {
+    previousNetwork: Network | undefined;
+    newNetwork: Network | undefined;
+    activeAccountId: string | null;
+  }): Promise<{
+    shouldReloadAccountList: boolean;
+    shouldChangeActiveAccount: boolean;
+  }> {
+    if (!previousNetwork) {
+      return {
+        shouldReloadAccountList: false,
+        shouldChangeActiveAccount: false,
+      };
+    }
+    const { engine } = this.backgroundApi;
+    const vault = await engine.getChainOnlyVault(previousNetwork?.id);
+    return vault.shouldChangeAccountWhenNetworkChanged({
+      previousNetwork,
+      newNetwork,
+      activeAccountId,
+    });
   }
 }
 

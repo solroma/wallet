@@ -1,4 +1,5 @@
 export type { CreateAccountRoutesParams } from './CreateAccount';
+export type { RecoverAccountRoutesParams } from './RecoverAccount';
 export type { ReceiveTokenRoutesParams } from './ReceiveToken';
 export type { SubmitRequestModalRoutesParams } from './SubmitRequest';
 export type { HistoryRequestModalRoutesParams } from '../../views/Help/Request/types';
@@ -28,7 +29,6 @@ export type { ImportBackupPasswordRoutesParams } from './ImportBackupPassword';
 export type { StakingRoutesParams } from '../../views/Staking/typing';
 export type { ManageConnectedSitesRoutesParams } from '../../views/ManageConnectedSites/types';
 export type { PushNotificationRoutesParams } from '../../views/PushNotification/types';
-export type { WebviewRoutesParams } from './WebView';
 export type { RevokeRoutesParams } from './Revoke';
 export type { BulkSenderRoutesParams } from './BulkSender';
 // eslint-disable-next-line import/no-cycle

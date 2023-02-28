@@ -7,6 +7,7 @@ import * as bip39 from 'bip39';
 import { cloneDeep, uniqBy } from 'lodash';
 import memoizee from 'memoizee';
 import natsort from 'natsort';
+import RNRestart from 'react-native-restart';
 
 import {
   mnemonicFromEntropy,
@@ -16,6 +17,7 @@ import {
   decrypt,
   encrypt,
 } from '@onekeyhq/engine/src/secret/encryptors/aes256';
+import { appSelector } from '@onekeyhq/kit/src/store';
 import type { TokenChartData } from '@onekeyhq/kit/src/store/reducers/tokens';
 import { generateUUID } from '@onekeyhq/kit/src/utils/helper';
 import type { SendConfirmPayload } from '@onekeyhq/kit/src/views/Send/types';
@@ -26,7 +28,6 @@ import {
 import { OnekeyNetwork } from '@onekeyhq/shared/src/config/networkIds';
 import { CoreSDKLoader } from '@onekeyhq/shared/src/device/hardwareInstance';
 import {
-  COINTYPE_BTC,
   IMPL_EVM,
   getSupportedImpls,
 } from '@onekeyhq/shared/src/engine/engineConsts';
@@ -65,10 +66,12 @@ import {
   getDefaultPurpose,
   getNextAccountId,
 } from './managers/derivation';
-import { getTokenRiskyItems } from './managers/goplus';
+import { fetchSecurityInfo, getRiskLevel } from './managers/goplus';
 import {
   getAccountNameInfoByTemplate,
+  getDBAccountTemplate,
   getDefaultAccountNameInfoByImpl,
+  migrateNextAccountIds,
 } from './managers/impl';
 import {
   fromDBNetworkToNetwork,
@@ -90,6 +93,7 @@ import { AccountType } from './types/account';
 import { CredentialType } from './types/credential';
 import { GoPlusSupportApis } from './types/goplus';
 import { HistoryEntryStatus } from './types/history';
+import { TokenRiskLevel } from './types/token';
 import {
   WALLET_TYPE_EXTERNAL,
   WALLET_TYPE_HD,
@@ -116,6 +120,7 @@ import type {
 } from './types/account';
 import type { BackupObject, ImportableHDWallet } from './types/backup';
 import type { DevicePayload } from './types/device';
+import type { GoPlusTokenSecurity } from './types/goplus';
 import type {
   HistoryEntry,
   HistoryEntryMeta,
@@ -690,7 +695,20 @@ class Engine {
       return [];
     }
 
-    const accounts = await this.dbApi.getAccounts(accountIds);
+    const checkActiveWallet = () => {
+      setTimeout(() => {
+        const activeWalletId = appSelector((s) => s.general.activeWalletId);
+        if (!activeWalletId && platformEnv.isNative) {
+          RNRestart.Restart();
+        }
+      }, 3000);
+    };
+
+    let accounts = await this.dbApi.getAccounts(accountIds);
+    if (networkId) {
+      const vault = await this.getChainOnlyVault(networkId);
+      accounts = await vault.filterAccounts({ accounts, networkId });
+    }
     const outputAccounts = await Promise.all(
       accounts
         .filter(
@@ -717,17 +735,17 @@ class Engine {
                       .validateAddress(a.address)
                       .then((address) => {
                         if (!address) {
-                          setTimeout(
-                            () => this.removeAccount(a.id, '', true),
-                            100,
-                          );
+                          setTimeout(() => {
+                            this.removeAccount(a.id, '', networkId, true);
+                            checkActiveWallet();
+                          }, 100);
                         }
                       })
                       .catch(() => {
-                        setTimeout(
-                          () => this.removeAccount(a.id, '', true),
-                          100,
-                        );
+                        setTimeout(() => {
+                          this.removeAccount(a.id, '', networkId, true);
+                          checkActiveWallet();
+                        }, 100);
                       });
                   }
                   throw error;
@@ -735,6 +753,7 @@ class Engine {
               ),
         ),
     );
+
     return outputAccounts.filter((a) => isAccountWithAddress(a));
   }
 
@@ -1104,6 +1123,7 @@ class Engine {
   async removeAccount(
     accountId: string,
     password: string,
+    networkId: string,
     skipPasswordCheck?: boolean,
   ): Promise<void> {
     // Remove an account. Raise an error if account doesn't exist or password is wrong.
@@ -1114,7 +1134,7 @@ class Engine {
     ]);
     let rollbackNextAccountIds: Record<string, number> = {};
 
-    if (dbAccount.coinType === COINTYPE_BTC && dbAccount.path.length > 0) {
+    if (dbAccount.type === AccountType.UTXO && dbAccount.path.length > 0) {
       const components = dbAccount.path.split('/');
       const index = parseInt(components[3].slice(0, -1)); // remove the "'" suffix
       const template = dbAccount.template ?? '';
@@ -1122,7 +1142,7 @@ class Engine {
         // Removing the last account, may need to roll back next account id.
         rollbackNextAccountIds = { [template]: index };
         try {
-          const vault = await this.getChainOnlyVault('btc--0');
+          const vault = await this.getChainOnlyVault(networkId);
           const accountUsed = await vault.checkAccountExistence(
             (dbAccount as DBUTXOAccount).xpub,
           );
@@ -1210,7 +1230,6 @@ class Engine {
       let tokenInfo:
         | (Pick<Token, 'name' | 'symbol' | 'decimals'> & {
             logoURI?: string;
-            security?: boolean;
           })
         | undefined;
       const { impl, chainId } = parseNetworkId(networkId);
@@ -1226,6 +1245,16 @@ class Engine {
         const vault = await this.getChainOnlyVault(networkId);
         try {
           [tokenInfo] = await vault.fetchTokenInfos([tokenIdOnNetwork]);
+          if (tokenInfo) {
+            const info = await fetchSecurityInfo<GoPlusTokenSecurity>({
+              networkId,
+              address: tokenIdOnNetwork,
+              apiName: GoPlusSupportApis.token_security,
+            });
+            Object.assign(tokenInfo, {
+              riskLevel: info ? getRiskLevel(info) : TokenRiskLevel.UNKNOWN,
+            });
+          }
         } catch (e) {
           debugLogger.common.error(`fetchTokenInfos error`, {
             params: [tokenIdOnNetwork],
@@ -1235,17 +1264,6 @@ class Engine {
       }
       if (!tokenInfo) {
         throw new Error('findToken ERROR: token not found.');
-      }
-      const { hasSecurity } = await getTokenRiskyItems({
-        apiName: GoPlusSupportApis.token_security,
-        networkId,
-        address: tokenIdOnNetwork,
-      });
-      if (hasSecurity) {
-        tokenInfo = {
-          ...tokenInfo,
-          security: true,
-        };
       }
       return {
         id: tokenId,
@@ -2695,6 +2713,8 @@ class Engine {
           );
         }
 
+        // migrate nextAccountIds for old backup
+        const newNextAccountIds = migrateNextAccountIds(nextAccountIds);
         const wallet = await this.dbApi.createHDWallet({
           password: localPassword,
           rs: {
@@ -2704,7 +2724,7 @@ class Engine {
           backuped: true,
           name,
           avatar,
-          nextAccountIds,
+          nextAccountIds: newNextAccountIds,
         });
         const reIdPrefix = new RegExp(`^${id}`);
         for (const accountToAdd of accounts) {
@@ -2715,6 +2735,9 @@ class Engine {
             );
           } else {
             accountToAdd.id = accountToAdd.id.replace(reIdPrefix, wallet.id);
+            if (!accountToAdd.template) {
+              accountToAdd.template = getDBAccountTemplate(accountToAdd);
+            }
             await this.dbApi.addAccountToWallet(wallet.id, accountToAdd);
           }
         }

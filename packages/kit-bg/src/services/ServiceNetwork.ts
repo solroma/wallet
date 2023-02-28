@@ -9,6 +9,7 @@ import type {
 } from '@onekeyhq/engine/src/types/network';
 import type { GeneralInitialState } from '@onekeyhq/kit/src/store/reducers/general';
 import { changeActiveNetwork } from '@onekeyhq/kit/src/store/reducers/general';
+import reducerAccountSelector from '@onekeyhq/kit/src/store/reducers/reducerAccountSelector';
 import { updateNetworks } from '@onekeyhq/kit/src/store/reducers/runtime';
 import type { IRpcStatus } from '@onekeyhq/kit/src/store/reducers/status';
 import {
@@ -30,6 +31,8 @@ import ServiceBase from './ServiceBase';
 
 import type ProviderApiBase from '../providers/ProviderApiBase';
 import type { IJsonRpcRequest } from '@onekeyfe/cross-inpage-provider-types';
+
+const accountSelectorActions = reducerAccountSelector.actions;
 
 NetInfo.configure({
   reachabilityShouldRun: () => false,
@@ -65,7 +68,9 @@ class ServiceNetwork extends ServiceBase {
     networkId: NonNullable<GeneralInitialState['activeNetworkId']>,
   ) {
     const { appSelector, serviceAccount } = this.backgroundApi;
-    const { activeWalletId, activeNetworkId } = appSelector((s) => s.general);
+    const { activeWalletId, activeNetworkId, activeAccountId } = appSelector(
+      (s) => s.general,
+    );
     const networks: Network[] = appSelector((s) => s.runtime.networks);
     const previousNetwork = networks.find(
       (network) => network.id === activeNetworkId,
@@ -83,7 +88,10 @@ class ServiceNetwork extends ServiceBase {
       networkId,
       activeNetworkId ?? '',
     );
-    const changeActiveNetworkAction = changeActiveNetwork(networkId);
+    const changeActiveNetworkActions = [
+      changeActiveNetwork(networkId),
+      accountSelectorActions.updateSelectedNetworkId(networkId),
+    ];
     let shouldDispatch = true;
     this.notifyChainChanged();
 
@@ -92,8 +100,14 @@ class ServiceNetwork extends ServiceBase {
     const chainIdChange = previousNetwork?.symbol !== newNetwork?.symbol;
     const forceRefreshAccount =
       chainIdChange && serviceAccount.shouldForceRefreshAccount(newNetwork?.id);
+    const { shouldChangeActiveAccount, shouldReloadAccountList } =
+      await serviceAccount.shouldChangeAccountWhenNetworkChanged({
+        previousNetwork,
+        newNetwork,
+        activeAccountId,
+      });
 
-    if (implChange || forceRefreshAccount) {
+    if (implChange || forceRefreshAccount || shouldChangeActiveAccount) {
       // 当切换了不同 impl 类型的链时更新 accounts 内容
       // 有一些特殊的链比如 Cosmos，如果 chainId 改变了，需要更新 accounts 内容
       const accounts = await serviceAccount.reloadAccountsByWalletIdNetworkId(
@@ -106,15 +120,22 @@ class ServiceNetwork extends ServiceBase {
         await serviceAccount.changeActiveAccount({
           accountId: firstAccount?.id ?? null,
           walletId: activeWalletId,
-          extraActions: [changeActiveNetworkAction], // dispatch batch actions
+          extraActions: [...changeActiveNetworkActions], // dispatch batch actions
           // as reloadAccountsByWalletIdNetworkId() has been called before
           shouldReloadAccountsWhenWalletChanged: false,
         });
         shouldDispatch = false;
       }
     }
+    // Refresh the list of accounts only, without switching activeAccount
+    if (shouldReloadAccountList) {
+      await serviceAccount.reloadAccountsByWalletIdNetworkId(
+        activeWalletId,
+        networkId,
+      );
+    }
     if (shouldDispatch) {
-      this.backgroundApi.dispatch(changeActiveNetworkAction);
+      this.backgroundApi.dispatch(...changeActiveNetworkActions);
     }
     return newNetwork;
   }

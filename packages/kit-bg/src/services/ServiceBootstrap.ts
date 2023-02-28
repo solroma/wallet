@@ -4,11 +4,11 @@ import semver from 'semver';
 
 import { getWalletTypeFromAccountId } from '@onekeyhq/engine/src/managers/account';
 import {
-  convertCategoryToTemplate,
   getDBAccountTemplate,
   getImplByCoinType,
+  migrateNextAccountIds,
 } from '@onekeyhq/engine/src/managers/impl';
-import { setDbMigrationVersion } from '@onekeyhq/kit/src/store/reducers/settings';
+import { setAccountDerivationDbMigrationVersion } from '@onekeyhq/kit/src/store/reducers/settings';
 import { updateAutoSwitchDefaultRpcAtVersion } from '@onekeyhq/kit/src/store/reducers/status';
 import {
   backgroundClass,
@@ -186,7 +186,7 @@ export default class ServiceBootstrap extends ServiceBase {
     try {
       const { appSelector } = this.backgroundApi;
       const dbMigrationVersion = appSelector(
-        (s) => s.settings.dbMigrationVersion,
+        (s) => s.settings.accountDerivationDbMigrationVersion,
       );
       const appVersion = appSelector((s) => s.settings.version);
       if (
@@ -212,13 +212,13 @@ export default class ServiceBootstrap extends ServiceBase {
           if (!account.template) {
             const template = getDBAccountTemplate(account);
             const impl = getImplByCoinType(account.coinType);
-            await dbApi.addAccountDerivation(
-              wallet.id,
-              account.id,
+            await dbApi.addAccountDerivation({
+              walletId: wallet.id,
+              accountId: account.id,
               impl,
               template,
-            );
-            await dbApi.setAccountTemplate(account.id, template);
+            });
+            await dbApi.setAccountTemplate({ accountId: account.id, template });
             debugLogger.common.info(
               `insert account: ${account.id} to AccountDerivation table, template: ${template}`,
             );
@@ -226,23 +226,21 @@ export default class ServiceBootstrap extends ServiceBase {
         }
 
         // update nextAccountIds field
-        const { nextAccountIds } = wallet;
-        const newNextAccountIds = { ...nextAccountIds };
-        for (const [category, value] of Object.entries(nextAccountIds)) {
-          const template = convertCategoryToTemplate(category);
-          if (template) {
-            newNextAccountIds[template] = value;
-          }
-        }
+        const newNextAccountIds = migrateNextAccountIds(wallet.nextAccountIds);
 
-        await dbApi.updateWalletNextAccountIds(wallet.id, newNextAccountIds);
+        await dbApi.updateWalletNextAccountIds({
+          walletId: wallet.id,
+          nextAccountIds: newNextAccountIds,
+        });
         debugLogger.common.info(
           `update wallet nextAccountIds, wallet: ${
             wallet.id
           }, nextAccountIds: ${JSON.stringify(newNextAccountIds)}`,
         );
       }
-      this.backgroundApi.dispatch(setDbMigrationVersion(appVersion));
+      this.backgroundApi.dispatch(
+        setAccountDerivationDbMigrationVersion(appVersion),
+      );
       console.log(wallets);
     } catch (e) {
       debugLogger.common.error('migrate error: ', e);

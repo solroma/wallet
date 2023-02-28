@@ -54,15 +54,15 @@ const TokenInfo: FC<TokenInfoProps> = ({ token, priceReady, sendAddress }) => {
     balance: '0',
   };
 
-  const buyEnable = !!(token?.onramperId && token?.onramperId?.length > 0);
+  const buyEnable = !!(token?.moonpayId && token?.moonpayId?.length > 0);
   const sellEnable = !!(token?.moonpayId && token?.moonpayId?.length > 0);
 
   const buyAction = useCallback(
     async (t: TokenDO) => {
       const signedUrl = await backgroundApiProxy.serviceFiatPay.getFiatPayUrl({
         type: 'buy',
-        address: account?.id,
-        cryptoCode: t.onramperId,
+        address: account?.address,
+        cryptoCode: t.moonpayId,
       });
       if (signedUrl) {
         navigation.navigate(RootRoutes.Modal, {
@@ -76,7 +76,7 @@ const TokenInfo: FC<TokenInfoProps> = ({ token, priceReady, sendAddress }) => {
         });
       }
     },
-    [account?.id, navigation],
+    [account?.address, navigation],
   );
 
   const sellAction = useCallback(
@@ -84,7 +84,7 @@ const TokenInfo: FC<TokenInfoProps> = ({ token, priceReady, sendAddress }) => {
       const signedUrl = await backgroundApiProxy.serviceFiatPay.getFiatPayUrl({
         type: 'sell',
         address: account?.id,
-        cryptoCode: t.onramperId,
+        cryptoCode: t.moonpayId,
       });
       if (signedUrl) {
         navigation.navigate(RootRoutes.Modal, {

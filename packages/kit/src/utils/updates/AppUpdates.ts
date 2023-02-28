@@ -29,8 +29,7 @@ class AppUpdates {
   addedListener = false;
 
   checkUpdate(isManual = false) {
-    if (platformEnv.isMas) return;
-    if (platformEnv.isDesktop) {
+    if (platformEnv.isDesktop && !platformEnv.isMas) {
       this.checkDesktopUpdate(isManual);
       return;
     }
@@ -39,6 +38,29 @@ class AppUpdates {
   }
 
   async checkAppUpdate(): Promise<VersionInfo | undefined> {
+    const packageInfo: PackageInfo | undefined = await this.getPackageInfo();
+    if (packageInfo) {
+      if (
+        !packageInfo ||
+        // localVersion >= releaseVersion
+        semver.gte(
+          store.getState().settings.version ?? '0.0.0',
+          packageInfo.version,
+        )
+      ) {
+        //  没有更新
+        return undefined;
+      }
+
+      return {
+        package: packageInfo,
+      };
+    }
+
+    return undefined;
+  }
+
+  async getPackageInfo() {
     const { enable, preReleaseUpdate } =
       store.getState().settings.devMode || {};
 
@@ -70,30 +92,34 @@ class AppUpdates {
     }
 
     if (platformEnv.isDesktop) {
+      if (platformEnv.isMas) {
+        packageInfo = releasePackages?.desktop?.find((x) => x.os === 'mas');
+      }
       if (platformEnv.isDesktopLinux) {
         packageInfo = releasePackages?.desktop?.find((x) => x.os === 'linux');
       }
-    }
-
-    if (packageInfo) {
-      if (
-        !packageInfo ||
-        // localVersion >= releaseVersion
-        semver.gte(
-          store.getState().settings.version ?? '0.0.0',
-          packageInfo.version,
-        )
-      ) {
-        //  没有更新
-        return undefined;
+      if (platformEnv.isDesktopWin) {
+        packageInfo = releasePackages?.desktop?.find((x) => x.os === 'win');
       }
-
-      return {
-        package: packageInfo,
-      };
+      if (platformEnv.isDesktopMac) {
+        packageInfo = releasePackages?.desktop?.find(
+          (x) => x.os === 'macos-x64',
+        );
+      }
+      if (platformEnv.isDesktopMacArm64) {
+        packageInfo = releasePackages?.desktop?.find(
+          (x) => x.os === 'macos-arm64',
+        );
+      }
     }
 
-    return undefined;
+    if (platformEnv.isExtChrome) {
+      packageInfo = releasePackages?.extension?.find((x) => x.os === 'chrome');
+    }
+    if (platformEnv.isExtFirefox) {
+      packageInfo = releasePackages?.extension?.find((x) => x.os === 'firefox');
+    }
+    return packageInfo;
   }
 
   checkDesktopUpdate(isManual = false) {

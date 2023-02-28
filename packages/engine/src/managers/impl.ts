@@ -40,10 +40,12 @@ import {
   IMPL_TBTC,
   IMPL_TRON,
   IMPL_XRP,
+  getSupportedImpls,
 } from '@onekeyhq/shared/src/engine/engineConsts';
 
 import { NotImplemented } from '../errors';
 import { AccountType } from '../types/account';
+import { createVaultSettings } from '../vaults/factory';
 
 import type { DBAccount } from '../types/account';
 import type { AccountNameInfo } from '../types/network';
@@ -149,285 +151,11 @@ function getDefaultCurveByCoinType(coinType: string): string {
   return getCurveByImpl(coinTypeToImpl[coinType]);
 }
 
-const defaultAccountNameInfo: Record<
-  string,
-  Record<string, AccountNameInfo>
-> = {
-  [IMPL_EVM]: {
-    default: {
-      prefix: 'EVM',
-      category: `44'/${COINTYPE_ETH}'`,
-      template: `m/44'/${COINTYPE_ETH}'/0'/0/x`,
-      coinType: COINTYPE_ETH,
-      label: { id: 'form__bip44_standard' },
-      desc: { id: `form__bip44_standard_desc` },
-      recommended: true,
-    },
-    etcNative: {
-      prefix: 'ETC-Native',
-      category: `44'/${COINTYPE_ETC}'`,
-      template: `m/44'/${COINTYPE_ETC}'/0'/0/x`,
-      coinType: COINTYPE_ETC,
-      label: { id: 'form__bip44_standard_cointype_61' },
-    },
-    ledgerLive: {
-      prefix: 'Ledger Live',
-      category: `44'/${COINTYPE_ETH}'`,
-      template: `m/44'/${COINTYPE_ETH}'/x'/0/0`,
-      coinType: COINTYPE_ETH,
-      label: 'Ledger Live',
-    },
-  },
-  [IMPL_SOL]: {
-    default: {
-      prefix: 'SOL',
-      category: `44'/${COINTYPE_SOL}'`,
-      template: `m/44'/${COINTYPE_SOL}'/x'/0'`,
-      coinType: COINTYPE_SOL,
-      label: { id: 'form__bip44_standard' },
-      desc: 'OneKey, Phantom, Sollet',
-      recommended: true,
-    },
-    ledgerLive: {
-      prefix: 'Ledger Live',
-      category: `44'/${COINTYPE_SOL}'`,
-      template: `m/44'/${COINTYPE_SOL}'/x'`,
-      coinType: COINTYPE_SOL,
-      label: 'Ledger Live',
-      desc: 'Ledger Live, Solflare',
-    },
-  },
-  [IMPL_ALGO]: {
-    default: {
-      prefix: 'ALGO',
-      category: `44'/${COINTYPE_ALGO}'`,
-      template: `m/44'/${COINTYPE_ALGO}'/0'/0'/x'`,
-      coinType: COINTYPE_ALGO,
-    },
-  },
-  [IMPL_NEAR]: {
-    default: {
-      prefix: 'NEAR',
-      category: `44'/${COINTYPE_NEAR}'`,
-      template: `m/44'/${COINTYPE_NEAR}'/x'`,
-      coinType: COINTYPE_NEAR,
-    },
-  },
-  [IMPL_STC]: {
-    default: {
-      prefix: 'STC',
-      category: `44'/${COINTYPE_STC}'`,
-      template: `m/44'/${COINTYPE_STC}'/0'/0'/x'`,
-      coinType: COINTYPE_STC,
-    },
-  },
-  [IMPL_CFX]: {
-    default: {
-      prefix: 'CFX',
-      category: `44'/${COINTYPE_CFX}'`,
-      template: `m/44'/503'/0'/0/x`,
-      coinType: COINTYPE_CFX,
-    },
-  },
-  [IMPL_BTC]: {
-    default: {
-      prefix: 'BTC Nested SegWit',
-      category: `49'/${COINTYPE_BTC}'`,
-      template: `m/49'/${COINTYPE_BTC}'/x'/0/0`,
-      coinType: COINTYPE_BTC,
-      label: 'Nested SegWit',
-      desc: {
-        id: 'form__bitcoin__nested_segwit_desc',
-        placeholder: { 0: '3' },
-      },
-      subDesc: 'BIP49, P2SH-P2WPKH, Base58.',
-    },
-    BIP84: {
-      prefix: 'BTC Native SegWit',
-      category: `84'/${COINTYPE_BTC}'`,
-      template: `m/84'/${COINTYPE_BTC}'/x'/0/0`,
-      coinType: COINTYPE_BTC,
-      label: 'Native SegWit',
-      desc: {
-        id: 'form__bitcoin__native_segwit_desc',
-        placeholder: { 0: 'bc1' },
-      },
-      subDesc: 'BIP84, P2WPKH, Bech32.',
-    },
-    BIP44: {
-      prefix: 'BTC Legacy',
-      category: `44'/${COINTYPE_BTC}'`,
-      template: `m/44'/${COINTYPE_BTC}'/x'/0/0`,
-      coinType: COINTYPE_BTC,
-      label: 'Legacy',
-      desc: { id: 'form__bitcoin__legacy_desc', placeholder: { 0: '1' } },
-      subDesc: 'BIP44, P2PKH, Base58.',
-      notRecommended: true,
-    },
-  },
-  [IMPL_TBTC]: {
-    default: {
-      prefix: 'TBTC Nested SegWit',
-      category: `49'/${COINTYPE_TBTC}'`,
-      template: `m/49'/${COINTYPE_TBTC}'/x'/0/0`,
-      coinType: COINTYPE_TBTC,
-      label: 'Nested SegWit',
-      desc: {
-        id: 'form__bitcoin__nested_segwit_desc',
-        placeholder: { 0: '2' },
-      },
-      subDesc: 'BIP49, P2SH-P2WPKH, Base58.',
-    },
-    BIP44: {
-      prefix: 'TBTC Legacy',
-      category: `44'/${COINTYPE_TBTC}'`,
-      template: `m/44'/${COINTYPE_TBTC}'/x'/0/0`,
-      coinType: COINTYPE_TBTC,
-      label: 'Legacy',
-      desc: { id: 'form__bitcoin__legacy_desc', placeholder: { 0: 'm' } },
-      subDesc: 'BIP44, P2PKH, Base58.',
-    },
-    BIP84: {
-      prefix: 'TBTC Native SegWit',
-      category: `84'/${COINTYPE_TBTC}'`,
-      template: `m/84'/${COINTYPE_TBTC}'/x'/0/0`,
-      coinType: COINTYPE_TBTC,
-      label: 'Native SegWit',
-      desc: {
-        id: 'form__bitcoin__native_segwit_desc',
-        placeholder: { 0: 'tb1' },
-      },
-      subDesc: 'BIP84, P2WPKH, Bech32. ',
-    },
-  },
-  [IMPL_TRON]: {
-    default: {
-      prefix: 'TRON',
-      category: `44'/${COINTYPE_TRON}'`,
-      template: `m/44'/${COINTYPE_TRON}'/0'/0/x`,
-      coinType: COINTYPE_TRON,
-    },
-  },
-  [IMPL_APTOS]: {
-    default: {
-      prefix: 'APT',
-      category: `44'/${COINTYPE_APTOS}'`,
-      template: `m/44'/${COINTYPE_APTOS}'/x'/0'/0'`,
-      coinType: COINTYPE_APTOS,
-    },
-  },
-  [IMPL_DOGE]: {
-    default: {
-      prefix: 'DOGE',
-      category: `44'/${COINTYPE_DOGE}'`,
-      template: `m/44'/${COINTYPE_DOGE}'/x'/0/0`,
-      coinType: COINTYPE_DOGE,
-      label: 'Legacy',
-      subDesc: 'BIP44, P2PKH, Base58.',
-    },
-  },
-  [IMPL_LTC]: {
-    default: {
-      prefix: 'LTC Nested SegWit',
-      category: `49'/${COINTYPE_LTC}'`,
-      template: `m/49'/${COINTYPE_LTC}'/x'/0/0`,
-      coinType: COINTYPE_LTC,
-      label: 'Nested SegWit',
-      desc: {
-        id: 'form__bitcoin__nested_segwit_desc',
-        placeholder: { 0: 'M' },
-      },
-      subDesc: 'BIP49, P2SH-P2WPKH, Base58.',
-    },
-    BIP84: {
-      prefix: 'LTC Native SegWit',
-      category: `84'/${COINTYPE_LTC}'`,
-      template: `m/84'/${COINTYPE_LTC}'/x'/0/0`,
-      coinType: COINTYPE_LTC,
-      label: 'Native SegWit',
-      desc: {
-        id: 'form__bitcoin__native_segwit_desc',
-        placeholder: { 0: 'ltc1' },
-      },
-      subDesc: 'BIP84, P2WPKH, Bech32. ',
-    },
-    BIP44: {
-      prefix: 'LTC Legacy',
-      category: `44'/${COINTYPE_LTC}'`,
-      template: `m/44'/${COINTYPE_LTC}'/x'/0/0`,
-      coinType: COINTYPE_LTC,
-      label: 'Legacy',
-      desc: { id: 'form__bitcoin__legacy_desc', placeholder: { 0: 'L' } },
-      subDesc: 'BIP44, P2PKH, Base58.',
-      notRecommended: true,
-    },
-  },
-  [IMPL_BCH]: {
-    default: {
-      prefix: 'BCH',
-      category: `44'/${COINTYPE_BCH}'`,
-      template: `m/44'/${COINTYPE_BCH}'/x'/0/0`,
-      coinType: COINTYPE_BCH,
-      label: 'Legacy',
-      subDesc: 'BIP44, P2PKH, Base58.',
-    },
-  },
-  [IMPL_XRP]: {
-    default: {
-      prefix: 'RIPPLE',
-      category: `44'/${COINTYPE_XRP}'`,
-      template: `m/44'/${COINTYPE_XRP}'/x'/0/0`,
-      coinType: COINTYPE_XRP,
-    },
-  },
-  [IMPL_COSMOS]: {
-    default: {
-      prefix: 'COSMOS',
-      category: `44'/${COINTYPE_COSMOS}'`,
-      template: `m/44'/${COINTYPE_COSMOS}'/x'/0/0`,
-      coinType: COINTYPE_COSMOS,
-    },
-  },
-  [IMPL_ADA]: {
-    default: {
-      prefix: 'CARDANO',
-      category: `1852'/${COINTYPE_ADA}'`,
-      template: `m/1852'/${COINTYPE_ADA}'/x'/0/0`,
-      coinType: COINTYPE_ADA,
-      label: 'Shelley',
-      subDesc: `m/1852'/${COINTYPE_ADA}'/x'/0/0`,
-    },
-  },
-  [IMPL_SUI]: {
-    default: {
-      prefix: 'SUI',
-      category: `44'/${COINTYPE_SUI}'`,
-      template: `m/44'/${COINTYPE_SUI}'/x'/0'/0'`,
-      coinType: COINTYPE_SUI,
-    },
-  },
-  [IMPL_FIL]: {
-    default: {
-      prefix: 'FIL',
-      category: `44'/${COINTYPE_FIL}'`,
-      template: `m/44'/${COINTYPE_FIL}'/0'/0/x`,
-      coinType: COINTYPE_FIL,
-    },
-  },
-  [IMPL_DOT]: {
-    default: {
-      prefix: 'DOT',
-      category: `44'/${COINTYPE_DOT}'`,
-      template: `m/44'/${COINTYPE_DOT}'/x'/0'/0'`,
-      coinType: COINTYPE_DOT,
-    },
-  },
-};
-
 function getAccountNameInfoByImpl(
   impl: string,
 ): Record<string, AccountNameInfo> {
-  const ret = defaultAccountNameInfo[impl];
+  const vaultSetting = createVaultSettings({ impl });
+  const ret = vaultSetting.accountNameInfo;
   if (typeof ret === 'undefined') {
     throw new NotImplemented(`Implementation ${impl} is not supported.`);
   }
@@ -435,7 +163,7 @@ function getAccountNameInfoByImpl(
 }
 
 function getDefaultAccountNameInfoByImpl(impl: string): AccountNameInfo {
-  const ret = defaultAccountNameInfo[impl];
+  const ret = getAccountNameInfoByImpl(impl);
   if (typeof ret.default === 'undefined') {
     throw new NotImplemented(`Implementation ${impl} is not supported.`);
   }
@@ -446,7 +174,7 @@ function getAccountNameInfoByTemplate(
   impl: string,
   template: string,
 ): AccountNameInfo {
-  const ret = defaultAccountNameInfo[impl];
+  const ret = getAccountNameInfoByImpl(impl);
   if (typeof ret === 'undefined') {
     throw new NotImplemented(`Is not supported for implementation ${impl}.`);
   }
@@ -465,6 +193,7 @@ function getDBAccountTemplate(account: DBAccount) {
   if (template) {
     return template;
   }
+  // The following three chains need to find the corresponding template according to the purpose of the account
   if ([IMPL_BTC, IMPL_TBTC, IMPL_LTC].includes(impl)) {
     for (const accountInfo of Object.values(getAccountNameInfoByImpl(impl))) {
       if (path.indexOf(accountInfo.category) > -1) {
@@ -476,9 +205,13 @@ function getDBAccountTemplate(account: DBAccount) {
   return defaultAccountInfo.template;
 }
 
+type IAllChainAccountNameInfo = Record<string, Record<string, AccountNameInfo>>;
 // For database migration, wallets.nextAccountIds
-function convertCategoryToTemplate(category: string) {
-  for (const [impl, accountInfo] of Object.entries(defaultAccountNameInfo)) {
+function convertCategoryToTemplate(
+  category: string,
+  allChainAccountNameInfo: IAllChainAccountNameInfo,
+) {
+  for (const [impl, accountInfo] of Object.entries(allChainAccountNameInfo)) {
     for (const info of Object.values(accountInfo)) {
       if (info.category === category) {
         if (
@@ -491,6 +224,33 @@ function convertCategoryToTemplate(category: string) {
       }
     }
   }
+}
+
+function migrateNextAccountIds(nextAccountIds: Record<string, number>) {
+  const allChainAccountNameInfo = [
+    ...getSupportedImpls(),
+  ].reduce<IAllChainAccountNameInfo>(
+    (acc, impl) => ({
+      ...acc,
+      [impl]: getAccountNameInfoByImpl(impl),
+    }),
+    {},
+  );
+  const newNextAccountIds = { ...nextAccountIds };
+  for (const [category, value] of Object.entries(nextAccountIds)) {
+    const template = convertCategoryToTemplate(
+      category,
+      allChainAccountNameInfo,
+    );
+    if (template && !newNextAccountIds[template]) {
+      newNextAccountIds[template] = value;
+    }
+  }
+  return newNextAccountIds;
+}
+
+function isBtcLikeImpl(impl: string): boolean {
+  return [IMPL_BTC, IMPL_TBTC, IMPL_LTC, IMPL_BCH, IMPL_DOGE].includes(impl);
 }
 
 export {
@@ -507,4 +267,6 @@ export {
   getDBAccountTemplate,
   getImplByCoinType,
   convertCategoryToTemplate,
+  migrateNextAccountIds,
+  isBtcLikeImpl,
 };

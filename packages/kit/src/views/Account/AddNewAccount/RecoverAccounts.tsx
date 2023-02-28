@@ -25,6 +25,7 @@ import {
 } from '@onekeyhq/components';
 import Pressable from '@onekeyhq/components/src/Pressable/Pressable';
 import { shortenAddress } from '@onekeyhq/components/src/utils';
+import { isBtcLikeImpl } from '@onekeyhq/engine/src/managers/impl';
 import type {
   Account,
   ImportableHDAccount,
@@ -36,12 +37,14 @@ import { useRuntime } from '@onekeyhq/kit/src/hooks/redux';
 import type { CreateAccountRoutesParams } from '@onekeyhq/kit/src/routes';
 import { CreateAccountModalRoutes } from '@onekeyhq/kit/src/routes';
 import type { ModalScreenProps } from '@onekeyhq/kit/src/routes/types';
+import { ModalRoutes, RootRoutes } from '@onekeyhq/kit/src/routes/types';
 import { getTimeStamp } from '@onekeyhq/kit/src/utils/helper';
 import platformEnv from '@onekeyhq/shared/src/platformEnv';
 
 import { FormatBalance } from '../../../components/Format';
 import { useDerivationPath } from '../../../components/NetworkAccountSelector/hooks/useDerivationPath';
 import { usePrevious } from '../../../hooks';
+import { RecoverAccountModalRoutes } from '../../../routes/routesEnum';
 import { deviceUtils } from '../../../utils/hardware';
 
 import { showJumpPageDialog } from './JumpPage';
@@ -101,6 +104,13 @@ const AccountCell: FC<CellProps> = ({
     onChange?.(!isChecked);
   }, [isChecked, state?.isDisabled, onChange]);
 
+  const displayPath = useMemo(() => {
+    if (isBtcLikeImpl(network.impl)) {
+      return `${item.path}/0/0`;
+    }
+    return item.path;
+  }, [network, item]);
+
   return (
     <ListItem onPress={onToggle} flex={1}>
       <ListItem.Column>
@@ -122,6 +132,7 @@ const AccountCell: FC<CellProps> = ({
             typography="Body2"
             color="text-subdued"
             wordBreak="break-all"
+            maxW={platformEnv.isNativeAndroid ? '45px' : 'auto'}
           >
             {item.index + 1}
           </Text>
@@ -135,7 +146,7 @@ const AccountCell: FC<CellProps> = ({
         text={{
           label: shortenAddress(item.displayAddress),
           labelProps: { w: '120px' },
-          description: showPathAndLink ? item.path : undefined,
+          description: showPathAndLink ? displayPath : undefined,
           descriptionProps: { typography: 'Caption', w: '132px' },
           size: 'sm',
         }}
@@ -465,11 +476,20 @@ const RecoverAccounts: FC = () => {
       (item) => item.key === 'default',
     );
     if (defaultOption) {
-      setSelectedDerivationOption(defaultOption);
       return parseInt(defaultOption.category.split("'/")[0]);
     }
     return 44;
   }, [selectedDerivationOption, derivationOptions]);
+
+  // set default derivation option
+  useEffect(() => {
+    const defaultOption = derivationOptions.find(
+      (item) => item.key === 'default',
+    );
+    if (defaultOption) {
+      setSelectedDerivationOption(defaultOption);
+    }
+  }, [derivationOptions]);
 
   useEffect(() => {
     currentPageRef.current = config.currentPage;
@@ -479,7 +499,6 @@ const RecoverAccounts: FC = () => {
     if (!depDataInit) return;
     if (isLoading && !isSwitchingDerivationPath.current) return;
 
-    console.log('search account =========>');
     isFetchingData.current = true;
     if (!isSwitchingDerivationPath.current) {
       setLoading(true);
@@ -555,9 +574,13 @@ const RecoverAccounts: FC = () => {
         const addedAccounts = new Map(loadedAccounts);
         const addedSelectState = new Map<number, SelectStateType>(selectState);
         accounts.forEach((i) => {
-          const isDisabled = activeAccounts.current.some(
-            (a) => a.path === i.path,
-          );
+          const isDisabled = activeAccounts.current.some((a) => {
+            if (a.template) {
+              // fix ledger live first account path is same as bip44
+              return a.template === template && a.path === i.path;
+            }
+            return a.path === i.path;
+          });
           addedSelectState.set(i.index, {
             isDisabled,
             selected: isDisabled || !!isBatchMode,
@@ -857,8 +880,10 @@ const RecoverAccounts: FC = () => {
             derivationOptions={derivationOptions}
             selectedOption={selectedDerivationOption}
             onChange={(option) => {
-              setLoading(true);
-              isSwitchingDerivationPath.current = true;
+              if (option.template !== selectedDerivationOption.template) {
+                setLoading(true);
+                isSwitchingDerivationPath.current = true;
+              }
               setSelectedDerivationOption(option);
             }}
           />
@@ -936,37 +961,36 @@ const RecoverAccounts: FC = () => {
               });
             }}
             onBulkAddPress={() => {
-              navigation.navigate(
-                CreateAccountModalRoutes.RecoverAccountsAdvanced,
-                {
-                  fromIndex: config.fromIndex,
-                  generateCount: config.generateCount,
-                  onApply: ({ fromIndex, generateCount: count }) => {
-                    const isForceRefresh =
-                      config.fromIndex !== fromIndex ||
-                      config.generateCount !== count;
-
-                    if (isForceRefresh) setPendRefreshData(true);
-
-                    setTimeout(() => {
-                      const newConfig = {
-                        currentPage: isForceRefresh ? 0 : config.currentPage,
-                        fromIndex,
-                        generateCount: count,
-                        showPathAndLink: config.showPathAndLink,
-                      };
-
-                      if (isForceRefresh) {
-                        setSelectState(new Map());
-                        setLoadedAccounts(new Map());
-                      }
-
-                      setRealGenerateCount(Number.MAX_VALUE);
-                      setConfig(newConfig);
-                    }, 100);
+              navigation.navigate(RootRoutes.Modal, {
+                screen: ModalRoutes.RecoverAccount,
+                params: {
+                  screen: RecoverAccountModalRoutes.RecoverAccountsAdvanced,
+                  params: {
+                    fromIndex: config.fromIndex,
+                    generateCount: config.generateCount,
+                    onApply: ({ fromIndex, generateCount: count }) => {
+                      const isForceRefresh =
+                        config.fromIndex !== fromIndex ||
+                        config.generateCount !== count;
+                      if (isForceRefresh) setPendRefreshData(true);
+                      setTimeout(() => {
+                        const newConfig = {
+                          currentPage: isForceRefresh ? 0 : config.currentPage,
+                          fromIndex,
+                          generateCount: count,
+                          showPathAndLink: config.showPathAndLink,
+                        };
+                        if (isForceRefresh) {
+                          setSelectState(new Map());
+                          setLoadedAccounts(new Map());
+                        }
+                        setRealGenerateCount(Number.MAX_VALUE);
+                        setConfig(newConfig);
+                      }, 100);
+                    },
                   },
                 },
-              );
+              });
             }}
           />
         </Box>

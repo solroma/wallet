@@ -260,14 +260,37 @@ function AccountList({
       );
       const template = section.derivationInfo?.template;
       const isCollapsed = section.collapsed;
+      const sectionIndex = dataSource.findIndex(
+        (s) => s.derivationInfo?.template === template,
+      );
       return {
         isEmptySectionData,
         isPreloadingCreate,
         template,
         isCollapsed,
+        sectionIndex,
       };
     },
-    [preloadingCreateAccount?.networkId, preloadingCreateAccount?.walletId],
+    [
+      preloadingCreateAccount?.networkId,
+      preloadingCreateAccount?.walletId,
+      dataSource,
+    ],
+  );
+
+  const getDataSourceInfo = useCallback(() => {
+    const isEmptyDataSource = dataSource.every(
+      (section) => !section.data.length,
+    );
+
+    return {
+      isEmptyDataSource,
+    };
+  }, [dataSource]);
+
+  const ListItemSeparatorComponent = useCallback(
+    (props) => <AccountListItemSeparator {...props} dataSource={dataSource} />,
+    [dataSource],
   );
 
   // for performance: do NOT render UI if selector not open
@@ -350,38 +373,40 @@ function AccountList({
             networkId={selectedNetworkId}
             walletId={section?.wallet?.id}
             label={item.name}
-            // TODO uppercase address
-            address={shortenAddress(item.displayAddress ?? item.address)}
+            address={shortenAddress(item.displayAddress || item.address)}
             // TODO wait Overview implements all accounts balance
             balance={undefined}
           />
         );
       }}
-      // eslint-disable-next-line react/no-unstable-nested-components
-      ItemSeparatorComponent={(props) => (
-        <AccountListItemSeparator {...props} dataSource={dataSource} />
-      )}
+      ItemSeparatorComponent={ListItemSeparatorComponent}
       renderSectionFooter={({
         section,
       }: {
         // eslint-disable-next-line react/no-unused-prop-types
         section: INetworkAccountSelectorAccountListSectionData;
       }) => {
-        const { isEmptySectionData, isPreloadingCreate } = getSectionMetaInfo({
-          section,
-        });
+        const { isEmptyDataSource } = getDataSourceInfo();
+        const { isEmptySectionData, isPreloadingCreate, sectionIndex } =
+          getSectionMetaInfo({
+            section,
+          });
         return (
           <>
             {isPreloadingCreate ? (
               <AccountSectionLoadingSkeleton isLoading />
             ) : null}
-            {isEmptySectionData && !isPreloadingCreate ? (
+            {/* only render EmptyState in first section footer */}
+            {isEmptyDataSource &&
+            isEmptySectionData &&
+            !isPreloadingCreate &&
+            sectionIndex === 0 ? (
               <EmptyAccountState
                 walletId={section.wallet.id}
                 networkId={section.networkId}
               />
             ) : null}
-            <Box h={8} />
+            {!isEmptySectionData && <Box h={8} />}
           </>
         );
       }}

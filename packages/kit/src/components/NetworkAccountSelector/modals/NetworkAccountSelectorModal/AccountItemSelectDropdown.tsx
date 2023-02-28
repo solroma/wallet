@@ -90,8 +90,9 @@ function AccountItemSelectDropdown({
     (value: string) => {
       switch (value) {
         case 'copy':
-          // TODO uppercase address copy
-          copyAddress(account.displayAddress ?? account.address);
+          setTimeout(() => {
+            copyAddress(account.displayAddress || account.address);
+          }, 150);
           break;
         case 'rename':
           DialogManager.show({
@@ -126,6 +127,7 @@ function AccountItemSelectDropdown({
           goToRemoveAccount({
             wallet,
             accountId: account.id,
+            networkId: network?.id ?? '',
             callback: () =>
               refreshAccounts(wallet?.id ?? '', network?.id ?? ''),
           });

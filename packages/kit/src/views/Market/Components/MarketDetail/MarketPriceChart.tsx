@@ -5,6 +5,7 @@ import { Box, useIsVerticalLayout } from '@onekeyhq/components';
 import platformEnv from '@onekeyhq/shared/src/platformEnv';
 
 import ChartWithLabel from '../../../PriceChart/ChartWithLabel';
+import { useChartTimeLabel } from '../../../PriceChart/hooks';
 import TimeControl, {
   TIMEOPTIONS,
   TIMEOPTIONS_VALUE,
@@ -37,6 +38,10 @@ const MarketPriceChart: FC<MarketPriceChartProps> = ({
     points,
   });
 
+  const timeDefaultLabel = useChartTimeLabel(
+    selectedTimeIndex,
+    chart?.[0]?.[0],
+  );
   const refreshDataOnTimeChange = useCallback((newTimeValue: string) => {
     const newTimeIndex = TIMEOPTIONS.indexOf(newTimeValue);
     setSelectedTimeIndex(newTimeIndex);
@@ -44,7 +49,11 @@ const MarketPriceChart: FC<MarketPriceChartProps> = ({
   const isFetching = useMemo(() => !(chart && chart.length > 0), [chart]);
   return (
     <Box style={style}>
-      <ChartWithLabel isFetching={isFetching} data={chart || []}>
+      <ChartWithLabel
+        timeDefaultLabel={timeDefaultLabel}
+        isFetching={isFetching}
+        data={chart || []}
+      >
         <TimeControl
           enabled={!isFetching}
           selectedIndex={selectedTimeIndex}

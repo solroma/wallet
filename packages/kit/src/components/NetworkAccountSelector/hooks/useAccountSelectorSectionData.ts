@@ -58,7 +58,16 @@ const buildData = debounce(
         );
       if (networkDerivations.length > 1) {
         // multiple derivation path mode
-        const getAccountPromises = networkDerivations.map(
+        const sequenceNetworkDerivations: typeof networkDerivations = [];
+        Object.values(accountNameInfo).forEach((value) => {
+          const derivation = networkDerivations.find(
+            (d) => d.template === value.template,
+          );
+          if (derivation) {
+            sequenceNetworkDerivations.push(derivation);
+          }
+        });
+        const getAccountPromises = sequenceNetworkDerivations.map(
           async (derivation, index) => {
             const accounts = await engine.getAccounts(
               derivation.accounts,
@@ -96,6 +105,7 @@ const buildData = debounce(
           wallet,
           networkId: selectedNetworkId,
           data: accounts || [],
+          derivationInfo: accountNameInfo.default,
           collapsed: false,
         });
       }

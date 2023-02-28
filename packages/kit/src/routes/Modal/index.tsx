@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { memo } from 'react';
+import { memo, useMemo } from 'react';
 
-import { createStackNavigator } from '@react-navigation/stack';
+// import { createStackNavigator } from '@react-navigation/stack';
 import { RootSiblingParent } from 'react-native-root-siblings';
 
 import { useIsVerticalLayout } from '@onekeyhq/components';
@@ -10,6 +10,7 @@ import { createLazyComponent } from '../../utils/createLazyComponent';
 import { ModalRoutes } from '../types';
 
 import { buildModalOpenAnimationOptions } from './buildModalStackNavigatorOptions';
+import createStackNavigator from './createStackNavigator';
 
 import type { ModalRoutesParams } from '../types';
 
@@ -17,6 +18,9 @@ const BackupWalletModal = createLazyComponent(() => import('./BackupWallet'));
 
 const CollectibleModal = createLazyComponent(() => import('./Collectibles'));
 const CreateAccountModal = createLazyComponent(() => import('./CreateAccount'));
+const RecoverAccountModal = createLazyComponent(
+  () => import('./RecoverAccount'),
+);
 const CreateWalletModalStack = createLazyComponent(
   () => import('./CreateWallet'),
 );
@@ -72,7 +76,9 @@ const TransactionDetailModal = createLazyComponent(
   () => import('./TransactionDetail'),
 );
 const UpdateFeatureModal = createLazyComponent(() => import('./UpdateFeature'));
-const WebviewModal = createLazyComponent(() => import('./WebView'));
+const WebviewModal = createLazyComponent(
+  () => import('@onekeyhq/kit/src/views/Webview'),
+);
 
 const AddressBookModal = createLazyComponent(() => import('./AddressBook'));
 const AnnualReportModal = createLazyComponent(() => import('./AnnualReport'));
@@ -93,6 +99,10 @@ const modalStackScreenList = [
   {
     name: ModalRoutes.CreateAccount,
     component: CreateAccountModal,
+  },
+  {
+    name: ModalRoutes.RecoverAccount,
+    component: RecoverAccountModal,
   },
   {
     name: ModalRoutes.Receive,
@@ -242,14 +252,17 @@ const ModalStack = createStackNavigator<ModalRoutesParams>();
 
 const ModalStackNavigator = () => {
   const isVerticalLayout = useIsVerticalLayout();
+  const screenOptions = useMemo(
+    () => ({
+      headerShown: false,
+      // presentation: 'modal' as const,
+      ...buildModalOpenAnimationOptions({ isVerticalLayout }),
+    }),
+    [isVerticalLayout],
+  );
   return (
     <RootSiblingParent>
-      <ModalStack.Navigator
-        screenOptions={{
-          headerShown: false,
-          ...buildModalOpenAnimationOptions({ isVerticalLayout }),
-        }}
-      >
+      <ModalStack.Navigator screenOptions={screenOptions}>
         {modalStackScreenList.map((modal) => (
           <ModalStack.Screen
             key={modal.name}

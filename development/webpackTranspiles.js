@@ -3,11 +3,12 @@ const webModuleTranspile = [
   '@gorhom',
   '@mysten/sui.js',
   'superstruct',
-  '@noble/curves',
   '@polkadot',
+  '@noble/curves',
   '@solana/web3.js',
   '@kaspa/core-lib',
   '@zondax/izari-filecoin',
+  '@onekeyhq',
 ];
 
 const extModuleTranspile = [
@@ -28,6 +29,13 @@ const extModuleTranspile = [
   '@solana/web3.js',
   '@zondax/izari-filecoin',
   '@kaspa/core-lib',
+  '@onekeyhq/blockchain-libs',
+  '@onekeyhq/components',
+  '@onekeyhq/kit',
+  '@onekeyhq/kit-bg',
+  '@onekeyhq/shared',
+  '@onekeyhq/engine',
+  '@onekeyhq/app',
 ];
 
 module.exports = {

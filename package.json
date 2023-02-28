@@ -57,6 +57,7 @@
     ]
   },
   "dependencies": {
+    "@noble/secp256k1": "^1.7.1",
     "@onekeyfe/blockchain-libs": "0.0.48",
     "@onekeyfe/cross-inpage-provider-core": "1.1.23",
     "@onekeyfe/cross-inpage-provider-errors": "1.1.23",
@@ -78,8 +79,9 @@
     "@web3-react/url": "8.0.25-beta.0",
     "asmcrypto.js": "2.3.2",
     "axios": "^0.27.2",
-    "bitcoinjs-lib": "6.0.1",
+    "bitcoinjs-lib": "6.1.0",
     "bitcoinjs-message": "2.2.0",
+    "create-hmac": "^1.1.7",
     "expo-device": "^4.3.0",
     "jsrsasign": "^10.6.1",
     "memoizee": "^0.4.15",
@@ -93,6 +95,7 @@
     "@open-wc/webpack-import-meta-loader": "^0.4.7",
     "@pmmmwh/react-refresh-webpack-plugin": "^0.5.10",
     "@types/chrome": "^0.0.161",
+    "@types/create-hmac": "^1",
     "@types/jest": "^29.2.3",
     "@types/jsrsasign": "^10",
     "@types/memoizee": "^0.4.8",

@@ -168,6 +168,12 @@ const defaultAccountNameInfo: Record<
       label: 'Native SegWit',
       addressPrefix: 'bc1',
     },
+    BIP86: {
+      prefix: 'BTC Taproot',
+      category: `86'/${COINTYPE_BTC}'`,
+      label: 'Taproot',
+      addressPrefix: 'bc1p',
+    },
   },
   [IMPL_TBTC]: {
     default: {

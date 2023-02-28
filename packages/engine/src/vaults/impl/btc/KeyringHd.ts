@@ -99,6 +99,7 @@ export class KeyringHd extends KeyringHdBase {
       const { [firstAddressRelPath]: address } = provider.xpubToAddresses(
         xpub,
         [firstAddressRelPath],
+        addressEncoding,
       );
       const name =
         (names || [])[index - (ignoreFirst ? 1 : 0)] ||

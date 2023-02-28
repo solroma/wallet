@@ -4,6 +4,8 @@ import * as BitcoinJS from 'bitcoinjs-lib';
 import bitcoinMessage from 'bitcoinjs-message';
 import bs58check from 'bs58check';
 
+// eslint-disable-next-line import/no-named-default
+
 import { BaseProvider } from '@onekeyhq/engine/src/client/BaseClient';
 import { CKDPub, compressPublicKey, verify } from '@onekeyhq/engine/src/secret';
 import { secp256k1 } from '@onekeyhq/engine/src/secret/curves';
@@ -20,6 +22,7 @@ import { check, checkIsDefined } from '@onekeyhq/shared/src/utils/assertUtils';
 import { BlockBook } from './blockbook';
 import AddressEncodings from './sdk/addressEncodings';
 import { getNetwork } from './sdk/networks';
+import ecc from './sdk/nobleSecp256k1Wrapper';
 import { PLACEHOLDER_VSIZE, estimateVsize, loadOPReturn } from './sdk/vsize';
 
 import type { Network } from './sdk/networks';
@@ -49,6 +52,8 @@ const validator = (
   msghash: Buffer,
   signature: Buffer,
 ): boolean => verify('secp256k1', pubkey, msghash, signature);
+
+BitcoinJS.initEccLib(ecc);
 
 class Provider extends BaseProvider {
   private _versionBytesToEncodings?: {
@@ -432,7 +437,11 @@ class Provider extends BaseProvider {
           network: this.network,
         });
         break;
-
+      case AddressEncodings.P2TR:
+        payment = BitcoinJS.payments.p2tr({
+          internalPubkey: pubkey.slice(1, 33),
+        });
+        break;
       default:
         // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
         throw new Error(`Invalid encoding: ${encoding}`);

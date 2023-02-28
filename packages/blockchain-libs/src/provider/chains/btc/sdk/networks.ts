@@ -47,6 +47,10 @@ const rbtc = {
       public: 0x045f1cf6,
       private: 0x045f18bc,
     },
+    [AddressEncodings.P2TR]: {
+      public: 0x0488b21e,
+      private: 0x0488ade4,
+    },
   },
 };
 

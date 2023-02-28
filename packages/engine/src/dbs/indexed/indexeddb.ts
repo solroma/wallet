@@ -570,7 +570,7 @@ class IndexedDBApi implements DBAPI {
               const getMainContextRequest = contextStore.get(MAIN_CONTEXT);
               getMainContextRequest.onsuccess = (_cevent) => {
                 const context = getMainContextRequest.result as OneKeyContext;
-                if (typeof context === 'undefined') {
+                if (!context) {
                   // shouldn't happen
                   console.error('Cannot get main context');
                   return;
@@ -884,7 +884,7 @@ class IndexedDBApi implements DBAPI {
             getMainContextRequest.onsuccess = (_cevent) => {
               const context: OneKeyContext =
                 getMainContextRequest.result as OneKeyContext;
-              if (typeof context !== 'undefined') {
+              if (context) {
                 const pendingWallets = context.pendingWallets || [];
                 ret = (request.result as Array<Wallet>).filter(
                   (wallet) => !pendingWallets.includes(wallet.id),
@@ -1535,7 +1535,7 @@ class IndexedDBApi implements DBAPI {
             getMainContextRequest.onsuccess = (_cevent) => {
               const context: OneKeyContext =
                 getMainContextRequest.result as OneKeyContext;
-              if (typeof context !== 'undefined') {
+              if (context) {
                 const pendingWallets = context.pendingWallets || [];
                 if (pendingWallets.length > 0) {
                   context.pendingWallets = [];

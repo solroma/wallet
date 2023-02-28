@@ -15,15 +15,12 @@
     "updates": {
       "fallbackToCacheTimeout": 0
     },
-    "assetBundlePatterns": [
-      "**/*"
-    ],
+    "assetBundlePatterns": ["**/*"],
+    "jsEngine": "jsc",
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "so.onekey.wallet",
-      "associatedDomains": [
-        "applinks:app.onekey.so"
-      ]
+      "associatedDomains": ["applinks:app.onekey.so"]
     },
     "android": {
       "googleServicesFile": "./android/app/google-services.json",

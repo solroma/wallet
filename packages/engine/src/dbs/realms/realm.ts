@@ -152,7 +152,7 @@ class RealmDB implements DBAPI {
           'Context',
           MAIN_CONTEXT,
         );
-        if (typeof context === 'undefined') {
+        if (!context) {
           realm.write(() => {
             realm.create('Context', {
               id: 'mainContext',
@@ -185,9 +185,7 @@ class RealmDB implements DBAPI {
         'Context',
         MAIN_CONTEXT,
       );
-      return Promise.resolve(
-        typeof context !== 'undefined' ? context.internalObj : context,
-      );
+      return Promise.resolve(context ? context.internalObj : context);
     } catch (error: any) {
       console.error(error);
       return Promise.reject(new OneKeyInternalError(error));
@@ -201,7 +199,7 @@ class RealmDB implements DBAPI {
         'Context',
         MAIN_CONTEXT,
       );
-      if (typeof context === 'undefined') {
+      if (!context) {
         return Promise.reject(new OneKeyInternalError('Context not found.'));
       }
       if (!checkPassword(context.internalObj, oldPassword)) {
@@ -304,7 +302,7 @@ class RealmDB implements DBAPI {
         'Context',
         MAIN_CONTEXT,
       );
-      if (typeof context === 'undefined') {
+      if (!context) {
         return Promise.reject(new OneKeyInternalError('Context not found.'));
       }
       if (!checkPassword(context.internalObj, password)) {
@@ -443,7 +441,7 @@ class RealmDB implements DBAPI {
           );
         });
         if (orderChanged && !syncingDefault) {
-          if (typeof context !== 'undefined') {
+          if (context) {
             context.networkOrderChanged = true;
           }
         }
@@ -718,7 +716,7 @@ class RealmDB implements DBAPI {
         'Context',
         MAIN_CONTEXT,
       );
-      if (typeof context === 'undefined') {
+      if (!context) {
         return Promise.reject(new OneKeyInternalError('Context not found.'));
       }
 
@@ -1054,7 +1052,7 @@ class RealmDB implements DBAPI {
         'Context',
         MAIN_CONTEXT,
       );
-      if (typeof context === 'undefined') {
+      if (!context) {
         return Promise.reject(new OneKeyInternalError('Context not found.'));
       }
       if (!checkPassword(context.internalObj, password)) {
@@ -1250,7 +1248,7 @@ class RealmDB implements DBAPI {
         'Context',
         MAIN_CONTEXT,
       );
-      if (typeof context === 'undefined') {
+      if (!context) {
         return Promise.reject(new OneKeyInternalError('Context not found.'));
       }
       if (wallet.type === WALLET_TYPE_HD) {
@@ -1402,7 +1400,7 @@ class RealmDB implements DBAPI {
         'Context',
         MAIN_CONTEXT,
       );
-      if (typeof context === 'undefined') {
+      if (!context) {
         return Promise.reject(new OneKeyInternalError('Context not found.'));
       }
       if (!checkPassword(context.internalObj, password)) {
@@ -1495,7 +1493,7 @@ class RealmDB implements DBAPI {
         'Context',
         MAIN_CONTEXT,
       );
-      if (typeof context === 'undefined') {
+      if (!context) {
         return Promise.reject(new OneKeyInternalError('Context not found.'));
       }
       this.realm!.write(() => {
@@ -1516,7 +1514,7 @@ class RealmDB implements DBAPI {
         'Context',
         MAIN_CONTEXT,
       );
-      if (typeof context !== 'undefined') {
+      if (context) {
         const wallets = this.realm!.objects<WalletSchema>('Wallet');
         for (const wallet of wallets) {
           if (context.pendingWallets?.has(wallet.id)) {
@@ -1589,7 +1587,7 @@ class RealmDB implements DBAPI {
           'Context',
           MAIN_CONTEXT,
         );
-        if (typeof context === 'undefined') {
+        if (!context) {
           return Promise.reject(new OneKeyInternalError('Context not found.'));
         }
         if (
@@ -1646,7 +1644,7 @@ class RealmDB implements DBAPI {
         'Context',
         MAIN_CONTEXT,
       );
-      if (typeof context === 'undefined') {
+      if (!context) {
         return Promise.reject(new OneKeyInternalError('Context not found.'));
       }
       if (wallet.type === WALLET_TYPE_HD) {

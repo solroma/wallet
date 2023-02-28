@@ -3,9 +3,10 @@ const webModuleTranspile = [
   '@gorhom',
   '@mysten/sui.js',
   'superstruct',
-  '@noble/curves',
   '@polkadot',
+  '@noble/curves',
   '@solana/web3.js',
+  '@onekeyhq',
 ];
 
 const extModuleTranspile = [
@@ -24,6 +25,13 @@ const extModuleTranspile = [
   '@polkadot/util-crypto',
   '@polkadot/keyring',
   '@solana/web3.js',
+  '@onekeyhq/blockchain-libs',
+  '@onekeyhq/components',
+  '@onekeyhq/kit',
+  '@onekeyhq/kit-bg',
+  '@onekeyhq/shared',
+  '@onekeyhq/engine',
+  '@onekeyhq/app',
 ];
 
 module.exports = {

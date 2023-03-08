@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-return */
 import type { ITransferInfo } from '@onekeyhq/engine/src/vaults/types';
 import backgroundApiProxy from '@onekeyhq/kit/src/background/instance/backgroundApiProxy';
+import { OnekeyNetwork } from '@onekeyhq/shared/src/config/networkIds';
 import {
   AppUIEventBusNames,
   appUIEventBus,
@@ -34,10 +35,15 @@ type IResult = { error: any; result: any };
  */
 const ensureSDKReady = async () =>
   new Promise((resolve) => {
-    appUIEventBus.emit(AppUIEventBusNames.EnsureChainWebEmbed, () => {
-      debugLogger.common.debug('ensure web embed exist resolve callback');
-      resolve(true);
-    });
+    console.log('========>>>>>>>>');
+    appUIEventBus.emit(
+      AppUIEventBusNames.EnsureChainWebEmbed,
+      () => {
+        debugLogger.common.debug('ensure web embed exist resolve callback');
+        resolve(true);
+      },
+      OnekeyNetwork.ada,
+    );
   });
 
 const composeTxPlan = async (

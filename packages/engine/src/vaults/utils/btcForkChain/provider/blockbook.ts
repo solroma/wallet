@@ -29,7 +29,7 @@ type ClientInfo = {
 class BlockBook {
   readonly request: AxiosInstance;
 
-  readonly backendRequest: AxiosInstance;
+  // readonly backendRequest: AxiosInstance;
 
   constructor(url: string) {
     this.request = axios.create({

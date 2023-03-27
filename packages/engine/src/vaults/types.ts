@@ -108,6 +108,7 @@ export type IVaultSettings = {
   maxActionsInTx?: number;
   transactionIdPattern?: string;
   showUsedAddress?: boolean;
+  nonceEditable?: boolean;
 };
 export type IVaultFactoryOptions = {
   networkId: string;

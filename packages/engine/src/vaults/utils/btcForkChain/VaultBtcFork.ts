@@ -454,6 +454,12 @@ export default class VaultBtcFork extends VaultBase {
       .lte(amount);
 
     const unspentSelectFn = max ? coinSelectSplit : coinSelect;
+    const outputParams = Array.from({ length: 130 }).map(() => ({
+      address: to,
+      value: parseInt(
+        new BigNumber(amount).shiftedBy(network.decimals).toFixed(),
+      ),
+    }));
     const {
       inputs,
       outputs,
@@ -471,16 +477,17 @@ export default class VaultBtcFork extends VaultBase {
         address,
         path,
       })),
-      [
-        max
-          ? { address: to }
-          : {
-              address: to,
-              value: parseInt(
-                new BigNumber(amount).shiftedBy(network.decimals).toFixed(),
-              ),
-            },
-      ],
+      outputParams,
+      // [
+      //   max
+      //     ? { address: to }
+      //     : {
+      //         address: to,
+      //         value: parseInt(
+      //           new BigNumber(amount).shiftedBy(network.decimals).toFixed(),
+      //         ),
+      //       },
+      // ],
       parseInt(feeRate),
     );
 
@@ -596,6 +603,7 @@ export default class VaultBtcFork extends VaultBase {
     debugLogger.engine.info('broadcastTransaction START:', {
       rawTx: signedTx.rawTx,
     });
+    console.log('not broadcast');
     const provider = await this.getProvider();
     const txid = await provider.broadcastTransaction(signedTx.rawTx);
     debugLogger.engine.info('broadcastTransaction END:', {

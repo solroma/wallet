@@ -304,7 +304,7 @@ function SendConfirm({
     />
   );
 
-  const sendConfirmAdvancedSettings = (
+  const advancedSettingsForm = (
     <SendConfirmAdvancedSettings
       accountId={accountId}
       networkId={networkId}
@@ -331,7 +331,8 @@ function SendConfirm({
     feeInfoError,
     feeInfoEditable,
     feeInput,
-    sendConfirmAdvancedSettings,
+    advancedSettings,
+    advancedSettingsForm,
 
     handleConfirm,
     onSecondaryActionPress: ({ close }) => {
@@ -356,7 +357,7 @@ function SendConfirm({
       isSendConfirm
       decodedTx={decodedTx}
       feeInput={feeInput}
-      sendConfirmAdvancedSettings={sendConfirmAdvancedSettings}
+      advancedSettingsForm={advancedSettingsForm}
     />
   );
 

@@ -225,7 +225,8 @@ export type ITxConfirmViewProps = ModalProps & {
   feeInfoLoading: boolean;
   feeInfoEditable?: boolean;
   feeInput?: JSX.Element;
-  sendConfirmAdvancedSettings?: JSX.Element | null;
+  advancedSettings?: SendConfirmAdvancedSettings;
+  advancedSettingsForm?: JSX.Element | null;
   feeInfoError?: Error | null;
 
   confirmDisabled?: boolean;
@@ -370,5 +371,13 @@ export type BatchSendConfirmOnSuccessData = {
 };
 
 export type SendConfirmAdvancedSettings = {
-  nonce: string;
+  originNonce: string;
+  currentNonce: string;
 };
+
+export enum EditableNonceStatusEnum {
+  None = 'None',
+  Equal = 'Equal',
+  Less = 'Less',
+  Greater = 'Greater',
+}

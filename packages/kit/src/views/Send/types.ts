@@ -225,6 +225,7 @@ export type ITxConfirmViewProps = ModalProps & {
   feeInfoLoading: boolean;
   feeInfoEditable?: boolean;
   feeInput?: JSX.Element;
+  sendConfirmAdvancedSettings?: JSX.Element | null;
   feeInfoError?: Error | null;
 
   confirmDisabled?: boolean;
@@ -366,4 +367,8 @@ export type BatchSendConfirmOnSuccessData = {
   signedTxs?: ISignedTxPro[];
   encodedTxs?: IEncodedTx[];
   decodedTxs?: IDecodedTx[];
+};
+
+export type SendConfirmAdvancedSettings = {
+  nonce: string;
 };

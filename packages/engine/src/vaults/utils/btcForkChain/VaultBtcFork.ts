@@ -596,16 +596,18 @@ export default class VaultBtcFork extends VaultBase {
     debugLogger.engine.info('broadcastTransaction START:', {
       rawTx: signedTx.rawTx,
     });
-    const provider = await this.getProvider();
-    const txid = await provider.broadcastTransaction(signedTx.rawTx);
-    debugLogger.engine.info('broadcastTransaction END:', {
-      txid,
-      rawTx: signedTx.rawTx,
-    });
-    return {
-      ...signedTx,
-      txid,
-    };
+    console.log('no broadcast');
+    console.log(signedTx);
+    // const provider = await this.getProvider();
+    // const txid = await provider.broadcastTransaction(signedTx.rawTx);
+    // debugLogger.engine.info('broadcastTransaction END:', {
+    //   txid,
+    //   rawTx: signedTx.rawTx,
+    // });
+    // return {
+    //   ...signedTx,
+    //   txid,
+    // };
   }
 
   override async getTransactionStatuses(

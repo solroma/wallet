@@ -23,7 +23,7 @@ type PresetNetwork = NetworkBase & {
   prices?: Array<Record<string, any>>;
   explorers?: Array<Record<string, any>>;
   extensions?: Record<string, any>;
-  clientApi?: Record<string, string>;
+  scanURL?: string;
 };
 
 type DBNetwork = NetworkBase & {
@@ -31,7 +31,7 @@ type DBNetwork = NetworkBase & {
   position: number;
   curve?: string;
   explorerURL?: string;
-  clientApi?: Record<string, string>;
+  scanURL?: string;
 };
 
 type EvmExtraInfo = {
@@ -76,7 +76,7 @@ type Network = NetworkBase & {
   // TODO: rpcURLs
   blockExplorerURL: BlockExplorer;
   settings: IVaultSettings;
-  clientApi?: Record<string, string>;
+  scanURL?: string;
 };
 
 type AddEVMNetworkParams = {
@@ -117,18 +117,7 @@ type EIP1559Fee = {
 
   gasPrice?: string; // in GWEI
   gasPriceValue?: string;
-
-  confidence?: number;
 };
-
-// metamask
-enum NetworkCongestionThresholds {
-  notBusy = 0,
-  stable = 0.33,
-  busy = 0.66,
-}
-
-export { NetworkCongestionThresholds };
 
 export type {
   DBNetwork,

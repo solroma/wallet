@@ -57,7 +57,6 @@ export type IVaultSettings = {
   accountNameInfo: Record<string, AccountNameInfo>;
   feeInfoEditable: boolean;
   privateKeyExportEnabled: boolean;
-  publicKeyExportEnabled?: boolean;
   tokenEnabled: boolean;
   txCanBeReplaced: boolean;
 
@@ -80,7 +79,6 @@ export type IVaultSettings = {
   activateTokenRequired?: boolean;
 
   minGasLimit?: number;
-  maxGasLimit?: number;
   minGasPrice?: string;
 
   cannotSendToSelf?: boolean;
@@ -110,7 +108,6 @@ export type IVaultSettings = {
   maxActionsInTx?: number;
   transactionIdPattern?: string;
   showUsedAddress?: boolean;
-  nonceEditable?: boolean;
 };
 export type IVaultFactoryOptions = {
   networkId: string;
@@ -236,7 +233,6 @@ export enum IEncodedTxUpdateType {
   tokenApprove = 'tokenApprove',
   speedUp = 'speedUp',
   cancel = 'cancel',
-  advancedSettings = 'advancedSettings',
 }
 export type IEncodedTxUpdateOptions = {
   type?: IEncodedTxUpdateType;
@@ -254,15 +250,9 @@ export type IFeeInfoPrice = string | EIP1559Fee; // in GWEI
 export type IFeeInfoUnit = {
   eip1559?: boolean;
   priceValue?: string;
-  price?: string; // in GWEI
-  price1559?: EIP1559Fee;
+  price?: IFeeInfoPrice; // in GWEI
   limit?: string;
   limitUsed?: string;
-  similarToPreset?: string;
-  waitingSeconds?: number;
-  isBtcForkChain?: boolean;
-  btcFee?: number;
-  feeRate?: string;
 };
 // TODO rename to IFeeInfoMeta
 export type IFeeInfo = {
@@ -283,14 +273,7 @@ export type IFeeInfo = {
   eip1559?: boolean;
   customDisabled?: boolean;
   baseFeeValue?: string; // A base fee: e.g. L1 fee for Layer 2 networks
-  extraInfo?: {
-    tokensChangedTo?: { [key: string]: string | undefined };
-    networkCongestion?: number;
-    estimatedTransactionCount?: number;
-    originalPrices?: Array<EIP1559Fee | string> | null;
-  } | null;
-  isBtcForkChain?: boolean;
-  feeList?: number[];
+  extraInfo?: any | null;
 };
 export type IFeeInfoSelectedType = 'preset' | 'custom';
 export type IFeeInfoSelected = {
@@ -341,7 +324,6 @@ export type IPrepareHardwareAccountsParams = {
   coinType: string;
   template: string;
   skipCheckAccountExist?: boolean;
-  confirmOnDevice?: boolean;
 };
 export type IPrepareAccountsParams =
   | IPrepareWatchingAccountsParams

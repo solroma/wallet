@@ -22,7 +22,7 @@ export const TxDetailHashMoreMenu: FC<Props> = (props) => {
     const baseOptions: IBaseMenuOptions = [
       {
         id: 'action_copy_hash',
-        onPress: () => copyText(decodedTx.txid),
+        onPress: () => setTimeout(() => copyText(decodedTx.txid), 200),
         icon: 'Square2StackOutline',
       },
       openBlockBrowser.hasAvailable && {

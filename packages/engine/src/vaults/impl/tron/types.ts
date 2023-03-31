@@ -34,21 +34,28 @@ export type IRPCCallResponse = {
   };
 };
 
-export type ITRC10Detail = {
-  id: number;
-  abbr: string;
-  name: string;
-  imgUrl: string;
-  precision: number;
-};
-
-export type ITRC20Detail = {
-  name: string;
-  symbol: string;
-  decimals: number;
-  icon_url: string;
-  contract_address: string;
-  contract_name: string;
+export type IContractDetail = {
+  'address': string;
+  'balance': number;
+  'verify_status': number;
+  'is_proxy': boolean;
+  'proxy_implementation': string;
+  'old_proxy_implementation': string;
+  'name': string;
+  'description': string;
+  'vip': boolean;
+  'tokenInfo': {
+    'tokenId': string;
+    'tokenAbbr': string;
+    'tokenName': string;
+    'tokenDecimal': number;
+    'tokenCanShow': number;
+    'tokenType': string;
+    'tokenLogo': string;
+    'tokenLevel': string;
+    'issuerAddr': string;
+    'vip': boolean;
+  };
 };
 
 export type ITokenDetail = {
@@ -65,8 +72,4 @@ export type ITokenDetail = {
   'amount': number;
   'nrOfTokenHolders': number;
   'transferCount': number;
-};
-
-export type IClientApi = {
-  tronscan: string;
 };

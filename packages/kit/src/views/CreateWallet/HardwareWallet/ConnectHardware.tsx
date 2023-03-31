@@ -60,6 +60,8 @@ import { showDialog } from '../../../utils/overlayUtils';
 
 import type { RouteProp } from '@react-navigation/native';
 
+import type { RouteProp } from '@react-navigation/native';
+
 type NavigationProps = ModalScreenProps<RootRoutesParams> &
   ModalScreenProps<CreateWalletRoutesParams>;
 

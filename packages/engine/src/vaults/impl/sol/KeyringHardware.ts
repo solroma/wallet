@@ -1,8 +1,6 @@
 /* eslint no-unused-vars: ["warn", { "argsIgnorePattern": "^_" }] */
 /* eslint @typescript-eslint/no-unused-vars: ["warn", { "argsIgnorePattern": "^_" }] */
 
-import { VersionedTransaction } from '@solana/web3.js';
-
 import type { SignedTx, UnsignedTx } from '@onekeyhq/engine/src/types/provider';
 import { convertDeviceError } from '@onekeyhq/shared/src/device/deviceErrorUtils';
 import {
@@ -22,8 +20,7 @@ import type {
   IPrepareHardwareAccountsParams,
   ISignCredentialOptions,
 } from '../../types';
-import type { INativeTxSol } from './types';
-import type { PublicKey } from '@solana/web3.js';
+import type { PublicKey, Transaction } from '@solana/web3.js';
 
 export class KeyringHardware extends KeyringHardwareBase {
   override async signTransaction(
@@ -35,17 +32,13 @@ export class KeyringHardware extends KeyringHardwareBase {
     const { connectId, deviceId } = await this.getHardwareInfo();
     const passphraseState = await this.getWalletPassphraseState();
     const { nativeTx: transaction, feePayer } = unsignedTx.payload as {
-      nativeTx: INativeTxSol;
+      nativeTx: Transaction;
       feePayer: PublicKey;
     };
 
-    const isVersionedTransaction = transaction instanceof VersionedTransaction;
-
     const response = await HardwareSDK.solSignTransaction(connectId, deviceId, {
       path: dbAccount.path,
-      rawTx: isVersionedTransaction
-        ? Buffer.from(transaction.message.serialize()).toString('hex')
-        : transaction.serializeMessage().toString('hex'),
+      rawTx: transaction.serializeMessage().toString('hex'),
       ...passphraseState,
     });
 
@@ -54,9 +47,9 @@ export class KeyringHardware extends KeyringHardwareBase {
       transaction.addSignature(feePayer, Buffer.from(signature, 'hex'));
       return {
         txid: signature,
-        rawTx: Buffer.from(
-          transaction.serialize({ requireAllSignatures: false }),
-        ).toString('base64'),
+        rawTx: transaction
+          .serialize({ requireAllSignatures: false })
+          .toString('base64'),
       };
     }
 
@@ -125,28 +118,5 @@ export class KeyringHardware extends KeyringHardwareBase {
       return response.payload.address;
     }
     throw convertDeviceError(response.payload);
-  }
-
-  override async batchGetAddress(
-    params: IGetAddressParams[],
-  ): Promise<{ path: string; address: string }[]> {
-    const HardwareSDK = await this.getHardwareSDKInstance();
-    const { connectId, deviceId } = await this.getHardwareInfo();
-    const passphraseState = await this.getWalletPassphraseState();
-    const response = await HardwareSDK.solGetAddress(connectId, deviceId, {
-      ...passphraseState,
-      bundle: params.map(({ path, showOnOneKey }) => ({
-        path,
-        showOnOneKey: !!showOnOneKey,
-      })),
-    });
-
-    if (!response.success) {
-      throw convertDeviceError(response.payload);
-    }
-    return response.payload.map((item) => ({
-      path: item.path ?? '',
-      address: item.address ?? '',
-    }));
   }
 }

@@ -13,10 +13,10 @@
   "dependencies": {
     "@onekeyhq/components": "*",
     "@onekeyhq/kit": "*",
-    "expo": "^48.0.4",
+    "expo": "^48.0.9",
     "firebase": "^9.8.2",
-    "moti": "^0.22.0",
-    "react-native-web": "0.18.10"
+    "moti": "^0.24.2",
+    "react-native-web": "0.19.1"
   },
   "private": true
 }

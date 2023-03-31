@@ -2,13 +2,10 @@
 import {
   Connection,
   Ed25519PublicKey,
-  IntentScope,
   JsonRpcProvider,
-  messageWithIntent,
   toB64,
   toSerializedSignature,
 } from '@mysten/sui.js';
-import { blake2b } from '@noble/hashes/blake2b';
 import { hexToBytes } from '@noble/hashes/utils';
 
 import { batchGetPublicKeys } from '@onekeyhq/engine/src/secret';
@@ -22,11 +19,11 @@ import { AccountType } from '../../../types/account';
 import { KeyringHdBase } from '../../keyring/KeyringHdBase';
 import { addHexPrefix } from '../../utils/hexUtils';
 
-import { handleSignData, toTransaction } from './utils';
+import { handleSignDataWithRpcVersion, toTransaction } from './utils';
 
 import type { ExportedSeedCredential } from '../../../dbs/base';
 import type { DBSimpleAccount } from '../../../types/account';
-import type { AptosMessage, CommonMessage } from '../../../types/message';
+import type { AptosMessage } from '../../../types/message';
 import type {
   IPrepareSoftwareAccountsParams,
   ISignCredentialOptions,
@@ -124,9 +121,8 @@ export class KeyringHd extends KeyringHdBase {
 
     const { encodedTx } = unsignedTx.payload;
     const txnBytes = await toTransaction(client, sender, encodedTx);
-    const [signature] = await signer.sign(
-      Buffer.from(handleSignData(txnBytes)),
-    );
+    const signData = handleSignDataWithRpcVersion(client, txnBytes);
+    const [signature] = await signer.sign(Buffer.from(signData));
 
     const serializeSignature = toSerializedSignature({
       signatureScheme: 'ED25519',
@@ -144,29 +140,9 @@ export class KeyringHd extends KeyringHdBase {
   }
 
   override async signMessage(
-    messages: CommonMessage[],
+    messages: AptosMessage[],
     options: ISignCredentialOptions,
   ): Promise<string[]> {
-    const dbAccount = (await this.getDbAccount()) as DBSimpleAccount;
-    const signers = await this.getSigners(options.password || '', [
-      dbAccount.address,
-    ]);
-    const signer = signers[dbAccount.address];
-
-    return Promise.all(
-      messages.map(async (message) => {
-        const messageScope = messageWithIntent(
-          IntentScope.PersonalMessage,
-          hexToBytes(message.message),
-        );
-        const digest = blake2b(messageScope, { dkLen: 32 });
-        const [signature] = await signer.sign(Buffer.from(digest));
-        return toSerializedSignature({
-          signatureScheme: 'ED25519',
-          signature,
-          pubKey: new Ed25519PublicKey(hexToBytes(dbAccount.pub)),
-        });
-      }),
-    );
+    return Promise.reject(new Error('Not implemented'));
   }
 }

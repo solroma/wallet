@@ -3,9 +3,7 @@ const webModuleTranspile = [
   '@gorhom',
   '@mysten/sui.js',
   'superstruct',
-  '@noble/curves',
   '@polkadot',
-  '@solana/web3.js',
 ];
 
 const extModuleTranspile = [
@@ -14,7 +12,6 @@ const extModuleTranspile = [
   'popmotion',
   '@mysten/sui.js',
   'superstruct',
-  '@noble/curves',
   '@polkadot/api',
   '@polkadot/wasm-bridge',
   '@polkadot/types-codec',
@@ -23,7 +20,6 @@ const extModuleTranspile = [
   '@polkadot/types',
   '@polkadot/util-crypto',
   '@polkadot/keyring',
-  '@solana/web3.js',
 ];
 
 module.exports = {

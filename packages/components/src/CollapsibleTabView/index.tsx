@@ -104,6 +104,12 @@ const Container: ForwardRefRenderFunction<
     },
   }));
 
+  useImperativeHandle(ref, () => ({
+    setPageIndex: (pageIndex: number) => {
+      setIndex(pageIndex);
+    },
+  }));
+
   const renderTabBar = useCallback(
     (props: any) => {
       const tabContainerWidth = isVerticalLayout

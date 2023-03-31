@@ -15,7 +15,7 @@ import {
 import { StyleSheet } from 'react-native';
 
 import { usePrevious } from '@onekeyhq/kit/src/hooks';
-import { useIsMounted } from '@onekeyhq/kit/src/hooks/useIsMounted';
+import { doHapticsWhenEnabled } from '@onekeyhq/shared/src/haptics';
 
 import Center from '../Box';
 import Icon from '../Icon';
@@ -583,17 +583,11 @@ const OkButton = forwardRef<
   typeof Button,
   ComponentProps<typeof Button> & OkButtonProps
 >(({ onPress, onPromise, isLoading, ...props }, ref) => {
-  const [loading, innerSetLoading] = useState(isLoading);
+  const [loading, setLoading] = useState(isLoading);
   // Handling when isLoading and onPromise are present at the same time
   const prevLoadingState = usePrevious<boolean | undefined>(loading);
-  const isMounted = useIsMounted();
-  const setLoading = useCallback(
-    (loadingStatus: boolean) => {
-      if (isMounted.current) innerSetLoading(loadingStatus);
-    },
-    [isMounted],
-  );
   const handlePress = useCallback(() => {
+    doHapticsWhenEnabled();
     if (onPromise && typeof isLoading === 'undefined') {
       setLoading(true);
       setTimeout(() => {
@@ -606,7 +600,7 @@ const OkButton = forwardRef<
     } else if (onPress) {
       onPress?.();
     }
-  }, [onPromise, isLoading, onPress, setLoading]);
+  }, [onPromise, isLoading, onPress]);
   useEffect(() => {
     if (
       typeof isLoading !== 'undefined' ||
@@ -615,7 +609,7 @@ const OkButton = forwardRef<
     ) {
       setLoading(!!isLoading);
     }
-  }, [isLoading, prevLoadingState, setLoading]);
+  }, [isLoading, prevLoadingState]);
   return (
     <Button ref={ref} {...props} onPress={handlePress} isLoading={loading} />
   );

@@ -15,7 +15,7 @@ import type {
   ISignCredentialOptions,
   IUnsignedTxPro,
 } from '../../types';
-import type { IClientApi, IEncodedTxXmr, ISendFundsArgs } from './types';
+import type { IEncodedTxXmr, ISendFundsArgs } from './types';
 
 // @ts-ignore
 export class KeyringImported extends KeyringImportedBase {
@@ -66,7 +66,7 @@ export class KeyringImported extends KeyringImportedBase {
   ): Promise<SignedTx> {
     const { password } = options;
     const moneroApi = await getMoneroApi();
-    const clientApi = await this.getClientApi<IClientApi>();
+    const scanUrl = await this.getScanUrl();
 
     const [privateKey] = Object.values(
       await this.getPrivateKeys(password || ''),
@@ -114,10 +114,7 @@ export class KeyringImported extends KeyringImportedBase {
       resolvedPaymentID: '',
       resolvedPaymentID_fieldIsVisible: false,
     };
-    const signedTx = await moneroApi.sendFunds(
-      sendFundsArgs,
-      clientApi.mymonero,
-    );
+    const signedTx = await moneroApi.sendFunds(sendFundsArgs, scanUrl);
     return signedTx;
   }
 }

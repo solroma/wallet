@@ -32,11 +32,13 @@ class ServiceHistory extends ServiceBase {
     accountId,
     tokenIdOnNetwork,
     limit,
+    isPending,
   }: {
     networkId: string;
     accountId: string;
     tokenIdOnNetwork?: string;
     limit?: number;
+    isPending?: boolean;
   }): Promise<IHistoryTx[]> {
     /*
     {
@@ -55,6 +57,7 @@ class ServiceHistory extends ServiceBase {
       networkId,
       accountId,
       tokenIdOnNetwork,
+      isPending,
     });
     return items;
   }

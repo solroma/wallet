@@ -151,6 +151,7 @@ function ScreenSendEditFee({ ...rest }) {
     });
 
   const isEIP1559Fee = feeInfoPayload?.info?.eip1559;
+  const isBtcForkChain = feeInfoPayload?.info?.isBtcForkChain;
 
   useEffect(() => {
     debugLogger.sendTx.info('SendEditFee  >>>>  ', feeInfoPayload, encodedTx);
@@ -204,6 +205,7 @@ function ScreenSendEditFee({ ...rest }) {
       ...(isEIP1559Fee
         ? { price1559: priceInfo as EIP1559Fee }
         : { price: priceInfo as string }),
+      ...(isBtcForkChain ? { feeRate: data.feeRate } : {}),
     };
 
     if (type === 'custom') {
@@ -317,9 +319,18 @@ function ScreenSendEditFee({ ...rest }) {
       } else {
         setValue('gasPrice', new BigNumber(price ?? 0).toFixed());
       }
+
+      if (isBtcForkChain) {
+        setValue(
+          'feeRate',
+          new BigNumber(price ?? 0)
+            .shiftedBy(feeInfoPayload.info.feeDecimals ?? 8)
+            .toFixed(),
+        );
+      }
       setValue('gasLimit', new BigNumber(limit ?? 0).toFixed());
     },
-    [isEIP1559Fee, setValue],
+    [isEIP1559Fee, isBtcForkChain, setValue, feeInfoPayload?.info.feeDecimals],
   );
 
   useEffect(() => {
@@ -455,6 +466,7 @@ function ScreenSendEditFee({ ...rest }) {
         useFormReturn={useFormReturn}
         saveCustom={saveCustom}
         setSaveCustom={setSaveCustom}
+        encodedTx={encodedTx}
       />
     );
     const presetFeeForm = forBatchSend ? (

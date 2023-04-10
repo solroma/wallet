@@ -258,6 +258,8 @@ export type IFeeInfoUnit = {
   limitUsed?: string;
   similarToPreset?: string;
   waitingSeconds?: number;
+  isBtcForkChain?: boolean;
+  btcFee?: number;
 };
 // TODO rename to IFeeInfoMeta
 export type IFeeInfo = {

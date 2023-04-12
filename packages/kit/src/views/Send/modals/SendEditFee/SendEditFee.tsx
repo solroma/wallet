@@ -548,7 +548,7 @@ function ScreenSendEditFee({ ...rest }) {
           : 'action__apply'
       }
       primaryActionProps={{
-        isDisabled: feeInfoLoading,
+        isDisabled: feeInfoLoading || (isBtcForkChain && !formState.isValid),
       }}
       onPrimaryActionPress={() => onSubmit()}
       hideSecondaryAction

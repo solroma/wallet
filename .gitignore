@@ -77,7 +77,7 @@ test-report.html
 /packages/desktop/public/res
 /packages/desktop/public/res-updater.zip
 
-ios/.xcode.env.local
+packages/app/ios/.xcode.env.local
 
 # Temporary files created by Metro to check the health of the file watcher
 .metro-health-check*

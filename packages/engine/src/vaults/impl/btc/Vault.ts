@@ -51,11 +51,11 @@ export default class Vault extends VaultBtcFork {
   }
 
   override getDefaultBlockNums(): number[] {
-    return [5, 2, 1];
+    return [25, 5, 1];
   }
 
   override getDefaultBlockTime(): number {
-    return 150;
+    return 600;
   }
 
   override getAccountXpub(account: DBUTXOAccount): string {

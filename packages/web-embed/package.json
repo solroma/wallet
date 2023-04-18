@@ -15,9 +15,9 @@
     "@onekeyhq/engine": "*",
     "@onekeyhq/kit": "*",
     "cardano-coin-selection-asmjs": "1.1.5",
-    "expo": "^48.0.9",
+    "expo": "^48.0.11",
     "firebase": "^9.8.2",
-    "react-native-web": "0.19.1",
+    "react-native-web": "0.19.4",
     "react-router-dom": "^6.3.0"
   },
   "private": true

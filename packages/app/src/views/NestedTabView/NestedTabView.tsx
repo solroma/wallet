@@ -10,13 +10,11 @@ import {
 
 import { UIManager, findNodeHandle } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
-import {
-  useSharedValue,
-  withSpring,
-  withTiming,
-} from 'react-native-reanimated';
+import { useSharedValue, withTiming } from 'react-native-reanimated';
 
+import { useIsVerticalLayout } from '@onekeyhq/components';
 import { enableOnPressAnim } from '@onekeyhq/components/src/utils/useBeforeOnPress';
+import { useNavigationActions } from '@onekeyhq/kit/src/hooks';
 import debugLogger from '@onekeyhq/shared/src/logger/debugLogger';
 import platformEnv from '@onekeyhq/shared/src/platformEnv';
 
@@ -53,12 +51,14 @@ const NestedTabView: ForwardRefRenderFunction<
     children,
     onChange,
     defaultIndex,
-    canOpenDrawer,
     scrollEnabled = true,
     ...rest
   },
   ref,
 ) => {
+  const isVerticalLayout = useIsVerticalLayout();
+  const canOpenDrawer = rest.canOpenDrawer && isVerticalLayout;
+  const { openDrawer } = useNavigationActions();
   const tabRef = useRef<typeof NativeNestedTabView>(null);
   // const { width: screenWidth } = useWindowDimensions();
   const tabIndex = useSharedValue(defaultIndex);
@@ -71,6 +71,9 @@ const NestedTabView: ForwardRefRenderFunction<
   const native = Gesture.Native();
 
   const lockVertical = useCallback(() => {
+    // when fingers move,
+    // disable the onPress function
+    enableOnPressAnim.value = 0;
     if (platformEnv.isNativeAndroid) {
       // console.log('lockVertical');
       lockDirection.value = LockDirection.Vertical;
@@ -81,6 +84,9 @@ const NestedTabView: ForwardRefRenderFunction<
   }, [lastTransX, lockDirection]);
 
   const lockHorizontal = useCallback(() => {
+    // when fingers move,
+    // disable the onPress function
+    enableOnPressAnim.value = 0;
     if (platformEnv.isNativeAndroid) {
       // console.log('lockHorizontal');
       // setInnerDisableRefresh(false);
@@ -119,15 +125,16 @@ const NestedTabView: ForwardRefRenderFunction<
       if (canOpenDrawer) {
         if (tabIndex.value === 0) {
           if (translationX > drawerOpenDistance) {
-            nestedTabTransX.value = withSpring(0, {
-              velocity: 50,
-              stiffness: 1000,
-              damping: 500,
-              mass: 3,
-              overshootClamping: true,
-              restDisplacementThreshold: 0.01,
-              restSpeedThreshold: 0.01,
-            });
+            openDrawer();
+            // nestedTabTransX.value = withSpring(0, {
+            //   velocity: 50,
+            //   stiffness: 1000,
+            //   damping: 500,
+            //   mass: 3,
+            //   overshootClamping: true,
+            //   restDisplacementThreshold: 0.01,
+            //   restSpeedThreshold: 0.01,
+            // });
           } else {
             resetNestedTabTransX();
           }
@@ -138,7 +145,7 @@ const NestedTabView: ForwardRefRenderFunction<
       // restore the onPress function
       enableOnPressAnim.value = withTiming(1, { duration: 100 });
     },
-    [canOpenDrawer, resetGesture, tabIndex.value],
+    [canOpenDrawer, resetGesture, tabIndex, openDrawer],
   );
   const pan = useMemo(() => {
     const basePan = Gesture.Pan();
@@ -166,9 +173,6 @@ const NestedTabView: ForwardRefRenderFunction<
     if (platformEnv.isNativeAndroid) {
       // onTouchesMove works better on Android
       basePan.onTouchesMove(({ allTouches }) => {
-        // when fingers move,
-        // disable the onPress function
-        enableOnPressAnim.value = 0;
         if (lockDirection.value === LockDirection.Vertical) {
           return;
         }

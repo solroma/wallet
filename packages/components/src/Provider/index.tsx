@@ -11,7 +11,7 @@ import platformEnv from '@onekeyhq/shared/src/platformEnv';
 import LOCALES from '../locale';
 import { Body1Props, Body2Props, SubheadingProps } from '../Typography';
 
-import { SCREEN_SIZE, getSize } from './device';
+import { SCREEN_SIZE, getScreenSize } from './device';
 import useLoadCustomFonts from './hooks/useLoadCustomFonts';
 import { Context } from './hooks/useProviderValue';
 import COLORS from './theme';
@@ -33,6 +33,9 @@ export type UIProviderProps = {
   reduxReady?: boolean;
 
   waitFontLoaded?: boolean;
+
+  leftSidebarCollapsed?: boolean;
+  setLeftSidebarCollapsed?: (value: boolean) => void;
 };
 export type IFontProviderProps = {
   children?: ReactNode;
@@ -57,6 +60,8 @@ const Provider: FC<UIProviderProps> = ({
   locale,
   reduxReady,
   waitFontLoaded,
+  leftSidebarCollapsed,
+  setLeftSidebarCollapsed,
 }) => {
   const { width, height } = useWindowDimensions();
 
@@ -68,10 +73,20 @@ const Provider: FC<UIProviderProps> = ({
       device: {
         screenWidth: width,
         screenHeight: height,
-        size: getSize(width),
+        size: getScreenSize(width),
       },
+      leftSidebarCollapsed,
+      setLeftSidebarCollapsed,
     }),
-    [themeVariant, locale, reduxReady, width, height],
+    [
+      themeVariant,
+      locale,
+      reduxReady,
+      width,
+      height,
+      leftSidebarCollapsed,
+      setLeftSidebarCollapsed,
+    ],
   );
 
   const themeVar = useMemo(

@@ -8,7 +8,6 @@ import type {
 import { useCallback, useMemo, useRef, useState } from 'react';
 
 import { flatten } from 'lodash';
-import { Icon as NBIcon } from 'native-base';
 import {
   StyleSheet,
   TouchableWithoutFeedback,
@@ -20,7 +19,6 @@ import { useUserDevice } from '@onekeyhq/components';
 
 import Box from '../Box';
 import Icon from '../Icon';
-import { ChevronDown } from '../Icon/react/mini';
 import OverlayContainer from '../OverlayContainer';
 import Pressable from '../Pressable';
 import Text from '../Text';
@@ -410,7 +408,9 @@ function Select<T = any>({
                   )}
                 </Box>
               </Box>
-              <NBIcon as={ChevronDown} size={5} ml="auto" />
+              <Box ml="auto">
+                <Icon size={5} name="ChevronDownMini" />
+              </Box>
             </Box>
           )
         }

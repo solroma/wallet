@@ -16,7 +16,6 @@
       "fallbackToCacheTimeout": 0
     },
     "assetBundlePatterns": ["**/*"],
-    "jsEngine": "jsc",
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "so.onekey.wallet",

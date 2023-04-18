@@ -39,6 +39,15 @@ buildscript {
 }
 
 allprojects {
+    // https://github.com/facebook/react-native/issues/35210
+    // TODO: remove this section once update to 0.71
+    configurations.all {
+        resolutionStrategy {
+            // Remove this override in 0.65+, as a proper fix is included in react-native itself.
+            force "com.facebook.react:react-native:0.68.3"
+        }
+    }
+    
     repositories { 
         maven {
             // expo-camera bundles a custom com.google.android:cameraview

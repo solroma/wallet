@@ -1,6 +1,6 @@
 {
   "name": "@onekeyhq/desktop",
-  "main": "__generated__/AppEntry.js",
+  "main": "index.js",
   "version": "0.0.1",
   "description": "Multi-chain support for BTC/ETH/BNB/NEAR/Polygon/Solana/Avalanche/Fantom and others",
   "private": true,
@@ -39,7 +39,7 @@
     "expo": "^48.0.11",
     "keytar": "^7.9.0",
     "node-fetch": "^2.6.7",
-    "react-native-web": "0.19.1",
+    "react-native-web": "0.19.4",
     "rimraf": "^3.0.2"
   },
   "devDependencies": {

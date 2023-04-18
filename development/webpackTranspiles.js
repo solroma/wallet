@@ -6,6 +6,7 @@ const webModuleTranspile = [
   '@polkadot',
   '@noble/curves',
   '@solana/web3.js',
+  '@onekeyhq',
 ];
 
 const extModuleTranspile = [

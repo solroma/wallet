@@ -119,7 +119,7 @@ function checkPassword(context: OneKeyContext, password: string): boolean {
   }
 }
 interface DBAPI {
-  getContext(): Promise<OneKeyContext | undefined>;
+  getContext(): Promise<OneKeyContext | null>;
   updatePassword(oldPassword: string, newPassword: string): Promise<void>;
   reset(): Promise<void>;
 

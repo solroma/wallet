@@ -7,7 +7,7 @@ import type { FontProps } from '@onekeyhq/components/src/Typography';
 
 import type { NativeSyntheticEvent, StyleProp, ViewStyle } from 'react-native';
 
-const getDrawerWidth = () => {
+export const getDrawerWidth = () => {
   const { width } = Dimensions.get('window');
   const expectedWidth = width * 0.85;
   const maxWidth = 400;

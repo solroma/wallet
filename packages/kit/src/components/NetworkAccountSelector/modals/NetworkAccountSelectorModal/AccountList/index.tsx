@@ -20,7 +20,7 @@ import { shortenAddress } from '@onekeyhq/components/src/utils';
 import type { IAccount } from '@onekeyhq/engine/src/types';
 
 import backgroundApiProxy from '../../../../../background/instance/backgroundApiProxy';
-import { useNetwork } from '../../../../../hooks';
+import { useDebounce, useNetwork } from '../../../../../hooks';
 import { useActiveWalletAccount } from '../../../../../hooks/redux';
 import { ACCOUNT_SELECTOR_AUTO_SCROLL_DELAY_ACCOUNT } from '../../../../Header/AccountSelectorChildren/accountSelectorConsts';
 import { AccountSectionLoadingSkeleton } from '../../../../Header/AccountSelectorChildren/RightAccountSection';
@@ -39,6 +39,24 @@ import SectionHeader from './SectionHeader';
 
 import type { useAccountSelectorInfo } from '../../../hooks/useAccountSelectorInfo';
 import type { INetworkAccountSelectorAccountListSectionData } from '../../../hooks/useAccountSelectorSectionData';
+
+export function searchAccount(
+  accounts: INetworkAccountSelectorAccountListSectionData[],
+  terms: string,
+): INetworkAccountSelectorAccountListSectionData[] {
+  const keywork = terms.toLowerCase();
+  return accounts.map((item) => {
+    const searchResult = item.data.filter(
+      ({ name, address }) =>
+        name.toLowerCase().includes(keywork) ||
+        address.toLowerCase().includes(keywork),
+    );
+    return {
+      ...item,
+      data: searchResult,
+    };
+  });
+}
 
 type EmptyAccountStateProps = {
   walletId: string;
@@ -168,9 +186,14 @@ function DerivationSectionHeader({
 
 function AccountList({
   accountSelectorInfo,
+  searchValue,
 }: {
   accountSelectorInfo: ReturnType<typeof useAccountSelectorInfo>;
+  searchValue: string;
 }) {
+  const terms = useDebounce(searchValue, 500);
+  const intl = useIntl();
+
   const {
     selectedNetworkId,
     selectedNetwork,
@@ -184,8 +207,12 @@ function AccountList({
     INetworkAccountSelectorAccountListSectionData[]
   >([]);
   useEffect(() => {
-    setDataSource(data);
-  }, [data]);
+    if (terms.length && data.length > 0) {
+      setDataSource(searchAccount(data, terms));
+    } else {
+      setDataSource(data);
+    }
+  }, [data, terms]);
 
   const hasMoreDerivationPath = useMemo(() => data.length > 1, [data]);
 
@@ -292,6 +319,16 @@ function AccountList({
     };
   }, [dataSource]);
 
+  const getSearchInfo = useCallback(() => {
+    const { isEmptyDataSource } = getDataSourceInfo();
+    const isEmptySearchData =
+      isEmptyDataSource && data.every((section) => section.data.length);
+
+    return {
+      isEmptySearchData,
+    };
+  }, [data, getDataSourceInfo]);
+
   const ListItemSeparatorComponent = useCallback(
     (props) => <AccountListItemSeparator {...props} dataSource={dataSource} />,
     [dataSource],
@@ -317,7 +354,6 @@ function AccountList({
       renderSectionHeader={({
         section,
       }: {
-        // eslint-disable-next-line react/no-unused-prop-types
         section: INetworkAccountSelectorAccountListSectionData;
       }) => {
         if (isListAccountsSingleWalletMode) {
@@ -391,10 +427,25 @@ function AccountList({
         section: INetworkAccountSelectorAccountListSectionData;
       }) => {
         const { isEmptyDataSource } = getDataSourceInfo();
+        const { isEmptySearchData } = getSearchInfo();
+
         const { isEmptySectionData, isPreloadingCreate, sectionIndex } =
           getSectionMetaInfo({
             section,
           });
+        if (isEmptySearchData && sectionIndex === 0) {
+          return (
+            <Empty
+              flex={1}
+              mt={8}
+              emoji="🔍"
+              title={intl.formatMessage({
+                id: 'content__no_results',
+                defaultMessage: 'No Result',
+              })}
+            />
+          );
+        }
         return (
           <>
             {isPreloadingCreate ? (

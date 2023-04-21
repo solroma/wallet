@@ -23,8 +23,8 @@ import {
   getActiveWalletAccount,
   useActiveWalletAccount,
 } from '@onekeyhq/kit/src/hooks/redux';
-import { ReceiveTokenRoutes } from '@onekeyhq/kit/src/routes/Modal/routes';
-import type { ReceiveTokenRoutesParams } from '@onekeyhq/kit/src/routes/Modal/types';
+import type { ReceiveTokenRoutesParams } from '@onekeyhq/kit/src/routes/Root/Modal/types';
+import { ReceiveTokenModalRoutes } from '@onekeyhq/kit/src/routes/routesEnum';
 import type { ModalScreenProps } from '@onekeyhq/kit/src/routes/types';
 import {
   ModalRoutes,
@@ -32,13 +32,11 @@ import {
   TabRoutes,
 } from '@onekeyhq/kit/src/routes/types';
 import type { SendRoutesParams } from '@onekeyhq/kit/src/views/Send/types';
-import platformEnv from '@onekeyhq/shared/src/platformEnv';
 
 import backgroundApiProxy from '../../../background/instance/backgroundApiProxy';
 import { useAccountValues, useNavigationActions } from '../../../hooks';
 import { useCopyAddress } from '../../../hooks/useCopyAddress';
 import useOpenBlockBrowser from '../../../hooks/useOpenBlockBrowser';
-import { SWAP_TAB_NAME } from '../../../store/reducers/market';
 import { calculateGains } from '../../../utils/priceUtils';
 import AccountMoreMenu from '../../Overlay/AccountMoreMenu';
 import { showAccountValueSettings } from '../../Overlay/AccountValueSettings';
@@ -123,7 +121,10 @@ const AccountAmountInfo: FC = () => {
             _hover={{ bg: 'surface-hovered' }}
             _pressed={{ bg: 'surface-pressed' }}
             onPress={() => {
-              copyAddress(account?.displayAddress ?? account?.address);
+              copyAddress({
+                address: account?.address,
+                displayAddress: account?.displayAddress,
+              });
             }}
           >
             <Text
@@ -194,13 +195,8 @@ const AccountOption: FC<AccountOptionProps> = ({ isSmallView }) => {
         }
       }
     }
-    if (isVertical) {
-      backgroundApiProxy.serviceMarket.switchMarketTopTab(SWAP_TAB_NAME);
-      navigation.getParent()?.navigate(TabRoutes.Market);
-    } else {
-      navigation.getParent()?.navigate(TabRoutes.Swap);
-    }
-  }, [network, account, navigation, isVertical]);
+    navigation.getParent()?.navigate(TabRoutes.Swap);
+  }, [network, account, navigation]);
 
   return (
     <Box flexDirection="row" px={isVertical ? 1 : 0} mx={-3}>
@@ -239,7 +235,7 @@ const AccountOption: FC<AccountOptionProps> = ({ isSmallView }) => {
             navigation.navigate(RootRoutes.Modal, {
               screen: ModalRoutes.Receive,
               params: {
-                screen: ReceiveTokenRoutes.ReceiveToken,
+                screen: ReceiveTokenModalRoutes.ReceiveToken,
                 params: {},
               },
             });
@@ -280,7 +276,7 @@ const AccountOption: FC<AccountOptionProps> = ({ isSmallView }) => {
       </Box>
 
       <Box flex={iconBoxFlex} mx={3} minW="56px" alignItems="center">
-        <AccountMoreMenu offset={platformEnv.isNativeAndroid ? 55 : 30}>
+        <AccountMoreMenu>
           <IconButton
             circle
             size={isSmallView ? 'xl' : 'lg'}

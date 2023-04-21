@@ -8,7 +8,6 @@ import {
   Button,
   Center,
   Collapse,
-  DialogManager,
   GroupingList,
   ListItem,
   Modal,
@@ -18,18 +17,22 @@ import {
 import backgroundApiProxy from '../../../background/instance/backgroundApiProxy';
 import { useNetwork } from '../../../hooks';
 import { updateCustomNetworkRpc } from '../../../store/reducers/settings';
+import { showDialog } from '../../../utils/overlayUtils';
 import AddNodeDialog from '../components/AddNodeDialog';
 // import RestartAppDialog from '../components/RestartDialog';
 import { RPCItem } from '../components/RPCItem';
 import { measureRpc, useRPCUrls } from '../hooks';
 
 import type { MeasureResult } from '../hooks';
-import type { ManageNetworkRoutes, ManageNetworkRoutesParams } from '../types';
+import type {
+  ManageNetworkModalRoutes,
+  ManageNetworkRoutesParams,
+} from '../types';
 import type { RouteProp } from '@react-navigation/native';
 
 type RouteProps = RouteProp<
   ManageNetworkRoutesParams,
-  ManageNetworkRoutes.RPCNode
+  ManageNetworkModalRoutes.RPCNode
 >;
 
 const HeaderCollapse = () => {
@@ -80,7 +83,7 @@ export const ManageNetworkRPCNode: FC = () => {
       });
 
       // **** restart required
-      // DialogManager.show({
+      // showDialog({
       //   render: (
       //     <RestartAppDialog
       //       onConfirm={() => {
@@ -100,9 +103,7 @@ export const ManageNetworkRPCNode: FC = () => {
   );
 
   const showAddNodeDialog = useCallback(() => {
-    DialogManager.show({
-      render: <AddNodeDialog networkId={networkId} onConfirm={refresh} />,
-    });
+    showDialog(<AddNodeDialog networkId={networkId} onConfirm={refresh} />);
   }, [networkId, refresh]);
 
   const toggleEditMode = useCallback(() => {

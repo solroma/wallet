@@ -23,12 +23,12 @@ export type DeleteWalletProp = {
 
 type ManagerWalletDeleteDialogProps = {
   deleteWallet: DeleteWalletProp | undefined;
-  closeOverlay: () => void;
+  onClose?: () => void;
 };
 
 const ManagerWalletDeleteDialog: FC<ManagerWalletDeleteDialogProps> = ({
   deleteWallet,
-  closeOverlay,
+  onClose: closeOverlay,
 }) => {
   const intl = useIntl();
 
@@ -54,7 +54,6 @@ const ManagerWalletDeleteDialog: FC<ManagerWalletDeleteDialogProps> = ({
 
   return (
     <Dialog
-      hasFormInsideDialog
       visible
       canceledOnTouchOutside={false}
       onClose={() => {

@@ -31,10 +31,8 @@ import {
 } from './BitcoinUsedAddressList';
 import BitcoinUsedAddressMenu from './BitcoinUsedAddressMenu';
 
-import type {
-  CreateAccountModalRoutes,
-  CreateAccountRoutesParams,
-} from '../../../routes';
+import type { CreateAccountRoutesParams } from '../../../routes';
+import type { CreateAccountModalRoutes } from '../../../routes/routesEnum';
 import type { RouteProp } from '@react-navigation/native';
 
 type RouteProps = RouteProp<
@@ -173,7 +171,7 @@ const BitcoinUsedAddress: FC = () => {
 
   const onCopyAddress = useCallback(
     ({ address, path }: { address: string; path: string }) => {
-      copyAddress(address, account?.template, path);
+      copyAddress({ address, template: account?.template, customPath: path });
     },
     [copyAddress, account?.template],
   );

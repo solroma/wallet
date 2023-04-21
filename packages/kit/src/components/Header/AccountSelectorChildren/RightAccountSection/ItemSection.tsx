@@ -6,7 +6,6 @@ import { InteractionManager } from 'react-native';
 import {
   Account,
   Box,
-  DialogManager,
   HStack,
   Pressable,
   useIsVerticalLayout,
@@ -16,14 +15,18 @@ import type { Network } from '@onekeyhq/engine/src/types/network';
 import type { Wallet } from '@onekeyhq/engine/src/types/wallet';
 import backgroundApiProxy from '@onekeyhq/kit/src/background/instance/backgroundApiProxy';
 import { useNavigation, useNavigationActions } from '@onekeyhq/kit/src/hooks';
-import { ManagerAccountModalRoutes } from '@onekeyhq/kit/src/routes/Modal/ManagerAccount';
-import { ModalRoutes, RootRoutes } from '@onekeyhq/kit/src/routes/types';
+import {
+  ManagerAccountModalRoutes,
+  ModalRoutes,
+  RootRoutes,
+} from '@onekeyhq/kit/src/routes/routesEnum';
 import AccountModifyNameDialog from '@onekeyhq/kit/src/views/ManagerAccount/ModifyAccount';
 import useRemoveAccountDialog from '@onekeyhq/kit/src/views/ManagerAccount/RemoveAccount';
 
 import { useCopyAddress } from '../../../../hooks/useCopyAddress';
 import reducerAccountSelector from '../../../../store/reducers/reducerAccountSelector';
 import { wait } from '../../../../utils/helper';
+import { showDialog } from '../../../../utils/overlayUtils';
 import ExternalAccountImg from '../../../../views/ExternalAccount/components/ExternalAccountImg';
 import { ACCOUNT_SELECTOR_CHANGE_ACCOUNT_CLOSE_DRAWER_DELAY } from '../accountSelectorConsts';
 
@@ -70,23 +73,21 @@ const AccountSectionItem: FC<Props> = ({
     (value) => {
       switch (value) {
         case 'copy':
-          copyAddress(item.displayAddress ?? item.address);
+          copyAddress({
+            address: item.address,
+            displayAddress: item.displayAddress,
+          });
           break;
         case 'rename':
-          DialogManager.show({
-            render: (
-              <AccountModifyNameDialog
-                visible
-                account={item}
-                onDone={() =>
-                  refreshAccounts(
-                    activeWallet?.id ?? '',
-                    activeNetwork?.id ?? '',
-                  )
-                }
-              />
-            ),
-          });
+          showDialog(
+            <AccountModifyNameDialog
+              visible
+              account={item}
+              onDone={() =>
+                refreshAccounts(activeWallet?.id ?? '', activeNetwork?.id ?? '')
+              }
+            />,
+          );
           break;
         case 'detail':
           navigation.navigate(RootRoutes.Modal, {

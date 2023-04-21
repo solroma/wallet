@@ -4,10 +4,12 @@ import {
   DrawerContentScrollView,
   useDrawerStatus,
 } from '@react-navigation/drawer';
+import { StyleSheet } from 'react-native';
 
 import { useIsVerticalLayout } from '@onekeyhq/components';
 
 import backgroundApiProxy from '../../background/instance/backgroundApiProxy';
+import { useNavigationActions } from '../../hooks';
 import reducerAccountSelector from '../../store/reducers/reducerAccountSelector';
 
 import WalletSelectorChildren from './WalletSelectorChildren';
@@ -15,16 +17,30 @@ import WalletSelectorChildren from './WalletSelectorChildren';
 import type { DrawerContentComponentProps } from '@react-navigation/drawer';
 
 const { updateMobileWalletSelectorDrawerOpen } = reducerAccountSelector.actions;
-function WalletSelectorMobile(props: DrawerContentComponentProps) {
+
+const styles = StyleSheet.create({
+  contentContainerStyle: {
+    flexDirection: 'row',
+    flex: 1,
+  },
+});
+export function WalletSelectorMobile(props: DrawerContentComponentProps) {
   const isVerticalLayout = useIsVerticalLayout();
 
   const { dispatch } = backgroundApiProxy;
   const drawerStatus = useDrawerStatus();
+  const { closeDrawer } = useNavigationActions();
   const isDrawerOpen = drawerStatus === 'open';
 
   useEffect(() => {
     dispatch(updateMobileWalletSelectorDrawerOpen(isDrawerOpen));
   }, [dispatch, isDrawerOpen]);
+
+  useEffect(() => {
+    if (!isVerticalLayout && isDrawerOpen) {
+      closeDrawer();
+    }
+  }, [closeDrawer, isDrawerOpen, isVerticalLayout]);
 
   if (!isVerticalLayout) {
     return null;
@@ -35,12 +51,10 @@ function WalletSelectorMobile(props: DrawerContentComponentProps) {
     <DrawerContentScrollView
       {...props}
       scrollEnabled={false}
-      contentContainerStyle={{ flexDirection: 'row', flex: 1 }}
+      contentContainerStyle={styles.contentContainerStyle}
     >
       {/* AccountSelectorMobile */}
       <WalletSelectorChildren />
     </DrawerContentScrollView>
   );
 }
-
-export { WalletSelectorMobile };

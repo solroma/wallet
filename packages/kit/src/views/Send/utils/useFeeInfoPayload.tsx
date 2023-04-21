@@ -6,6 +6,7 @@ import { useIsFocused } from '@react-navigation/native';
 import BigNumber from 'bignumber.js';
 
 import { ToastManager } from '@onekeyhq/components';
+import type { EIP1559Fee } from '@onekeyhq/engine/src/types/network';
 import type { IEncodedTxEvm } from '@onekeyhq/engine/src/vaults/impl/evm/Vault';
 import type {
   IEncodedTx,
@@ -41,6 +42,7 @@ export function useFeeInfoPayload({
   forBatchSend,
   payload,
   ignoreFetchFeeCalling,
+  shouldStopPolling,
 }: {
   encodedTx: IEncodedTx | null;
   useFeeInTx?: boolean;
@@ -52,6 +54,7 @@ export function useFeeInfoPayload({
   forBatchSend?: boolean;
   payload?: any;
   ignoreFetchFeeCalling?: boolean;
+  shouldStopPolling?: boolean;
 }) {
   const isFocused = useIsFocused();
   const { network } = useActiveSideAccount({ accountId, networkId });
@@ -88,9 +91,28 @@ export function useFeeInfoPayload({
       const priceIndex =
         indexNum > info.prices.length - 1 ? info.prices.length - 1 : indexNum;
       const priceInfo = info.prices[priceIndex];
+
+      if (info.eip1559) {
+        return {
+          eip1559: true,
+          price1559: priceInfo as EIP1559Fee,
+          limit: info.limit,
+        };
+      }
+
+      if (info.isBtcForkChain) {
+        return {
+          eip1559: false,
+          price: priceInfo as string,
+          limit: info.limit,
+          isBtcForkChain: true,
+          btcFee: info.feeList?.[priceIndex],
+        };
+      }
+
       return {
-        eip1559: info.eip1559,
-        price: priceInfo,
+        eip1559: false,
+        price: priceInfo as string,
         limit: info.limit,
       };
     },
@@ -162,7 +184,7 @@ export function useFeeInfoPayload({
         const limit = gasLimit || gas;
 
         if (maxFeePerGas && maxPriorityFeePerGas) {
-          const price = {
+          const price1559 = {
             baseFee: new BigNumber(gasPrice ?? 0)
               .shiftedBy(-(feeDecimals ?? 0))
               .toFixed(),
@@ -175,11 +197,11 @@ export function useFeeInfoPayload({
           };
           info.eip1559 = true;
           info.limit = limit;
-          info.prices = [price];
+          info.prices = [price1559];
           info.tx = {
             eip1559: true,
             limit,
-            price,
+            price1559,
           };
         } else {
           const price = new BigNumber(gasPrice ?? 0)
@@ -315,10 +337,7 @@ export function useFeeInfoPayload({
     let timer: ReturnType<typeof setInterval>;
     if (pollingInterval && isFocused) {
       timer = setInterval(async () => {
-        if (loading) {
-          return;
-        }
-        if (feeInfoSelectedInRouteParams?.type === 'custom') {
+        if (loading || shouldStopPolling) {
           return;
         }
         try {
@@ -352,6 +371,7 @@ export function useFeeInfoPayload({
     loading,
     pollingInterval,
     isFocused,
+    shouldStopPolling,
   ]);
 
   return {

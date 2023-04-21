@@ -1,4 +1,5 @@
 // TODO packages/kit/src/components/Header/AccountSelectorChildren/RightHeader.tsx
+import type { ComponentProps, FC } from 'react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { useIntl } from 'react-intl';
@@ -23,26 +24,50 @@ import { useAppSelector } from '@onekeyhq/kit/src/hooks';
 import useAppNavigation from '@onekeyhq/kit/src/hooks/useAppNavigation';
 import useLocalAuthenticationModal from '@onekeyhq/kit/src/hooks/useLocalAuthenticationModal';
 import type { RootNavContainerRef } from '@onekeyhq/kit/src/provider/NavigationProvider';
-import { BackupWalletModalRoutes } from '@onekeyhq/kit/src/routes/Modal/BackupWallet';
-import { OnekeyHardwareModalRoutes } from '@onekeyhq/kit/src/routes/Modal/HardwareOnekey';
-import { HardwareUpdateModalRoutes } from '@onekeyhq/kit/src/routes/Modal/HardwareUpdate';
-import { ManagerWalletModalRoutes } from '@onekeyhq/kit/src/routes/Modal/ManagerWallet';
-import { ModalRoutes, RootRoutes } from '@onekeyhq/kit/src/routes/routesEnum';
+import {
+  BackupWalletModalRoutes,
+  HardwareUpdateModalRoutes,
+  ManagerWalletModalRoutes,
+  ModalRoutes,
+  OnekeyHardwareModalRoutes,
+  RootRoutes,
+} from '@onekeyhq/kit/src/routes/routesEnum';
 import {
   forgetPassphraseWallet,
   rememberPassphraseWallet,
 } from '@onekeyhq/kit/src/store/reducers/settings';
 import { deviceUtils } from '@onekeyhq/kit/src/utils/hardware';
 import { getHomescreenKeys } from '@onekeyhq/kit/src/utils/hardware/constants/homescreens';
-import { showOverlay } from '@onekeyhq/kit/src/utils/overlayUtils';
+import { showDialog } from '@onekeyhq/kit/src/utils/overlayUtils';
 import showDeviceAdvancedSettings from '@onekeyhq/kit/src/views/Hardware/Onekey/DeviceAdvancedSettingsBottomSheetModal';
 import HardwareLoadingDialog from '@onekeyhq/kit/src/views/Hardware/Onekey/OnekeyHardwareConnectDialog';
 import ManagerWalletDeleteDialog from '@onekeyhq/kit/src/views/ManagerWallet/DeleteWallet';
 import type { DeleteWalletProp } from '@onekeyhq/kit/src/views/ManagerWallet/DeleteWallet';
 
+import reducerAccountSelector from '../../../store/reducers/reducerAccountSelector';
+import { defaultMenuOffset } from '../../../views/Overlay/BaseMenu';
+import { useWalletSelectorStatus } from '../hooks/useWalletSelectorStatus';
 import { useHardwareWalletInfo } from '../WalletAvatar';
 
 import type { TypeHardwareWalletInfo } from '../WalletAvatar';
+
+const WalletMenuItem: FC<ComponentProps<typeof Menu.CustomItem>> = ({
+  onPress,
+  ...rest
+}) => (
+  <Menu.CustomItem
+    onPress={(e) => {
+      const { dispatch } = backgroundApiProxy;
+      dispatch(
+        reducerAccountSelector.actions.updateDesktopWalletSelectorVisible(
+          false,
+        ),
+      );
+      onPress?.(e);
+    }}
+    {...rest}
+  />
+);
 
 function HardwarePassphraseMenuOptions({
   navigation,
@@ -83,7 +108,7 @@ function HardwarePassphraseMenuOptions({
 
   return (
     <>
-      <Menu.CustomItem
+      <WalletMenuItem
         onPress={() => {
           navigation.navigate(RootRoutes.Modal, {
             screen: ModalRoutes.OnekeyHardware,
@@ -98,8 +123,8 @@ function HardwarePassphraseMenuOptions({
         icon="PencilMini"
       >
         {intl.formatMessage({ id: 'action__edit' })}
-      </Menu.CustomItem>
-      <Menu.CustomItem
+      </WalletMenuItem>
+      <WalletMenuItem
         onPress={onClickRememberPassphrase}
         extraChildren={
           <Box>
@@ -112,9 +137,9 @@ function HardwarePassphraseMenuOptions({
         }
       >
         {intl.formatMessage({ id: 'msg__use_passphrase_remember_wallet' })}
-      </Menu.CustomItem>
+      </WalletMenuItem>
       <Divider my="4px" />
-      <Menu.CustomItem
+      <WalletMenuItem
         onPress={() => {
           onDeleteWallet({
             isPassphrase: hwInfo?.isPassphrase ?? false,
@@ -124,7 +149,7 @@ function HardwarePassphraseMenuOptions({
         icon="TrashMini"
       >
         {intl.formatMessage({ id: 'action__delete_wallet' })}
-      </Menu.CustomItem>
+      </WalletMenuItem>
     </>
   );
 }
@@ -167,9 +192,8 @@ function HardwareMenuOptions({
   const checkFirmwareUpdate = useCallback(() => {
     if (!deviceConnectId) return;
 
-    showOverlay((onCloseOverlay) => (
+    showDialog(
       <HardwareLoadingDialog
-        onClose={onCloseOverlay}
         onHandler={() =>
           serviceHardware
             .checkFirmwareUpdate(deviceConnectId)
@@ -201,8 +225,8 @@ function HardwareMenuOptions({
               }, 500);
             })
         }
-      />
-    ));
+      />,
+    );
   }, [deviceConnectId, intl, navigation, serviceHardware, wallet?.id]);
 
   useEffect(() => {
@@ -239,7 +263,7 @@ function HardwareMenuOptions({
 
   return (
     <>
-      <Menu.CustomItem
+      <WalletMenuItem
         onPress={() => {
           navigation.navigate(RootRoutes.Modal, {
             screen: ModalRoutes.OnekeyHardware,
@@ -255,10 +279,10 @@ function HardwareMenuOptions({
         icon="PencilMini"
       >
         {intl.formatMessage({ id: 'action__edit' })}
-      </Menu.CustomItem>
+      </WalletMenuItem>
 
       {!!showHomeScreenSetting && (
-        <Menu.CustomItem
+        <WalletMenuItem
           onPress={() => {
             navigation.navigate(RootRoutes.Modal, {
               screen: ModalRoutes.OnekeyHardware,
@@ -274,9 +298,9 @@ function HardwareMenuOptions({
           icon="PhotoMini"
         >
           {intl.formatMessage({ id: 'modal__homescreen' })}
-        </Menu.CustomItem>
+        </WalletMenuItem>
       )}
-      <Menu.CustomItem
+      <WalletMenuItem
         onPress={() => {
           navigation.navigate(RootRoutes.Modal, {
             screen: ModalRoutes.OnekeyHardware,
@@ -291,8 +315,8 @@ function HardwareMenuOptions({
         icon="InformationCircleMini"
       >
         {intl.formatMessage({ id: 'action__about_device' })}
-      </Menu.CustomItem>
-      <Menu.CustomItem
+      </WalletMenuItem>
+      <WalletMenuItem
         onPress={() => {
           showDeviceAdvancedSettings({
             walletId: wallet?.id ?? '',
@@ -302,10 +326,10 @@ function HardwareMenuOptions({
         icon="AdjustmentsHorizontalMini"
       >
         {intl.formatMessage({ id: 'content__advanced' })}
-      </Menu.CustomItem>
+      </WalletMenuItem>
       <Divider my="4px" />
       {hwInfo?.hasUpgrade ? (
-        <Menu.CustomItem
+        <WalletMenuItem
           onPress={() => {
             navigation.navigate(RootRoutes.Modal, {
               screen: ModalRoutes.HardwareUpdate,
@@ -321,17 +345,17 @@ function HardwareMenuOptions({
           icon="ArrowUpTrayMini"
         >
           {intl.formatMessage({ id: 'action__update_available' })}
-        </Menu.CustomItem>
+        </WalletMenuItem>
       ) : (
-        <Menu.CustomItem
+        <WalletMenuItem
           icon="MagnifyingGlassMini"
           onPress={checkFirmwareUpdate}
         >
           {intl.formatMessage({ id: 'form__check_for_updates' })}
-        </Menu.CustomItem>
+        </WalletMenuItem>
       )}
       <Divider my="4px" />
-      <Menu.CustomItem
+      <WalletMenuItem
         onPress={() => {
           onDeleteWallet({
             isPassphrase: hwInfo?.isPassphrase ?? false,
@@ -341,7 +365,7 @@ function HardwareMenuOptions({
         icon="TrashMini"
       >
         {intl.formatMessage({ id: 'action__delete_device' })}
-      </Menu.CustomItem>
+      </WalletMenuItem>
     </>
   );
 }
@@ -361,12 +385,7 @@ function WalletItemSelectDropdown({
 
   const showDeleteWalletDialog = useCallback(
     (walletProps: DeleteWalletProp) => {
-      showOverlay((onClose) => (
-        <ManagerWalletDeleteDialog
-          deleteWallet={walletProps}
-          closeOverlay={onClose}
-        />
-      ));
+      showDialog(<ManagerWalletDeleteDialog deleteWallet={walletProps} />);
     },
     [],
   );
@@ -434,7 +453,7 @@ function WalletItemSelectDropdown({
     if (!isSoftwareWallet) return null;
     return (
       <>
-        <Menu.CustomItem
+        <WalletMenuItem
           onPress={() => {
             navigation.navigate(RootRoutes.Modal, {
               screen: ModalRoutes.ManagerWallet,
@@ -449,12 +468,12 @@ function WalletItemSelectDropdown({
           icon="PencilMini"
         >
           {intl.formatMessage({ id: 'action__edit' })}
-        </Menu.CustomItem>
-        <Menu.CustomItem onPress={navigateToBackupModal} icon="ShieldCheckMini">
+        </WalletMenuItem>
+        <WalletMenuItem onPress={navigateToBackupModal} icon="ShieldCheckMini">
           {intl.formatMessage({ id: 'action__backup' })}
-        </Menu.CustomItem>
+        </WalletMenuItem>
         <Divider my="4px" />
-        <Menu.CustomItem
+        <WalletMenuItem
           onPress={() => {
             onDeleteWallet();
           }}
@@ -462,7 +481,7 @@ function WalletItemSelectDropdown({
           icon="TrashMini"
         >
           {intl.formatMessage({ id: 'action__delete_wallet' })}
-        </Menu.CustomItem>
+        </WalletMenuItem>
       </>
     );
   }, [
@@ -492,6 +511,7 @@ function WalletItemSelectDropdown({
       <Menu
         placement="bottom right"
         width={224}
+        offset={defaultMenuOffset}
         // eslint-disable-next-line react/no-unstable-nested-components
         trigger={(triggerProps) => {
           const { onPress } = triggerProps;
@@ -554,6 +574,9 @@ function WalletItemSelectDropdown({
     [intl, navigateToBackupModal, showBackupDialog],
   );
 
+  const { visible } = useWalletSelectorStatus();
+
+  if (!visible) return null;
   return (
     <>
       {menuView}

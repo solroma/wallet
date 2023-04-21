@@ -19,7 +19,7 @@ import type {
 } from '@onekeyhq/engine/src/vaults/types';
 import type { IDappSourceInfo } from '@onekeyhq/shared/types';
 
-import { SendRoutes } from './enums';
+import { SendModalRoutes } from './enums';
 
 import type { WalletService } from '../../components/WalletConnect/types';
 import type { WalletConnectClientForDapp } from '../../components/WalletConnect/WalletConnectClientForDapp';
@@ -28,7 +28,7 @@ import type { InjectedConnectorInfo } from '../ExternalAccount/injectedConnector
 import type { SwapQuoteTx } from '../Swap/typings';
 import type { IWalletConnectSession } from '@walletconnect/types';
 
-export { SendRoutes };
+export { SendModalRoutes };
 
 export type ISendAuthenticationModalTitleInfo = {
   title: string;
@@ -133,10 +133,12 @@ export type SendConfirmParams = SendConfirmSharedParams & {
   onDetail?: (txid: string) => any;
   signOnly?: boolean;
   ignoreFetchFeeCalling?: boolean;
+  hideSendFeedbackReceipt?: boolean;
 };
 export type SignMessageConfirmParams = SendConfirmSharedParams & {
   sourceInfo?: IDappSourceInfo;
   unsignedMessage: IUnsignedMessageEvm;
+  onSuccess?: (result: any) => void;
 };
 export type IWalletConnectExternalAccountInfo = {
   accountInfo?: IBaseExternalAccountInfo;
@@ -181,20 +183,20 @@ export type HardwareSwapContinueParams = {
 };
 
 export type SendRoutesParams = {
-  [SendRoutes.PreSendToken]: PreSendParams;
-  [SendRoutes.PreSendAddress]: PreSendParams;
-  [SendRoutes.PreSendAmount]: PreSendParams;
-  [SendRoutes.SendEditFee]: EditFeeParams;
-  [SendRoutes.TokenApproveAmountEdit]: TokenApproveAmountEditParams;
-  [SendRoutes.SendConfirmFromDapp]: SendConfirmFromDappParams;
-  [SendRoutes.SendConfirm]: SendConfirmParams;
-  [SendRoutes.SendAuthentication]: SendAuthenticationParams;
-  [SendRoutes.SendSpecialWarning]: SendSpecialWarningParams;
-  [SendRoutes.SignMessageConfirm]: SignMessageConfirmParams;
-  [SendRoutes.SendFeedbackReceipt]: SendFeedbackReceiptParams;
-  [SendRoutes.HardwareSwapContinue]: HardwareSwapContinueParams;
-  [SendRoutes.BatchSendConfirm]: BatchSendConfirmParams;
-  [SendRoutes.BatchSendProgress]: BatchSendProgressParams;
+  [SendModalRoutes.PreSendToken]: PreSendParams;
+  [SendModalRoutes.PreSendAddress]: PreSendParams;
+  [SendModalRoutes.PreSendAmount]: PreSendParams;
+  [SendModalRoutes.SendEditFee]: EditFeeParams;
+  [SendModalRoutes.TokenApproveAmountEdit]: TokenApproveAmountEditParams;
+  [SendModalRoutes.SendConfirmFromDapp]: SendConfirmFromDappParams;
+  [SendModalRoutes.SendConfirm]: SendConfirmParams;
+  [SendModalRoutes.SendAuthentication]: SendAuthenticationParams;
+  [SendModalRoutes.SendSpecialWarning]: SendSpecialWarningParams;
+  [SendModalRoutes.SignMessageConfirm]: SignMessageConfirmParams;
+  [SendModalRoutes.SendFeedbackReceipt]: SendFeedbackReceiptParams;
+  [SendModalRoutes.HardwareSwapContinue]: HardwareSwapContinueParams;
+  [SendModalRoutes.BatchSendConfirm]: BatchSendConfirmParams;
+  [SendModalRoutes.BatchSendProgress]: BatchSendProgressParams;
 };
 
 export type ITxConfirmViewPropsHandleConfirm = ({
@@ -225,6 +227,8 @@ export type ITxConfirmViewProps = ModalProps & {
   feeInfoLoading: boolean;
   feeInfoEditable?: boolean;
   feeInput?: JSX.Element;
+  advancedSettings?: SendConfirmAdvancedSettings;
+  advancedSettingsForm?: JSX.Element | null;
   feeInfoError?: Error | null;
 
   confirmDisabled?: boolean;
@@ -271,6 +275,7 @@ export type ISendEditFeeValues = {
   maxFeePerGas: string;
   baseFee: string;
   totalFee: string;
+  feeRate: string;
 };
 
 export type BatchSendConfirmPayloadInfo = {
@@ -367,3 +372,15 @@ export type BatchSendConfirmOnSuccessData = {
   encodedTxs?: IEncodedTx[];
   decodedTxs?: IDecodedTx[];
 };
+
+export type SendConfirmAdvancedSettings = {
+  originNonce: string;
+  currentNonce: string;
+};
+
+export enum EditableNonceStatusEnum {
+  None = 'None',
+  Equal = 'Equal',
+  Less = 'Less',
+  Greater = 'Greater',
+}

@@ -14,12 +14,12 @@ import {
 } from '@onekeyhq/components';
 
 import backgroundApiProxy from '../../../background/instance/backgroundApiProxy';
-import { showOverlay } from '../../../utils/overlayUtils';
+import { showDialog, showOverlay } from '../../../utils/overlayUtils';
 import { showSplashScreen } from '../../Overlay/showSplashScreen';
 
 export type ResetDialogProps = {
-  onConfirm: () => Promise<void>;
-  onClose: () => void;
+  onConfirm: () => void;
+  onClose?: () => void;
 };
 
 const ResetDialog: FC<ResetDialogProps> = ({ onConfirm, onClose }) => {
@@ -31,7 +31,6 @@ const ResetDialog: FC<ResetDialogProps> = ({ onConfirm, onClose }) => {
 
   return (
     <Dialog
-      hasFormInsideDialog
       visible
       footerButtonProps={{
         primaryActionTranslationId: 'action__delete',
@@ -40,11 +39,13 @@ const ResetDialog: FC<ResetDialogProps> = ({ onConfirm, onClose }) => {
           isDisabled: input.toUpperCase() !== 'RESET',
           isLoading: loading,
         },
-        onPrimaryActionPress: async () => {
+        onPrimaryActionPress: () => {
           setLoading(true);
-          await onConfirm();
-          setLoading(false);
-          onClose();
+          onConfirm();
+          setTimeout(() => {
+            setLoading(false);
+            onClose?.();
+          }, 600);
         },
         onSecondaryActionPress: onClose,
       }}
@@ -79,15 +80,14 @@ const ResetDialog: FC<ResetDialogProps> = ({ onConfirm, onClose }) => {
 const ResetButton = () => {
   const intl = useIntl();
   const openResetHintDialog = useCallback(() => {
-    showOverlay((onClose) => (
+    showDialog(
       <ResetDialog
-        onConfirm={async () => {
+        onConfirm={() => {
           showSplashScreen();
-          return backgroundApiProxy.serviceApp.resetApp();
+          backgroundApiProxy.serviceApp.resetApp();
         }}
-        onClose={onClose}
-      />
-    ));
+      />,
+    );
   }, []);
 
   const openBackupModal = useCallback(() => {

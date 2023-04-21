@@ -6,23 +6,21 @@ import { useIsVerticalLayout } from '@onekeyhq/components';
 
 import backgroundApiProxy from '../../../background/instance/backgroundApiProxy';
 import { useAppSelector } from '../../../hooks';
-import {
-  MARKET_FAVORITES_CATEGORYID,
-  MARKET_TAB_NAME,
-} from '../../../store/reducers/market';
+import { TabRoutes } from '../../../routes/routesEnum';
+import { MARKET_FAVORITES_CATEGORYID } from '../../../store/reducers/market';
 
 import { useMarketSelectedCategory } from './useMarketCategory';
 import { useMarketMidLayout } from './useMarketLayout';
+
+import type { MarketTopTabName } from '../../../store/reducers/market';
 
 export const useListSort = () => {
   const listSort = useAppSelector((s) => s.market.listSort);
   return useMemo(() => listSort, [listSort]);
 };
 
-export const useMarketTopTabName = () => {
-  const tabName = useAppSelector((s) => s.market.marktTobTapName);
-  return useMemo(() => tabName, [tabName]);
-};
+export const useMarketTopTabName = () =>
+  useAppSelector((s) => s.market.marketTopTabName) || TabRoutes.Swap;
 
 const useMarketCategoryCoingeckoIds = () => {
   const selectedCategory = useMarketSelectedCategory();
@@ -61,7 +59,7 @@ export const useMarketList = ({
     if (
       isFocused &&
       selectedCategory?.categoryId &&
-      marktTopTabName === MARKET_TAB_NAME &&
+      marktTopTabName === TabRoutes.Market &&
       checkFavoritesFetch
     ) {
       if (!listSort) {
@@ -110,4 +108,18 @@ export const useMarketList = ({
     selectedCategory,
     onRefreshingMarketList,
   };
+};
+
+export const marketSwapTabRoutes: { key: MarketTopTabName }[] = [
+  { key: TabRoutes.Swap },
+  { key: TabRoutes.Market },
+];
+export const setMarketSwapTabIndex = (index: number) => {
+  if (index < 2) {
+    backgroundApiProxy.serviceMarket.switchMarketTopTab(
+      marketSwapTabRoutes[index].key,
+    );
+  } else {
+    // TODO: handle other tabs
+  }
 };

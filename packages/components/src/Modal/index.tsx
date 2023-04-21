@@ -7,7 +7,6 @@ import type {
 import { cloneElement, useCallback, useMemo, useRef } from 'react';
 
 import { useFocusEffect } from '@react-navigation/native';
-import { RootSiblingParent } from 'react-native-root-siblings';
 
 import { useIsVerticalLayout, useUserDevice } from '@onekeyhq/components';
 import platformEnv from '@onekeyhq/shared/src/platformEnv';
@@ -26,12 +25,14 @@ import type { FlatListProps } from '../FlatList';
 import type { LocaleIds } from '../locale';
 import type { SectionListProps } from '../SectionList';
 import type { HeaderProps } from './Container/Header/type';
+import type { LayoutChangeEvent } from 'react-native';
 
 export type ModalProps = {
   headerShown?: boolean;
   trigger?: ReactElement<any>;
   visible?: boolean;
   closeAction?: () => void;
+  onLayout?: (e: LayoutChangeEvent) => void;
   closeOnOverlayClick?: boolean;
   primaryActionTranslationId?: LocaleIds;
   secondaryActionTranslationId?: LocaleIds;
@@ -44,6 +45,7 @@ export type ModalProps = {
     close: () => void;
   }) => void;
   onSecondaryActionPress?: ({ close }: { close: () => void }) => void;
+  extraElement?: ReactNode;
   hidePrimaryAction?: boolean;
   hideSecondaryAction?: boolean;
   primaryActionProps?: ComponentProps<typeof Button>;
@@ -99,6 +101,7 @@ const Modal = ({
   visible: outerVisible,
   onClose,
   onModalClose,
+  onLayout,
   sectionListProps,
   flatListProps,
   scrollViewProps,
@@ -200,9 +203,6 @@ const Modal = ({
       content = <Box {...staticChildrenProps}>{rest.children}</Box>;
     }
 
-    if (platformEnv.isNative) {
-      return <RootSiblingParent>{content}</RootSiblingParent>;
-    }
     return content;
   }, [
     headerShown,
@@ -231,6 +231,7 @@ const Modal = ({
           <Box flex={1} alignItems="flex-end" w="100%" flexDirection="row">
             <Box
               ref={modalRef}
+              onLayout={onLayout}
               height={modalHeight}
               // TODO 100vh in App
               maxHeight={platformEnv.isRuntimeBrowser ? '100vh' : undefined}
@@ -267,6 +268,7 @@ const Modal = ({
 
     return (
       <Desktop
+        onLayout={onLayout}
         onClose={onModalClose}
         headerShown={headerShown}
         header={header}
@@ -285,6 +287,7 @@ const Modal = ({
     rest,
     modalContent,
     size,
+    onLayout,
     modalHeight,
     isVerticalLayout,
   ]);

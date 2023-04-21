@@ -1,5 +1,5 @@
 import type { ComponentProps, FC } from 'react';
-import { useCallback, useEffect, useMemo, useRef } from 'react';
+import { useCallback, useMemo } from 'react';
 
 import { useNavigation } from '@react-navigation/core';
 import { useIntl } from 'react-intl';
@@ -20,12 +20,11 @@ import { Tabs } from '@onekeyhq/components/src/CollapsibleTabView';
 import type { LocaleIds } from '@onekeyhq/components/src/locale';
 import type { ThemeToken } from '@onekeyhq/components/src/Provider/theme';
 import { batchTransferContractAddress } from '@onekeyhq/engine/src/presets/batchTransferContractAddress';
-import { useAppSelector } from '@onekeyhq/kit/src/hooks/redux';
+import { HomeRoutes, RootRoutes } from '@onekeyhq/kit/src/routes/routesEnum';
 import type {
   HomeRoutesParams,
   RootRoutesParams,
 } from '@onekeyhq/kit/src/routes/types';
-import { HomeRoutes, RootRoutes } from '@onekeyhq/kit/src/routes/types';
 import { IMPL_EVM } from '@onekeyhq/shared/src/engine/engineConsts';
 import platformEnv from '@onekeyhq/shared/src/platformEnv';
 
@@ -35,7 +34,6 @@ import { useTools } from '../../../hooks/redux';
 import useOpenBlockBrowser from '../../../hooks/useOpenBlockBrowser';
 import { openUrl } from '../../../utils/openUrl';
 import { useIsVerticalOrMiddleLayout } from '../../Revoke/hooks';
-import { WalletHomeTabEnum } from '../type';
 
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { ImageSourcePropType } from 'react-native';
@@ -95,18 +93,16 @@ const data: DataItem[] = [
 
 type NavigationProps = NativeStackNavigationProp<
   RootRoutesParams,
-  RootRoutes.Root
+  RootRoutes.Main
 > &
   NativeStackNavigationProp<HomeRoutesParams, HomeRoutes.NFTPNLScreen> &
   NativeStackNavigationProp<HomeRoutesParams, HomeRoutes.Revoke>;
 
 const ToolsPage: FC = () => {
   const intl = useIntl();
-  const hasFetchedRef = useRef(false);
   const { network, accountAddress } = useActiveWalletAccount();
   const isVertical = useIsVerticalOrMiddleLayout();
   const navigation = useNavigation<NavigationProps>();
-  const homeTabName = useAppSelector((s) => s.status.homeTabName);
 
   const tools = useTools(network?.id);
 
@@ -178,7 +174,7 @@ const ToolsPage: FC = () => {
       } else if (key === 'bulkSender') {
         if (platformEnv.isExtFirefoxUiPopup) {
           backgroundApiProxy.serviceApp.openExtensionExpandTab({
-            routes: [RootRoutes.Root, HomeRoutes.BulkSender],
+            routes: [RootRoutes.Main, HomeRoutes.BulkSender],
           });
           setTimeout(() => {
             window.close();
@@ -218,22 +214,6 @@ const ToolsPage: FC = () => {
     },
     [isVertical],
   );
-
-  const fetchData = useCallback(() => {
-    backgroundApiProxy.serviceToken.fetchTools().finally(() => {
-      hasFetchedRef.current = true;
-    });
-  }, []);
-
-  useEffect(() => {
-    if (hasFetchedRef.current) {
-      return;
-    }
-    if (homeTabName !== WalletHomeTabEnum.Tools) {
-      return;
-    }
-    fetchData();
-  }, [fetchData, homeTabName]);
 
   const renderIcon = useCallback((icon: DataItem['icon']) => {
     if (!icon) {

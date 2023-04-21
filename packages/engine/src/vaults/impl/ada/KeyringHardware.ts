@@ -1,5 +1,4 @@
 import type { SignedTx, UnsignedTx } from '@onekeyhq/engine/src/types/provider';
-import { NewFirmwareUnRelease } from '@onekeyhq/kit/src/utils/hardware/errors';
 import { convertDeviceError } from '@onekeyhq/shared/src/device/deviceErrorUtils';
 import { CoreSDKLoader } from '@onekeyhq/shared/src/device/hardwareInstance';
 import { COINTYPE_ADA as COIN_TYPE } from '@onekeyhq/shared/src/engine/engineConsts';
@@ -54,12 +53,8 @@ export class KeyringHardware extends KeyringHardwareBase {
 
     const showOnOneKey = false;
     const HardwareSDK = await this.getHardwareSDKInstance();
-    const { connectId, deviceId, deviceType } = await this.getHardwareInfo();
+    const { connectId, deviceId } = await this.getHardwareInfo();
     const passphraseState = await this.getWalletPassphraseState();
-
-    if (deviceType !== 'touch') {
-      throw new NewFirmwareUnRelease();
-    }
 
     const { derivationType, addressType, networkId, protocolMagic } =
       await getCardanoConstant();
@@ -171,6 +166,42 @@ export class KeyringHardware extends KeyringHardwareBase {
       return response.payload.address;
     }
     throw convertDeviceError(response.payload);
+  }
+
+  override async batchGetAddress(
+    params: IHardwareGetAddressParams[],
+  ): Promise<{ path: string; address: string }[]> {
+    const HardwareSDK = await this.getHardwareSDKInstance();
+    const { connectId, deviceId } = await this.getHardwareInfo();
+    const passphraseState = await this.getWalletPassphraseState();
+    const { derivationType, addressType, networkId, protocolMagic } =
+      await getCardanoConstant();
+    const response = await HardwareSDK.cardanoGetAddress(connectId, deviceId, {
+      ...passphraseState,
+      bundle: params.map(({ path, showOnOneKey }) => {
+        const stakingPath = `${path.split('/').slice(0, 4).join('/')}/2/0`;
+        return {
+          addressParameters: {
+            addressType,
+            path,
+            stakingPath,
+          },
+          networkId,
+          protocolMagic,
+          derivationType,
+          isCheck: true,
+          showOnOneKey: !!showOnOneKey,
+        };
+      }),
+    });
+
+    if (!response.success) {
+      throw convertDeviceError(response.payload);
+    }
+    return response.payload.map((item) => ({
+      path: item.serializedPath,
+      address: item.address,
+    }));
   }
 
   override async signTransaction(unsignedTx: UnsignedTx): Promise<SignedTx> {

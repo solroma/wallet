@@ -31,10 +31,9 @@ import Mobile from './Container/Mobile';
 
 import type { ICON_NAMES } from '../Icon';
 import type { ColorType } from 'native-base/lib/typescript/components/types';
-import type { GestureResponderEvent } from 'react-native-modal';
 
 interface CloseButtonProps {
-  onClose: (event: GestureResponderEvent) => void;
+  onClose?: () => void;
   backgroundColor?: string;
 }
 
@@ -122,6 +121,7 @@ export type SelectProps<T = string> = {
   withReactModal?: boolean;
   autoAdjustPosition?: boolean;
   outerContainerRef?: MutableRefObject<unknown>;
+  noTrigger?: boolean;
 };
 
 export type ChildProps<T> = Pick<
@@ -192,6 +192,7 @@ function Select<T = any>({
   withReactModal,
   autoAdjustPosition,
   outerContainerRef,
+  noTrigger,
 }: SelectProps<T>) {
   const triggerRef = useRef<HTMLElement | View>(null);
   const [innerVisible, setInnerVisible] = useState(false);
@@ -322,7 +323,9 @@ function Select<T = any>({
     onModalHide,
   ]);
 
-  return (
+  return noTrigger ? (
+    container
+  ) : (
     <Box ref={triggerRef} position="relative" {...containerProps}>
       <Pressable onPress={toggleVisible} {...triggerProps}>
         {({ isHovered, isFocused, isPressed }) =>

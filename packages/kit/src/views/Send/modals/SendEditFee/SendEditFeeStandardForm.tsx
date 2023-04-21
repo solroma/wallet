@@ -1,18 +1,35 @@
 import { useMemo } from 'react';
 
-import { RadioFee } from '@onekeyhq/components';
+import { Box, HStack, RadioFee, VStack } from '@onekeyhq/components';
 import type {
   IFeeInfo,
   IFeeInfoPayload,
+  IFeeInfoSelectedType,
+  IFeeInfoUnit,
 } from '@onekeyhq/engine/src/vaults/types';
-import {
-  calculateTotalFeeNative,
-  calculateTotalFeeRange,
-} from '@onekeyhq/engine/src/vaults/utils/feeInfoUtils';
 
-import { FormatCurrencyNativeOfAccount } from '../../../../components/Format';
 import { FeeSpeedLabel } from '../../components/FeeSpeedLabel';
-import { FeeSpeedTime } from '../../components/FeeSpeedTime';
+import {
+  CustomFeeSpeedTime,
+  FeeSpeedTime,
+} from '../../components/FeeSpeedTime';
+import { FeeSpeedTip } from '../../components/FeeSpeedTip';
+import { SendEditFeeOverview } from '../../components/SendEditFeeOverview';
+
+const presetItemStyle = {
+  marginTop: 2,
+  paddingLeft: '16px',
+  paddingRight: '16px',
+  paddingTop: '4px',
+  paddingBottom: '4px',
+  alignItems: 'center',
+  height: '64px',
+};
+
+const customItemStyle = {
+  ...presetItemStyle,
+  marginTop: 6,
+};
 
 export type IStandardFeeProps = {
   feeInfoPayload: IFeeInfoPayload | null;
@@ -20,6 +37,8 @@ export type IStandardFeeProps = {
   onChange: (v: string) => void;
   accountId: string;
   networkId: string;
+  currentCustom: null | IFeeInfoUnit;
+  currentFeeType: IFeeInfoSelectedType;
 };
 export function SendEditFeeStandardForm({
   feeInfoPayload,
@@ -27,107 +46,182 @@ export function SendEditFeeStandardForm({
   onChange,
   accountId,
   networkId,
+  currentCustom,
+  currentFeeType,
 }: IStandardFeeProps) {
+  const customFeeInfo = currentCustom || feeInfoPayload?.selected.custom;
+  const isEIP1559Fee = feeInfoPayload?.info?.eip1559;
+  const isBtcForkChain = feeInfoPayload?.info?.isBtcForkChain;
+
+  const btcCustomFee = useMemo(() => {
+    if (!isBtcForkChain) return null;
+    if (currentFeeType !== 'custom') return null;
+    if (!currentCustom?.btcFee) return null;
+    return `${currentCustom?.btcFee}`;
+  }, [currentCustom?.btcFee, currentFeeType, isBtcForkChain]);
+
+  const selectedFeeInfo = useMemo(() => {
+    let price = null;
+    let limit = '';
+    if (value === 'custom') {
+      price = isEIP1559Fee ? customFeeInfo?.price1559 : customFeeInfo?.price;
+      limit = customFeeInfo?.limit ?? '0';
+    } else {
+      price = feeInfoPayload?.info?.prices[Number(value)];
+      limit = feeInfoPayload?.info.limit ?? '0';
+    }
+
+    return (
+      <SendEditFeeOverview
+        accountId={accountId}
+        networkId={networkId}
+        feeInfo={feeInfoPayload?.info}
+        price={price}
+        limit={limit}
+        btcCustomFee={btcCustomFee}
+      />
+    );
+  }, [
+    accountId,
+    customFeeInfo?.limit,
+    customFeeInfo?.price,
+    customFeeInfo?.price1559,
+    feeInfoPayload?.info,
+    isEIP1559Fee,
+    networkId,
+    value,
+    btcCustomFee,
+  ]);
+
   const gasList = useMemo(
     () => feeInfoPayload?.info?.prices ?? [],
     [feeInfoPayload?.info?.prices],
   );
   const gasItems = useMemo(() => {
     if (!gasList) return [];
-    const isEIP1559Fee = feeInfoPayload?.info?.eip1559;
-    if (isEIP1559Fee) {
-      return gasList.map((gas, index) => {
-        // const gasInfo = gas as EIP1559Fee;
-        const { min, max } = calculateTotalFeeRange({
-          eip1559: true,
-          limit: feeInfoPayload?.info?.limit,
-          price: gas,
-        });
-        const minFee = min;
-        const totalFeeNative = calculateTotalFeeNative({
-          amount: max,
-          info: feeInfoPayload?.info,
-        });
 
-        const minFeeNative = calculateTotalFeeNative({
-          amount: minFee,
-          info: feeInfoPayload?.info,
-        });
-
-        const waitingSeconds = feeInfoPayload?.info.waitingSeconds?.[index];
-
-        return {
-          value: index.toString(),
-          title: <FeeSpeedLabel index={index} />,
-          titleSecond: (
-            <FeeSpeedTime index={index} waitingSeconds={waitingSeconds} />
-          ),
-          describe: (
-            <FormatCurrencyNativeOfAccount
-              accountId={accountId}
-              networkId={networkId}
-              value={minFeeNative}
-              render={(ele) => <>~ {!minFeeNative ? '-' : ele}</>}
-            />
-          ),
-          describeSecond: (
-            <FormatCurrencyNativeOfAccount
-              accountId={accountId}
-              networkId={networkId}
-              value={totalFeeNative}
-              render={(ele) => <>Max Fee: {!totalFeeNative ? '-' : ele}</>}
-            />
-          ),
-          describeThird: `${totalFeeNative}${
-            feeInfoPayload.info.nativeSymbol ?? ''
-          }`,
-        };
-      });
-    }
-
-    return gasList.map((gas, index) => {
-      const totalFee = calculateTotalFeeRange({
-        limit: feeInfoPayload?.info?.limit,
-        price: gas,
-      }).max;
-      const totalFeeNative = calculateTotalFeeNative({
-        amount: totalFee,
-        info: feeInfoPayload?.info as IFeeInfo,
-      });
+    const items = gasList.map((gas, index) => {
       const waitingSeconds = (feeInfoPayload?.info as IFeeInfo)
         .waitingSeconds?.[index];
 
       return {
         value: index.toString(),
-        title: <FeeSpeedLabel index={index} />,
-        titleSecond: (
-          <FeeSpeedTime index={index} waitingSeconds={waitingSeconds} />
-        ),
-        describe: (
-          <FormatCurrencyNativeOfAccount
-            accountId={accountId}
-            networkId={networkId}
-            value={totalFeeNative}
-            render={(ele) => <>~ {!totalFeeNative ? '-' : ele}</>}
+        title: (
+          <FeeSpeedLabel
+            index={index}
+            iconSize={28}
+            space={2}
+            prices={feeInfoPayload?.info.prices ?? []}
           />
         ),
-        describeSecond: `${totalFeeNative}${
-          feeInfoPayload?.info?.nativeSymbol
-            ? ` ${feeInfoPayload?.info?.nativeSymbol}`
-            : ''
-        }`,
+
+        describe: (
+          <HStack space="10px" alignItems="center">
+            <VStack>
+              <SendEditFeeOverview
+                accountId={accountId}
+                networkId={networkId}
+                price={gas}
+                feeInfo={feeInfoPayload?.info}
+                limit={feeInfoPayload?.info.limit ?? '0'}
+                currencyProps={{ typography: 'Body1', textAlign: 'right' }}
+                onlyCurrency
+              />
+              <FeeSpeedTime
+                index={index}
+                waitingSeconds={waitingSeconds}
+                prices={feeInfoPayload?.info.prices ?? []}
+              />
+            </VStack>
+            <FeeSpeedTip
+              index={index}
+              isEIP1559={feeInfoPayload?.info.eip1559}
+              price={gas}
+              limit={feeInfoPayload?.info.limit ?? '0'}
+              feeInfo={feeInfoPayload?.info}
+              prices={feeInfoPayload?.info.prices ?? []}
+            />
+          </HStack>
+        ),
+        ...presetItemStyle,
       };
     });
-  }, [accountId, feeInfoPayload?.info, gasList, networkId]);
+
+    if (!feeInfoPayload?.info.customDisabled) {
+      items.push({
+        value: 'custom',
+        title: (
+          <FeeSpeedLabel isCustom iconSize={28} alignItems="center" space={2} />
+        ),
+
+        describe: (
+          <HStack space="10px" alignItems="center">
+            <VStack>
+              {(customFeeInfo || btcCustomFee) && (
+                <SendEditFeeOverview
+                  accountId={accountId}
+                  networkId={networkId}
+                  price={
+                    customFeeInfo?.eip1559
+                      ? customFeeInfo?.price1559
+                      : customFeeInfo?.price
+                  }
+                  feeInfo={feeInfoPayload?.info}
+                  limit={
+                    customFeeInfo?.limit ?? feeInfoPayload?.info.limit ?? '0'
+                  }
+                  currencyProps={{ typography: 'Body1', textAlign: 'right' }}
+                  btcCustomFee={String(currentCustom?.btcFee)}
+                  onlyCurrency
+                />
+              )}
+
+              <CustomFeeSpeedTime
+                isEIP1559Fee={isEIP1559Fee}
+                waitingSeconds={feeInfoPayload?.info.waitingSeconds ?? []}
+                custom={customFeeInfo}
+                prices={feeInfoPayload?.info.prices ?? []}
+              />
+            </VStack>
+            <FeeSpeedTip
+              isCustom
+              isEIP1559={customFeeInfo?.eip1559}
+              price={
+                customFeeInfo?.eip1559
+                  ? customFeeInfo?.price1559
+                  : customFeeInfo?.price
+              }
+              limit={customFeeInfo?.limit ?? feeInfoPayload?.info.limit ?? '0'}
+            />
+          </HStack>
+        ),
+        ...customItemStyle,
+      });
+    }
+
+    return items;
+  }, [
+    gasList,
+    feeInfoPayload?.info,
+    accountId,
+    networkId,
+    customFeeInfo,
+    btcCustomFee,
+    currentCustom?.btcFee,
+    isEIP1559Fee,
+  ]);
 
   return (
-    <RadioFee
-      padding="0px"
-      mt={5}
-      items={gasItems}
-      name="standard fee group"
-      value={value}
-      onChange={onChange}
-    />
+    <Box>
+      {selectedFeeInfo}
+      <RadioFee
+        padding="0px"
+        mt={5}
+        items={gasItems}
+        name="standard fee group"
+        value={value}
+        onChange={(index) => onChange(index)}
+      />
+    </Box>
   );
 }

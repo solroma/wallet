@@ -20,13 +20,16 @@ import type {
   SelectItem,
 } from '@onekeyhq/components/src/Select';
 import type { Wallet } from '@onekeyhq/engine/src/types/wallet';
-import { CreateAccountModalRoutes } from '@onekeyhq/kit/src/routes';
-import { BackupWalletModalRoutes } from '@onekeyhq/kit/src/routes/Modal/BackupWallet';
-import { OnekeyHardwareModalRoutes } from '@onekeyhq/kit/src/routes/Modal/HardwareOnekey';
-import { HardwareUpdateModalRoutes } from '@onekeyhq/kit/src/routes/Modal/HardwareUpdate';
-import { ManagerWalletModalRoutes } from '@onekeyhq/kit/src/routes/Modal/ManagerWallet';
-import { ModalRoutes, RootRoutes } from '@onekeyhq/kit/src/routes/types';
-import { showOverlay } from '@onekeyhq/kit/src/utils/overlayUtils';
+import {
+  BackupWalletModalRoutes,
+  CreateAccountModalRoutes,
+  HardwareUpdateModalRoutes,
+  ManagerWalletModalRoutes,
+  ModalRoutes,
+  OnekeyHardwareModalRoutes,
+  RootRoutes,
+} from '@onekeyhq/kit/src/routes/routesEnum';
+import { showDialog } from '@onekeyhq/kit/src/utils/overlayUtils';
 
 import backgroundApiProxy from '../../../background/instance/backgroundApiProxy';
 import { useAppSelector } from '../../../hooks';
@@ -144,12 +147,7 @@ const RightHeader: FC<RightHeaderProps> = ({
 
   const showDeleteWalletDialog = useCallback(
     (walletProps: DeleteWalletProp) => {
-      showOverlay((onClose) => (
-        <ManagerWalletDeleteDialog
-          deleteWallet={walletProps}
-          closeOverlay={onClose}
-        />
-      ));
+      showDialog(<ManagerWalletDeleteDialog deleteWallet={walletProps} />);
     },
     [],
   );

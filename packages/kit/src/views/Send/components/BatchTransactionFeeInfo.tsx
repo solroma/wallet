@@ -27,7 +27,7 @@ import { FormatCurrencyNativeOfAccount } from '../../../components/Format';
 import { setFeePresetIndex } from '../../../store/reducers/data';
 import { showOverlay } from '../../../utils/overlayUtils';
 import { SendEditFeeStandardFormLite } from '../modals/SendEditFee/SendEditFeeStandardFormLite';
-import { SendRoutes } from '../types';
+import { SendModalRoutes } from '../types';
 import { useFeePresetIndex } from '../utils/useFeePresetIndex';
 import { useNetworkFeeInfoEditable } from '../utils/useNetworkFeeInfoEditable';
 
@@ -52,7 +52,7 @@ interface Props {
 
 type NavigationProps = StackNavigationProp<
   SendRoutesParams,
-  SendRoutes.BatchSendConfirm
+  SendModalRoutes.BatchSendConfirm
 >;
 
 function PressableWrapper({
@@ -198,7 +198,7 @@ function BatchTransactionFeeInfo(props: Props) {
       }
 
       if (replace) {
-        navigation.replace(SendRoutes.SendEditFee, {
+        navigation.replace(SendModalRoutes.SendEditFee, {
           networkId,
           accountId,
           encodedTx,
@@ -207,7 +207,7 @@ function BatchTransactionFeeInfo(props: Props) {
         });
       } else {
         navigation.navigate({
-          name: SendRoutes.SendEditFee,
+          name: SendModalRoutes.SendEditFee,
           params: {
             networkId,
             accountId,
@@ -245,15 +245,21 @@ function BatchTransactionFeeInfo(props: Props) {
                   <Text typography="Body2Strong" color="text-subdued">
                     {intl.formatMessage({ id: 'form__gas_fee_settings' })}
                   </Text>
-                  <Text typography="Body1Strong">
-                    <FeeSpeedLabel index={feePresetIndex} />
-                    <FormatCurrencyNativeOfAccount
-                      networkId={networkId}
-                      accountId={accountId}
-                      value={totalFeeInNative}
-                      render={(ele) => <>(~ {ele})</>}
+                  <HStack alignItems="center">
+                    <FeeSpeedLabel
+                      index={feePresetIndex}
+                      space={2}
+                      alignItems="center"
                     />
-                  </Text>
+                    <Text typography="Body1Strong">
+                      <FormatCurrencyNativeOfAccount
+                        networkId={networkId}
+                        accountId={accountId}
+                        value={totalFeeInNative}
+                        render={(ele) => <>(~ {ele})</>}
+                      />
+                    </Text>
+                  </HStack>
                   <Box
                     w="100%"
                     flexDirection="row"
@@ -304,9 +310,11 @@ function BatchTransactionFeeInfo(props: Props) {
               <Text typography="Body2Strong" color="text-subdued">
                 {intl.formatMessage({ id: 'form__gas_fee_settings' })}
               </Text>
-              <Text typography="Body1Strong">
-                <FeeSpeedLabel index={feePresetIndex} />
-              </Text>
+              <FeeSpeedLabel
+                index={feePresetIndex}
+                alignItems="center"
+                space={2}
+              />
             </VStack>
             {!disabled && (
               <Box>

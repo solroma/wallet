@@ -208,7 +208,8 @@ export class NewFirmwareForceUpdate extends OneKeyHardwareError {
 export class DeviceNotSame extends OneKeyHardwareError {
   override code = HardwareErrorCode.DeviceCheckDeviceIdError;
 
-  override key: LocaleIds = 'msg__not_the_same_wallet';
+  override key: LocaleIds =
+    'msg__device_information_is_inconsistent_it_may_caused_by_device_reset';
 }
 
 export class DeviceNotFind extends OneKeyHardwareError {
@@ -259,6 +260,13 @@ export class IncompleteFileError extends OneKeyHardwareError {
   override code = HardwareErrorCode.CheckDownloadFileError;
 
   override key: LocaleIds = 'msg__incomplete_file';
+}
+
+export class NotInSigningModeError extends OneKeyHardwareError {
+  override code = HardwareErrorCode.NotInSigningMode;
+
+  override key: LocaleIds =
+    'msg__transaction_signing_error_not_in_signing_mode';
 }
 
 // 未知错误

@@ -1,14 +1,24 @@
 import { useCallback, useMemo } from 'react';
 
+import BigNumber from 'bignumber.js';
+import { find } from 'lodash';
+import { useIntl } from 'react-intl';
+
+import { ToastManager } from '@onekeyhq/components';
+import type { IEncodedTxEvm } from '@onekeyhq/engine/src/vaults/impl/evm/Vault';
 import type {
   IFeeInfoUnit,
   ISignedTxPro,
 } from '@onekeyhq/engine/src/vaults/types';
-import { IDecodedTxActionType } from '@onekeyhq/engine/src/vaults/types';
+import {
+  IDecodedTxActionType,
+  IEncodedTxUpdateType,
+} from '@onekeyhq/engine/src/vaults/types';
 import { ENABLED_DAPP_SCOPE } from '@onekeyhq/shared/src/background/backgroundUtils';
 import {
   IMPL_COSMOS,
   IMPL_DOT,
+  IMPL_SUI,
 } from '@onekeyhq/shared/src/engine/engineConsts';
 
 import backgroundApiProxy from '../../../../background/instance/backgroundApiProxy';
@@ -21,13 +31,15 @@ import { wait } from '../../../../utils/helper';
 import { TxDetailView } from '../../../TxDetail/TxDetailView';
 import { BaseSendConfirmModal } from '../../components/BaseSendConfirmModal';
 import { FeeInfoInputForConfirmLite } from '../../components/FeeInfoInput';
+import { SendConfirmAdvancedSettings } from '../../components/SendConfirmAdvancedSettings';
 import { SendConfirmErrorsAlert } from '../../components/SendConfirmErrorsAlert';
-import { SendRoutes } from '../../types';
+import { SendModalRoutes } from '../../types';
 import {
   FEE_INFO_POLLING_INTERVAL,
   useFeeInfoPayload,
 } from '../../utils/useFeeInfoPayload';
 import { useReloadAccountBalance } from '../../utils/useReloadAccountBalance';
+import { useSendConfirmAdvancedSettings } from '../../utils/useSendConfirmAdvancedSettings';
 import { useSendConfirmEncodedTx } from '../../utils/useSendConfirmEncodedTx';
 import { useSendConfirmRouteParamsParsed } from '../../utils/useSendConfirmRouteParamsParsed';
 
@@ -49,6 +61,7 @@ function SendConfirm({
   sendConfirmParamsParsed: ReturnType<typeof useSendConfirmRouteParamsParsed>;
 }) {
   useOnboardingRequired();
+  const intl = useIntl();
   const { engine, serviceHistory, serviceToken } = backgroundApiProxy;
 
   const {
@@ -70,6 +83,11 @@ function SendConfirm({
   } = sendConfirmParamsParsed;
   useReloadAccountBalance({ networkId, accountId });
 
+  const {
+    isLoading: isLoadingAdvancedSettings,
+    advancedSettings,
+    setAdvancedSettings,
+  } = useSendConfirmAdvancedSettings({ accountId, networkId });
   const { walletId, networkImpl, account, wallet } = useActiveSideAccount({
     accountId,
     networkId,
@@ -142,10 +160,77 @@ function SendConfirm({
         });
       }
 
-      const result = await engine.specialCheckEncodedTx({
+      const encodedTxWithAdvancedSettings = await engine.updateEncodedTx({
         networkId,
         accountId,
         encodedTx: encodedTxWithFee,
+        payload: advancedSettings,
+        options: {
+          type: IEncodedTxUpdateType.advancedSettings,
+        },
+      });
+
+      const localPendingTxs = await serviceHistory.getLocalHistory({
+        networkId,
+        accountId,
+        isPending: true,
+        limit: 50,
+      });
+
+      const localPendingTxWithSameNonce = find(localPendingTxs, (tx) =>
+        new BigNumber(
+          (encodedTxWithAdvancedSettings as IEncodedTxEvm).nonce ?? 0,
+        ).isEqualTo(tx.decodedTx.nonce),
+      );
+
+      if (localPendingTxWithSameNonce) {
+        const { feeInfo } = localPendingTxWithSameNonce.decodedTx;
+        if (feeInfo && feeInfoValue) {
+          if (feeInfo.eip1559) {
+            if (
+              new BigNumber(
+                feeInfo.price1559?.maxFeePerGas ?? 0,
+              ).isGreaterThanOrEqualTo(
+                feeInfoValue.price1559?.maxFeePerGas ?? 0,
+              ) ||
+              new BigNumber(
+                feeInfo.price1559?.maxPriorityFeePerGas ?? 0,
+              ).isGreaterThanOrEqualTo(
+                feeInfoValue.price1559?.maxPriorityFeePerGas ?? 0,
+              )
+            ) {
+              ToastManager.show(
+                {
+                  title: intl.formatMessage({
+                    id: 'msg__invalid_rbf_tx_pay_a_higher_fee_and_retry',
+                  }),
+                },
+                { type: 'error' },
+              );
+              return;
+            }
+          } else if (
+            new BigNumber(feeInfo.price ?? 0).isGreaterThanOrEqualTo(
+              feeInfoValue.price ?? 0,
+            )
+          ) {
+            ToastManager.show(
+              {
+                title: intl.formatMessage({
+                  id: 'msg__invalid_rbf_tx_pay_a_higher_fee_and_retry',
+                }),
+              },
+              { type: 'error' },
+            );
+            return;
+          }
+        }
+      }
+
+      const result = await engine.specialCheckEncodedTx({
+        networkId,
+        accountId,
+        encodedTx: encodedTxWithAdvancedSettings,
       });
 
       const onFail = (error: Error) => {
@@ -164,7 +249,11 @@ function SendConfirm({
         });
         if (routeParams.signOnly) {
           // TODO Unified return to tx related processes to handle their own
-          if (networkImpl === IMPL_COSMOS || networkImpl === IMPL_DOT) {
+          if (
+            networkImpl === IMPL_COSMOS ||
+            networkImpl === IMPL_DOT ||
+            networkImpl === IMPL_SUI
+          ) {
             await dappApprove.resolve({ result: tx });
           } else {
             await dappApprove.resolve({ result: tx.rawTx });
@@ -192,8 +281,9 @@ function SendConfirm({
             accountId,
             closeModal: close,
           };
-          navigation.navigate(SendRoutes.HardwareSwapContinue, params);
-        } else {
+          navigation.navigate(SendModalRoutes.HardwareSwapContinue, params);
+        } else if (!routeParams.hideSendFeedbackReceipt) {
+          // Sometimes it is necessary to send multiple transactions. So the feedback are not displayed.
           const type = routeParams.signOnly ? 'Sign' : 'Send';
           const params: SendFeedbackReceiptParams = {
             networkId,
@@ -204,7 +294,11 @@ function SendConfirm({
             onDetail: routeParams.onDetail,
             isSingleTransformMode: true,
           };
-          navigation.navigate(SendRoutes.SendFeedbackReceipt, params);
+          navigation.navigate(SendModalRoutes.SendFeedbackReceipt, params);
+        } else {
+          setTimeout(() => {
+            close();
+          }, 0);
         }
 
         if (routeParams.onSuccess) {
@@ -214,13 +308,13 @@ function SendConfirm({
 
         // navigate SendFeedbackReceipt onSuccess
         // close modal
-        setTimeout(() => {
-          // close()
-        }, 0);
+        // setTimeout(() => {
+        //   // close()
+        // }, 0);
       };
       const nextRouteParams: SendAuthenticationParams = {
         ...routeParams,
-        encodedTx: encodedTxWithFee,
+        encodedTx: encodedTxWithAdvancedSettings,
         accountId,
         networkId,
         walletId,
@@ -239,12 +333,12 @@ function SendConfirm({
 
       if (result.success) {
         return navigation[nextRouteAction](
-          SendRoutes.SendAuthentication,
+          SendModalRoutes.SendAuthentication,
           nextRouteParams,
         );
       }
 
-      return navigation[nextRouteAction](SendRoutes.SendSpecialWarning, {
+      return navigation[nextRouteAction](SendModalRoutes.SendSpecialWarning, {
         ...nextRouteParams,
         hintMsgKey: result.key ?? '',
         hintMsgParams: result.params,
@@ -253,20 +347,22 @@ function SendConfirm({
     [
       feeInfoEditable,
       feeInfoPayload,
-      routeParams,
-      accountId,
-      walletId,
+      engine,
       networkId,
+      accountId,
+      advancedSettings,
+      serviceHistory,
+      routeParams,
+      walletId,
       onModalClose,
       navigation,
-      engine,
       dappApprove,
+      intl,
       serviceToken,
       payloadInfo?.swapInfo,
       wallet?.type,
-      serviceHistory,
-      resendActionInfo,
       networkImpl,
+      resendActionInfo,
     ],
   );
 
@@ -282,6 +378,18 @@ function SendConfirm({
       feeInfoError={feeInfoError}
     />
   );
+
+  const advancedSettingsForm = (
+    <SendConfirmAdvancedSettings
+      accountId={accountId}
+      networkId={networkId}
+      encodedTx={encodedTx}
+      advancedSettings={advancedSettings}
+      setAdvancedSettings={setAdvancedSettings}
+      isLoadingAdvancedSettings={isLoadingAdvancedSettings}
+    />
+  );
+
   const sharedProps: ITxConfirmViewProps = {
     accountId,
     networkId,
@@ -298,6 +406,8 @@ function SendConfirm({
     feeInfoError,
     feeInfoEditable,
     feeInput,
+    advancedSettings,
+    advancedSettingsForm,
 
     handleConfirm,
     onSecondaryActionPress: ({ close }) => {
@@ -322,6 +432,7 @@ function SendConfirm({
       isSendConfirm
       decodedTx={decodedTx}
       feeInput={feeInput}
+      advancedSettingsForm={advancedSettingsForm}
     />
   );
 

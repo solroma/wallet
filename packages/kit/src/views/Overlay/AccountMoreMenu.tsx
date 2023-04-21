@@ -20,9 +20,13 @@ import platformEnv from '@onekeyhq/shared/src/platformEnv';
 import backgroundApiProxy from '../../background/instance/backgroundApiProxy';
 import { useActiveWalletAccount, useNavigation } from '../../hooks';
 import { useCopyAddress } from '../../hooks/useCopyAddress';
+import { useIsMounted } from '../../hooks/useIsMounted';
 import { buildAddressDetailsUrl } from '../../hooks/useOpenBlockBrowser';
-import { FiatPayRoutes } from '../../routes/Modal/FiatPay';
-import { ModalRoutes, RootRoutes } from '../../routes/routesEnum';
+import {
+  FiatPayModalRoutes,
+  ModalRoutes,
+  RootRoutes,
+} from '../../routes/routesEnum';
 import { setPushNotificationConfig } from '../../store/reducers/settings';
 import { openUrl } from '../../utils/openUrl';
 import {
@@ -47,6 +51,7 @@ const AccountMoreMenu: FC<IMenu> = (props) => {
     useEnabledAccountDynamicAccounts();
   const [needActivateAccount, setNeedActivateAccount] =
     useState<boolean>(false);
+  const isMounted = useIsMounted();
 
   const enabledNotification = useMemo(
     () =>
@@ -75,11 +80,14 @@ const AccountMoreMenu: FC<IMenu> = (props) => {
       ) {
         return false;
       }
-      setNeedActivateAccount(
-        !!vaultSettings?.activateAccountRequired && wallet?.type !== 'watching',
-      );
+      if (isMounted.current) {
+        setNeedActivateAccount(
+          !!vaultSettings?.activateAccountRequired &&
+            wallet?.type !== 'watching',
+        );
+      }
     })();
-  }, [network, wallet?.type]);
+  }, [isMounted, network, wallet?.type]);
 
   const showSubscriptionIcon =
     !!account &&
@@ -178,7 +186,7 @@ const AccountMoreMenu: FC<IMenu> = (props) => {
             navigation.navigate(RootRoutes.Modal, {
               screen: ModalRoutes.FiatPay,
               params: {
-                screen: FiatPayRoutes.SupportTokenListModal,
+                screen: FiatPayModalRoutes.SupportTokenListModal,
                 params: {
                   networkId: network?.id ?? '',
                   accountId,
@@ -197,7 +205,7 @@ const AccountMoreMenu: FC<IMenu> = (props) => {
             navigation.navigate(RootRoutes.Modal, {
               screen: ModalRoutes.FiatPay,
               params: {
-                screen: FiatPayRoutes.SupportTokenListModal,
+                screen: FiatPayModalRoutes.SupportTokenListModal,
                 params: {
                   networkId: network?.id ?? '',
                   type: 'sell',
@@ -224,8 +232,11 @@ const AccountMoreMenu: FC<IMenu> = (props) => {
         id: 'action__copy_address',
         onPress: () => {
           setTimeout(() => {
-            copyAddress(account?.address);
-          });
+            copyAddress({
+              address: account?.address,
+              displayAddress: account?.displayAddress,
+            });
+          }, 150);
         },
         icon: 'Square2StackMini',
       },

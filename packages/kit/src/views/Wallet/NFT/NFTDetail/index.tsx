@@ -1,5 +1,5 @@
 import type { FC } from 'react';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { useNavigation, useRoute } from '@react-navigation/core';
 import BigNumber from 'bignumber.js';
@@ -40,12 +40,9 @@ import {
   getActiveWalletAccount,
   useActiveWalletAccount,
 } from '@onekeyhq/kit/src/hooks/redux';
-import type {
-  CollectiblesModalRoutes,
-  CollectiblesRoutesParams,
-} from '@onekeyhq/kit/src/routes/Modal/Collectibles';
+import type { CollectiblesRoutesParams } from '@onekeyhq/kit/src/routes/Root/Modal/Collectibles';
+import { ModalRoutes, RootRoutes } from '@onekeyhq/kit/src/routes/routesEnum';
 import type { ModalScreenProps } from '@onekeyhq/kit/src/routes/types';
-import { ModalRoutes, RootRoutes } from '@onekeyhq/kit/src/routes/types';
 import { generateUploadNFTParams } from '@onekeyhq/kit/src/utils/hardware/nftUtils';
 import NFTDetailMenu from '@onekeyhq/kit/src/views/Overlay/NFTDetailMenu';
 import { OnekeyNetwork } from '@onekeyhq/shared/src/config/networkIds';
@@ -54,7 +51,8 @@ import debugLogger from '@onekeyhq/shared/src/logger/debugLogger';
 import platformEnv from '@onekeyhq/shared/src/platformEnv';
 
 import backgroundApiProxy from '../../../../background/instance/backgroundApiProxy';
-import { SendRoutes } from '../../../../routes';
+import { SendModalRoutes } from '../../../../routes/routesEnum';
+// import hardware from '../../../../store/reducers/hardware';
 import { deviceUtils } from '../../../../utils/hardware';
 import CollectionLogo from '../../../NFTMarket/CollectionLogo';
 import { useCollectionDetail } from '../../../NFTMarket/Home/hook';
@@ -63,6 +61,7 @@ import { convertToMoneyFormat } from '../utils';
 
 import CollectibleContent from './CollectibleContent';
 
+import type { CollectiblesModalRoutes } from '../../../../routes/routesEnum';
 import type { DeviceUploadResourceParams } from '@onekeyfe/hd-core';
 import type { RouteProp } from '@react-navigation/core';
 
@@ -208,6 +207,7 @@ const NFTDetailModal: FC = () => {
     })();
   }, [wallet, asset]);
 
+  const hardwareCancelFlagRef = useRef(false);
   const onCollectToTouch = useCallback(async () => {
     let uri;
     if (asset.nftscanUri && asset.nftscanUri.length > 0) {
@@ -244,7 +244,7 @@ const NFTDetailModal: FC = () => {
       setMenuLoading(false);
       return;
     }
-    if (uploadResParams) {
+    if (uploadResParams && !hardwareCancelFlagRef.current) {
       try {
         await serviceHardware.uploadResource(
           device?.mac ?? '',
@@ -267,7 +267,7 @@ const NFTDetailModal: FC = () => {
       navigation.navigate(RootRoutes.Modal, {
         screen: ModalRoutes.Send,
         params: {
-          screen: SendRoutes.PreSendAddress,
+          screen: SendModalRoutes.PreSendAddress,
           params: {
             accountId,
             networkId,
@@ -731,7 +731,10 @@ const NFTDetailModal: FC = () => {
         top={platformEnv.isExtensionUiPopup ? '8px' : '24px'}
         right={platformEnv.isExtensionUiPopup ? '8px' : '24px'}
         zIndex={1}
-        onPress={modalClose}
+        onPress={() => {
+          hardwareCancelFlagRef.current = true;
+          modalClose();
+        }}
       />
       {modalContent()}
     </Modal>

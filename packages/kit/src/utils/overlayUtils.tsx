@@ -1,27 +1,40 @@
 import type { ReactElement } from 'react';
-import { createContext } from 'react';
+import { cloneElement } from 'react';
 
-import RootSiblings from 'react-native-root-siblings';
+import { StyleSheet, View } from 'react-native';
 
-export const OverlayContext = createContext({
-  closeOverlay: () => {},
-});
+import { enterPortal } from '../views/Overlay/RootPortal';
+
+import type { PortalManager } from '../views/Overlay/RootPortal';
+
+export const FULLWINDOW_OVERLAY_PORTAL = 'Root-FullWindowOverlay';
+
 export function showOverlay(
   renderOverlay: (closeOverlay: () => void) => ReactElement,
 ) {
-  let modal: RootSiblings | null;
+  let portal: PortalManager | null;
   const closeOverlay = () => {
-    modal?.destroy();
-    modal = null;
+    portal?.destroy();
+    portal = null;
   };
+  const content = (
+    <View pointerEvents="box-none" style={StyleSheet.absoluteFill}>
+      {renderOverlay(closeOverlay)}
+    </View>
+  );
   setTimeout(() => {
-    modal = new RootSiblings(
-      (
-        <OverlayContext.Provider value={{ closeOverlay }}>
-          {renderOverlay(closeOverlay)}
-        </OverlayContext.Provider>
-      ),
-    );
+    portal = enterPortal(FULLWINDOW_OVERLAY_PORTAL, content);
   });
   return closeOverlay;
 }
+
+export const showDialog = (render: ReactElement) =>
+  showOverlay((onClose) =>
+    cloneElement(render, {
+      onClose: () => {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
+        render.props.onClose?.();
+        onClose();
+      },
+    }),
+  );

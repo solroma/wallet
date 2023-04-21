@@ -26,12 +26,15 @@ import { useActiveWalletAccount } from '@onekeyhq/kit/src/hooks/redux';
 import { deviceUtils } from '@onekeyhq/kit/src/utils/hardware';
 import platformEnv from '@onekeyhq/shared/src/platformEnv';
 
-import type { ReceiveTokenRoutes, ReceiveTokenRoutesParams } from './types';
+import type {
+  ReceiveTokenModalRoutes,
+  ReceiveTokenRoutesParams,
+} from './types';
 import type { RouteProp } from '@react-navigation/core';
 
 type NavigationProps = RouteProp<
   ReceiveTokenRoutesParams,
-  ReceiveTokenRoutes.ReceiveToken
+  ReceiveTokenModalRoutes.ReceiveToken
 >;
 
 const ReceiveToken = () => {
@@ -39,7 +42,7 @@ const ReceiveToken = () => {
 
   const route = useRoute<NavigationProps>();
 
-  const { address, name } = route.params ?? {};
+  const { address, displayAddress, name } = route.params ?? {};
   const routePrams = route.params;
 
   const isVerticalLayout = useIsVerticalLayout();
@@ -56,7 +59,11 @@ const ReceiveToken = () => {
   const walletId = wallet?.id || '';
 
   const shownAddress =
-    address ?? account?.displayAddress ?? account?.address ?? '';
+    displayAddress ??
+    address ??
+    account?.displayAddress ??
+    account?.address ??
+    '';
   const shownName = name ?? account?.name ?? '';
 
   const { engine } = backgroundApiProxy;
@@ -104,7 +111,9 @@ const ReceiveToken = () => {
       if (!isSameAddress) {
         ToastManager.show(
           {
-            title: intl.formatMessage({ id: 'msg__not_the_same_wallet' }),
+            title: intl.formatMessage({
+              id: 'msg__address_is_inconsistent_please_check_manually',
+            }),
           },
           { type: 'default' },
         );
@@ -168,6 +177,7 @@ const ReceiveToken = () => {
           alignItems="center"
           mt={isVerticalLayout ? '32px' : '24px'}
           mx="auto"
+          maxWidth="full"
         >
           <Text
             textAlign="center"
@@ -182,7 +192,8 @@ const ReceiveToken = () => {
             color="text-subdued"
             textAlign="center"
             typography={{ sm: 'Body1', md: 'Body2' }}
-            noOfLines={3}
+            w="full"
+            maxWidth="full"
           >
             {isLoadingForHardware ? shownAddress : shortenAddress(shownAddress)}
           </Text>
@@ -318,7 +329,8 @@ const ReceiveToken = () => {
                       color="text-subdued"
                       textAlign="center"
                       typography={{ sm: 'Body1', md: 'Body2' }}
-                      noOfLines={3}
+                      w="full"
+                      maxWidth="full"
                     >
                       {shownAddress}
                     </Text>

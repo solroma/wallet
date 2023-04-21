@@ -17,9 +17,10 @@ import { MAX_PAGE_CONTAINER_WIDTH } from '@onekeyhq/shared/src/config/appConfig'
 import { useActiveWalletAccount } from '../../hooks';
 import { useSimpleTokenPriceValue } from '../../hooks/useManegeTokenPrice';
 import { useSingleToken } from '../../hooks/useTokens';
+import { ManageTokenModalRoutes } from '../../routes/routesEnum';
 import { ModalRoutes, RootRoutes } from '../../routes/types';
-import { ManageTokenRoutes } from '../ManageTokens/types';
 import PriceChart from '../PriceChart/PriceChart';
+import { KeleETHUnstakeBulletin } from '../Staking/components/KeleETHUnstakeBulletin';
 import StakedAssets from '../Staking/components/StakedAssets';
 import { TxHistoryListView } from '../TxHistory/TxHistoryListView';
 
@@ -82,7 +83,7 @@ const TokenDetail: FC<TokenDetailViewProps> = () => {
         navigation.navigate(RootRoutes.Modal, {
           screen: ModalRoutes.ManageToken,
           params: {
-            screen: ManageTokenRoutes.PriceAlertList,
+            screen: ManageTokenModalRoutes.PriceAlertList,
             params: {
               price,
               token: token as Token,
@@ -172,6 +173,9 @@ const TokenDetail: FC<TokenDetailViewProps> = () => {
       w="100%"
       maxW={MAX_PAGE_CONTAINER_WIDTH}
     >
+      <Box px={isVertical ? '4' : 0}>
+        <KeleETHUnstakeBulletin token={token} />
+      </Box>
       <TxHistoryListView
         accountId={accountId}
         networkId={networkId}

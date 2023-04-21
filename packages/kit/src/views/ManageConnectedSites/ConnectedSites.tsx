@@ -31,7 +31,7 @@ import {
 import backgroundApiProxy from '../../background/instance/backgroundApiProxy';
 import { useActiveWalletAccount, useAppSelector } from '../../hooks/redux';
 import { wait } from '../../utils/helper';
-import { showOverlay } from '../../utils/overlayUtils';
+import { showDialog, showOverlay } from '../../utils/overlayUtils';
 
 import AddConnectionSiteDialog from './Component/AddConnectionSite';
 import ConnectedSitesHeader from './Component/ConnectedSitesHeader';
@@ -183,9 +183,7 @@ export default function ConnectedSites() {
   );
 
   const openAddDialog = useCallback(() => {
-    showOverlay((closeOverlay) => (
-      <AddConnectionSiteDialog closeOverlay={closeOverlay} />
-    ));
+    showDialog(<AddConnectionSiteDialog />);
   }, []);
 
   const renderItem: ListRenderItem<DappSiteConnection> = useCallback(

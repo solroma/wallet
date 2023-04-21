@@ -86,7 +86,14 @@ export class KeyringHardware extends KeyringHardwareBase {
   override async prepareAccounts(
     params: IPrepareHardwareAccountsParams,
   ): Promise<DBUTXOAccount[]> {
-    const { indexes, purpose, names, template, skipCheckAccountExist } = params;
+    const {
+      indexes,
+      purpose,
+      names,
+      template,
+      skipCheckAccountExist,
+      confirmOnDevice,
+    } = params;
     const provider = await (
       this.vault as unknown as BTCForkVault
     ).getProvider();
@@ -99,6 +106,7 @@ export class KeyringHardware extends KeyringHardwareBase {
       addressIndex: 0,
       isChange: false,
       isCustomAddress: false,
+      confirmOnDevice,
       validator: skipCheckAccountExist
         ? undefined
         : async ({ xpub, addressEncoding }) => {
@@ -120,6 +128,7 @@ export class KeyringHardware extends KeyringHardwareBase {
     addressIndex,
     isChange,
     isCustomAddress,
+    confirmOnDevice,
     validator,
   }: {
     indexes: number[];
@@ -129,6 +138,7 @@ export class KeyringHardware extends KeyringHardwareBase {
     addressIndex: number;
     isChange: boolean;
     isCustomAddress: boolean;
+    confirmOnDevice?: boolean;
     validator?: ({
       xpub,
       address,
@@ -167,7 +177,9 @@ export class KeyringHardware extends KeyringHardwareBase {
         bundle: usedIndexes.map((index) => ({
           path: `${pathPrefix}/${index}'`,
           coin: coinName.toLowerCase(),
-          showOnOneKey: false,
+          showOnOneKey: !confirmOnDevice
+            ? false
+            : index === usedIndexes[usedIndexes.length - 1],
         })),
         ...passphraseState,
       });
@@ -360,6 +372,30 @@ export class KeyringHardware extends KeyringHardwareBase {
       return response.payload.address;
     }
     throw convertDeviceError(response.payload);
+  }
+
+  override async batchGetAddress(
+    params: IGetAddressParams[],
+  ): Promise<{ path: string; address: string }[]> {
+    const coinName = (this.vault as unknown as BTCForkVault).getCoinName();
+    const { connectId, deviceId } = await this.getHardwareInfo();
+    const passphraseState = await this.getWalletPassphraseState();
+    const response = await HardwareSDK.btcGetAddress(connectId, deviceId, {
+      ...passphraseState,
+      bundle: params.map(({ path, showOnOneKey }) => ({
+        path,
+        showOnOneKey: !!showOnOneKey,
+        coin: coinName.toLowerCase(),
+      })),
+    });
+
+    if (!response.success) {
+      throw convertDeviceError(response.payload);
+    }
+    return response.payload.map((item) => ({
+      path: item.path ?? '',
+      address: item.address ?? '',
+    }));
   }
 
   signMessage(): Promise<string[]> {

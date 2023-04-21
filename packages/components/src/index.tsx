@@ -54,12 +54,11 @@ export { default as Text } from './Text';
 export { default as VStack } from './VStack';
 export { default as ZStack } from './ZStack';
 export { default as Dialog } from './Dialog';
-export { default as DialogManager } from './DialogManager';
 export { default as PageActions } from './PageActions';
 export { default as Form } from './Form';
 export { default as Image } from './Image';
 export { default as NetImage } from './NetImage';
-
+export { default as Slider } from './Slider';
 export { default as ImageViewer } from './ImageViewer';
 export { default as SortableList } from './SortableList';
 export { default as TabView } from './TabView';
@@ -101,6 +100,8 @@ export { default as useTheme } from './Provider/hooks/useTheme';
 export { default as useThemeValue } from './Provider/hooks/useThemeValue';
 export { default as useUserDevice } from './Provider/hooks/useUserDevice';
 export { default as MnemonicCard } from './MnemonicCard';
+export { default as RichTooltip } from './RichTooltip';
+
 // only export default components or pure types here
 // the component name should be the same as the file name
 

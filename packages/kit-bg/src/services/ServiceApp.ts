@@ -243,7 +243,7 @@ class ServiceApp extends ServiceBase {
         // setTimeout to avoid RESET trigger install
         setTimeout(() => {
           extUtils.openExpandTab({
-            routes: [RootRoutes.Root],
+            routes: [RootRoutes.Main],
             params: {},
           });
         }, 1000);
@@ -304,6 +304,8 @@ class ServiceApp extends ServiceBase {
     await this.initLocalAuthentication();
     await this.checkLockStatus();
     serviceDiscover.init();
+
+    await serviceBootstrap.preBootstrap();
 
     const networks = await serviceNetwork.initNetworks();
     const wallets = await serviceAccount.initWallets();

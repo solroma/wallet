@@ -1,5 +1,5 @@
 import type { FC } from 'react';
-import { useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 
 import { useRoute } from '@react-navigation/core';
 import { useNavigation } from '@react-navigation/native';
@@ -21,10 +21,14 @@ import {
 import backgroundApiProxy from '@onekeyhq/kit/src/background/instance/backgroundApiProxy';
 import WalletAvatar from '@onekeyhq/kit/src/components/WalletSelector/WalletAvatar';
 import { useRuntime } from '@onekeyhq/kit/src/hooks/redux';
-import type { ManagerWalletRoutesParams } from '@onekeyhq/kit/src/routes/Modal/ManagerWallet';
-import { ManagerWalletModalRoutes } from '@onekeyhq/kit/src/routes/Modal/ManagerWallet';
-import { ModalRoutes, RootRoutes } from '@onekeyhq/kit/src/routes/types';
+import type { ManagerWalletRoutesParams } from '@onekeyhq/kit/src/routes/Root/Modal/ManagerWallet';
+import {
+  ManagerWalletModalRoutes,
+  ModalRoutes,
+  RootRoutes,
+} from '@onekeyhq/kit/src/routes/routesEnum';
 import { setRefreshTS } from '@onekeyhq/kit/src/store/reducers/settings';
+import platformEnv from '@onekeyhq/shared/src/platformEnv';
 import type { Avatar } from '@onekeyhq/shared/src/utils/emojiUtils';
 import { defaultAvatar } from '@onekeyhq/shared/src/utils/emojiUtils';
 
@@ -140,6 +144,15 @@ const ModifyWalletNameViewModal: FC = () => {
     [editAvatar, navigation],
   );
 
+  const onPress = useCallback(() => {
+    // Under Android, due to unknown reasons, there is a certain probability of crashing, and the onSubmit is delayed
+    if (platformEnv.isNativeAndroid) {
+      setTimeout(onSubmit, 50);
+    } else {
+      onSubmit();
+    }
+  }, [onSubmit]);
+
   return (
     <Modal
       header={intl.formatMessage({ id: 'modal__edit_wallet' })}
@@ -170,7 +183,7 @@ const ModifyWalletNameViewModal: FC = () => {
             type="primary"
             size="xl"
             isLoading={isLoading}
-            onPress={onSubmit}
+            onPress={onPress}
           >
             {intl.formatMessage({
               id: 'action__done',

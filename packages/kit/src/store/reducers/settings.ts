@@ -113,6 +113,8 @@ export type SettingsState = {
   softwareUpdate?: {
     forceUpdateVersionInfo?: VersionInfo;
   };
+  leftSidebarCollapsed?: boolean;
+  enableETH2Unstake?: boolean;
 };
 
 export const defaultPushNotification = {
@@ -574,6 +576,12 @@ export const settingsSlice = createSlice({
         forceUpdateVersionInfo: action.payload,
       };
     },
+    setLeftSidebarCollapsed(state, action: PayloadAction<boolean>) {
+      state.leftSidebarCollapsed = action.payload;
+    },
+    setEnableETH2Unstake(state, action: PayloadAction<boolean>) {
+      state.enableETH2Unstake = action.payload;
+    },
   },
 });
 
@@ -627,6 +635,8 @@ export const {
   setVerification,
   setDeviceVersion,
   setForceUpdateVersionInfo,
+  setLeftSidebarCollapsed,
+  setEnableETH2Unstake,
 } = settingsSlice.actions;
 
 export default settingsSlice.reducer;

@@ -2,11 +2,14 @@ import { createRef, memo, useEffect, useMemo, useRef } from 'react';
 
 import { useFlipper } from '@react-navigation/devtools';
 import { DefaultTheme, NavigationContainer } from '@react-navigation/native';
+import { StyleSheet, View } from 'react-native';
 import { RootSiblingParent } from 'react-native-root-siblings';
+import { FullWindowOverlay } from 'react-native-screens';
 
 import { useIsVerticalLayout, useThemeValue } from '@onekeyhq/components';
+import CustomToast from '@onekeyhq/components/src/Toast/Custom';
 import { useSettings } from '@onekeyhq/kit/src/hooks/redux';
-import RootStack from '@onekeyhq/kit/src/routes/Root';
+import { RootStackNavigator } from '@onekeyhq/kit/src/routes';
 import type { RootRoutesParams } from '@onekeyhq/kit/src/routes/types';
 import { analyticLogEvent } from '@onekeyhq/shared/src/analytics';
 import { setAttributes } from '@onekeyhq/shared/src/crashlytics';
@@ -16,6 +19,9 @@ import platformEnv from '@onekeyhq/shared/src/platformEnv';
 import { useShortcuts } from '../hooks/useShortcuts';
 import '../routes/deepLink';
 import buildLinking from '../routes/linking';
+import { createLazyComponent } from '../utils/createLazyComponent';
+import { FULLWINDOW_OVERLAY_PORTAL } from '../utils/overlayUtils';
+import { PortalExit } from '../views/Overlay/RootPortal';
 
 import RedirectProvider from './RedirectProvider';
 
@@ -23,6 +29,10 @@ import type { NavigationContainerRef } from '@react-navigation/native';
 
 export type RootNavContainerRef = NavigationContainerRef<RootRoutesParams>;
 export const navigationRef = createRef<RootNavContainerRef>();
+
+const ChainWebEmbed = createLazyComponent(
+  () => import('@onekeyhq/kit/src/views/ChainWebEmbed'),
+);
 
 declare global {
   // eslint-disable-next-line no-var, vars-on-top
@@ -41,10 +51,7 @@ const NavigationApp = () => {
     'divider',
   ]);
 
-  const linking = useMemo(
-    () => buildLinking(isVerticalLayout),
-    [isVerticalLayout],
-  );
+  const linking = useMemo(() => buildLinking(), []);
 
   /**
    * native-android & vertical layout web or ext
@@ -99,6 +106,17 @@ const NavigationApp = () => {
 
   useShortcuts();
 
+  const globalPortalViews = useMemo(
+    () => (
+      <View pointerEvents="box-none" style={StyleSheet.absoluteFill}>
+        <ChainWebEmbed />
+        <CustomToast bottomOffset={60} />
+        <PortalExit name={FULLWINDOW_OVERLAY_PORTAL} />
+      </View>
+    ),
+    [],
+  );
+
   return (
     <NavigationContainer
       documentTitle={{
@@ -133,8 +151,17 @@ const NavigationApp = () => {
     >
       <RootSiblingParent>
         <RedirectProvider>
-          <RootStack />
+          <RootStackNavigator />
         </RedirectProvider>
+        {platformEnv.isNativeIOS ? (
+          // FullWindowOverlay can render above native views
+          // but can not work with modal
+          // https://github.com/software-mansion/react-native-screens/issues/1149
+          // so now only used for toast
+          <FullWindowOverlay>{globalPortalViews}</FullWindowOverlay>
+        ) : (
+          globalPortalViews
+        )}
       </RootSiblingParent>
     </NavigationContainer>
   );

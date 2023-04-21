@@ -23,7 +23,7 @@ import {
 import platformEnv from '@onekeyhq/shared/src/platformEnv';
 
 import backgroundApiProxy from '../../background/instance/backgroundApiProxy';
-import { useHtmlPreloadSplashLogoRemove } from '../../provider/AppLoading';
+import { useHtmlPreloadSplashLogoRemove } from '../../hooks/useHtmlPreloadSplashLogoRemove';
 import { wait } from '../../utils/helper';
 import { showSplashScreen } from '../../views/Overlay/showSplashScreen';
 
@@ -52,7 +52,6 @@ const ForgetPasswordButton = () => {
         </Pressable>
       </Box>
       <Dialog
-        hasFormInsideDialog
         visible={visible}
         onClose={() => setVisible(false)}
         footerButtonProps={{

@@ -6,7 +6,6 @@ import { useIntl } from 'react-intl';
 
 import {
   Center,
-  DialogManager,
   Modal,
   Spinner,
   ToastManager,
@@ -14,13 +13,16 @@ import {
 } from '@onekeyhq/components';
 import backgroundApiProxy from '@onekeyhq/kit/src/background/instance/backgroundApiProxy';
 import NeedBridgeDialog from '@onekeyhq/kit/src/components/NeedBridgeDialog';
-import type { CreateWalletRoutesParams } from '@onekeyhq/kit/src/routes/Modal/CreateWallet';
-import { CreateWalletModalRoutes } from '@onekeyhq/kit/src/routes/Modal/CreateWallet';
+import type { CreateWalletRoutesParams } from '@onekeyhq/kit/src/routes/Root/Modal/CreateWallet';
+import {
+  CreateWalletModalRoutes,
+  ModalRoutes,
+  RootRoutes,
+} from '@onekeyhq/kit/src/routes/routesEnum';
 import type {
   ModalScreenProps,
   RootRoutesParams,
 } from '@onekeyhq/kit/src/routes/types';
-import { ModalRoutes, RootRoutes } from '@onekeyhq/kit/src/routes/types';
 import { CustomOneKeyHardwareError } from '@onekeyhq/kit/src/utils/hardware/errors';
 import type { IOneKeyDeviceFeatures } from '@onekeyhq/shared/types';
 
@@ -28,6 +30,7 @@ import { closeExtensionWindowIfOnboardingFinished } from '../../../hooks/useOnbo
 import { setOnBoardingLoadingBehindModal } from '../../../store/reducers/runtime';
 import { deviceUtils } from '../../../utils/hardware';
 import { wait } from '../../../utils/helper';
+import { showDialog } from '../../../utils/overlayUtils';
 import { EOnboardingRoutes } from '../../Onboarding/routes/enums';
 
 import type { RouteProp } from '@react-navigation/native';
@@ -83,7 +86,7 @@ const DeviceStatusCheckModal: FC = () => {
         safeGoBack();
         const { code } = e || {};
         if (code === CustomOneKeyHardwareError.NeedOneKeyBridge) {
-          DialogManager.show({ render: <NeedBridgeDialog /> });
+          showDialog(<NeedBridgeDialog />);
           return;
         }
 

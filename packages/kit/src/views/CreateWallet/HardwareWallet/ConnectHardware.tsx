@@ -10,7 +10,6 @@ import {
   Badge,
   Box,
   Center,
-  DialogManager,
   HStack,
   Icon,
   Image,
@@ -34,7 +33,7 @@ import KeepDeviceAroundSource from '@onekeyhq/kit/assets/wallet/keep_device_clos
 import backgroundApiProxy from '@onekeyhq/kit/src/background/instance/backgroundApiProxy';
 import NeedBridgeDialog from '@onekeyhq/kit/src/components/NeedBridgeDialog';
 import { useRuntime } from '@onekeyhq/kit/src/hooks/redux';
-import type { CreateWalletRoutesParams } from '@onekeyhq/kit/src/routes/Modal/CreateWallet';
+import type { CreateWalletRoutesParams } from '@onekeyhq/kit/src/routes/Root/Modal/CreateWallet';
 import {
   CreateWalletModalRoutes,
   ModalRoutes,
@@ -57,6 +56,7 @@ import {
   NeedBluetoothPermissions,
   NeedBluetoothTurnedOn,
 } from '../../../utils/hardware/errors';
+import { showDialog } from '../../../utils/overlayUtils';
 
 import type { RouteProp } from '@react-navigation/native';
 
@@ -167,7 +167,7 @@ const ConnectHardwareModal: FC = () => {
 
     const checkBridge = await serviceHardware.checkBridge();
     if (typeof checkBridge === 'boolean' && !checkBridge) {
-      DialogManager.show({ render: <NeedBridgeDialog /> });
+      showDialog(<NeedBridgeDialog />);
       return;
     }
     if (
@@ -187,7 +187,7 @@ const ConnectHardwareModal: FC = () => {
           },
         );
       } else {
-        DialogManager.show({ render: <NeedBridgeDialog /> });
+        showDialog(<NeedBridgeDialog />);
       }
       return;
     }

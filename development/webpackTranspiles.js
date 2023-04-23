@@ -9,6 +9,7 @@ const webModuleTranspile = [
   '@kaspa/core-lib',
   '@zondax/izari-filecoin',
   '@onekeyhq',
+  'timeout-signal',
 ];
 
 const extModuleTranspile = [
@@ -17,6 +18,7 @@ const extModuleTranspile = [
   'popmotion',
   '@mysten/sui.js',
   'superstruct',
+  'timeout-signal',
   '@noble/curves',
   '@polkadot/api',
   '@polkadot/wasm-bridge',

@@ -5442,7 +5442,7 @@ __metadata:
     "@types/jsrsasign": ^10
     "@types/memoizee": ^0.4.8
     "@types/node": ^16.7.13
-    "@types/react": ^18.0.25
+    "@types/react": ^17
     "@types/react-dom": ^18.0.9
     "@types/react-native": ^0.71.6
     "@types/react-test-renderer": 18
@@ -5508,7 +5508,7 @@ __metadata:
     rimraf: ^3.0.2
     timeout-signal: 2.0.0
     ts-jest: ^27.0.5
-    typescript: 4.8.4
+    typescript: ^5.0.4
     ultra-runner: ^3.10.5
     webpack: 4.46.0
     webpack-bundle-analyzer: ^4.7.0
@@ -5546,7 +5546,6 @@ __metadata:
     "@react-navigation/stack": ^6.0.11
     "@types/levelup": ^5
     "@types/node": ^18.11.18
-    "@types/react": ~18.0.28
     "@types/react-native-canvas": ^0.1.9
     "@walletconnect/client": ^1.8.0
     "@walletconnect/qrcode-modal": ^1.8.0
@@ -5818,7 +5817,7 @@ __metadata:
     expo-notifications: ~0.18.1
     expo-secure-store: ^12.1.1
     fuse.js: ^6.5.3
-    lightweight-charts: ^4.0.1
+    lightweight-charts: ^3.8.0
     moti: ^0.24.2
     react-async-hook: ^4.0.0
     react-freeze: ^1.0.3
@@ -9075,14 +9074,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/react@npm:^18":
-  version: 18.0.38
-  resolution: "@types/react@npm:18.0.38"
+"@types/react@npm:^17":
+  version: 17.0.58
+  resolution: "@types/react@npm:17.0.58"
   dependencies:
     "@types/prop-types": "*"
     "@types/scheduler": "*"
     csstype: ^3.0.2
-  checksum: 34481c79f4f7ea2aefbaa45281319dc183200230d932d968463eba1643bd3635073d0a17c5c613150a69e36ca18b811ecffafea6384fa3dff3b5203866339d69
+  checksum: 4eaf32b86c43f388c681e34a00921c508dd88a1d1022aebfadc5fe802b7c5bed863de1a17eed31e43ca2d65222952dfe79a022055a0e6e4e1ad89fc5a42ec05e
   languageName: node
   linkType: hard
 
@@ -17815,10 +17814,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"fancy-canvas@npm:2.1.0":
-  version: 2.1.0
-  resolution: "fancy-canvas@npm:2.1.0"
-  checksum: 2463ca8a9254fb4cc69bbe33a2996b2a0ba8f725721d51464d9e87b4f3c3e8759e2289b0d592f56265501d5cff0b363bb7c72bb9c38212c19114dbd006ec8959
+"fancy-canvas@npm:0.2.2":
+  version: 0.2.2
+  resolution: "fancy-canvas@npm:0.2.2"
+  checksum: 965446383e59aa0108e03a4bc2b12dbb386089a24d95ba1abfb3d0f7a96cf168af70de0c06fabb9f396542e8ea56d1fc8609db108d9ec0ca5f454749d1f78203
   languageName: node
   linkType: hard
 
@@ -22870,12 +22869,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"lightweight-charts@npm:^4.0.1":
-  version: 4.0.1
-  resolution: "lightweight-charts@npm:4.0.1"
+"lightweight-charts@npm:^3.8.0":
+  version: 3.8.0
+  resolution: "lightweight-charts@npm:3.8.0"
   dependencies:
-    fancy-canvas: 2.1.0
-  checksum: 772183cb4d334ba9baf7459fdaf58420f4846f9d0908af4f0a9592bda6c03ae09898f8b08c4095ba6f45667b3545febe4e6860decf827e6f8a5d198c40e91f3a
+    fancy-canvas: 0.2.2
+  checksum: 606c4b01a18e786562e7089f7e2f0051bbb322beab03053efb278e9e238a5097202c5e5008a89a1153c42f1a948e1248ab383be7985ef25d26d2149df35c52dc
   languageName: node
   linkType: hard
 
@@ -32257,23 +32256,23 @@ __metadata:
   languageName: node
   linkType: hard
 
-"typescript@npm:4.8.4":
-  version: 4.8.4
-  resolution: "typescript@npm:4.8.4"
+"typescript@npm:^5.0.4":
+  version: 5.0.4
+  resolution: "typescript@npm:5.0.4"
   bin:
     tsc: bin/tsc
     tsserver: bin/tsserver
-  checksum: 3e4f061658e0c8f36c820802fa809e0fd812b85687a9a2f5430bc3d0368e37d1c9605c3ce9b39df9a05af2ece67b1d844f9f6ea8ff42819f13bcb80f85629af0
+  checksum: 82b94da3f4604a8946da585f7d6c3025fff8410779e5bde2855ab130d05e4fd08938b9e593b6ebed165bda6ad9292b230984f10952cf82f0a0ca07bbeaa08172
   languageName: node
   linkType: hard
 
-"typescript@patch:typescript@4.8.4#~builtin<compat/typescript>":
-  version: 4.8.4
-  resolution: "typescript@patch:typescript@npm%3A4.8.4#~builtin<compat/typescript>::version=4.8.4&hash=0102e9"
+"typescript@patch:typescript@^5.0.4#~builtin<compat/typescript>":
+  version: 5.0.4
+  resolution: "typescript@patch:typescript@npm%3A5.0.4#~builtin<compat/typescript>::version=5.0.4&hash=85af82"
   bin:
     tsc: bin/tsc
     tsserver: bin/tsserver
-  checksum: 301459fc3eb3b1a38fe91bf96d98eb55da88a9cb17b4ef80b4d105d620f4d547ba776cc27b44cc2ef58b66eda23fe0a74142feb5e79a6fb99f54fc018a696afa
+  checksum: bb309d320c59a26565fb3793dba550576ab861018ff3fd1b7fccabbe46ae4a35546bc45f342c0a0b6f265c801ccdf64ffd68f548f117ceb7f0eac4b805cd52a9
   languageName: node
   linkType: hard
 

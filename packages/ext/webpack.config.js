@@ -31,7 +31,7 @@ const secretsPath = path.join(__dirname, `secrets.${env.NODE_ENV}.js`);
 const secrets = fse.existsSync(secretsPath) ? secretsPath : false;
 
 const alias = {
-  'react-dom': '@hot-loader/react-dom',
+  // 'react-dom': '@hot-loader/react-dom',
   // 'secrets': secrets,
 };
 

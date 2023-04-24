@@ -3861,19 +3861,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@hot-loader/react-dom@npm:^17.0.2":
-  version: 17.0.2
-  resolution: "@hot-loader/react-dom@npm:17.0.2"
-  dependencies:
-    loose-envify: ^1.1.0
-    object-assign: ^4.1.1
-    scheduler: ^0.20.2
-  peerDependencies:
-    react: 17.0.2
-  checksum: 180de3211aff1d60fd9d2a9130ba7977e2e356b1ecd2e7c50a98e6507bb7873f0523b44fa63142f0ffdc629d2933994f4add86e1f19288941f9d223bd28f5e48
-  languageName: node
-  linkType: hard
-
 "@humanwhocodes/config-array@npm:^0.10.5":
   version: 0.10.7
   resolution: "@humanwhocodes/config-array@npm:0.10.7"
@@ -4755,25 +4742,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@noble/curves@npm:^0.8.3":
-  version: 0.8.3
-  resolution: "@noble/curves@npm:0.8.3"
-  dependencies:
-    "@noble/hashes": 1.3.0
-  checksum: caab73fbd0335e26249db26f2dbfa7eb7413814c62d1b94d688f19474b8c2dad7f6afe193a59ff45ae8a8516a473d8e86e9060aac806a1018d124a9e1307562b
-  languageName: node
-  linkType: hard
-
-"@noble/curves@npm:^0.9.0":
-  version: 0.9.1
-  resolution: "@noble/curves@npm:0.9.1"
-  dependencies:
-    "@noble/hashes": 1.3.0
-  checksum: f34b8256182d3287fa80225a793e4db470f8e47d62e95700150e97c18e96547891d6651b9ce1727c2fba88bfe96b3a10af6320a35f89f9eca04e0b1f0247a5af
-  languageName: node
-  linkType: hard
-
-"@noble/curves@npm:~1.0.0":
+"@noble/curves@npm:^1.0.0":
   version: 1.0.0
   resolution: "@noble/curves@npm:1.0.0"
   dependencies:
@@ -5745,16 +5714,14 @@ __metadata:
   resolution: "@onekeyhq/ext@workspace:packages/ext"
   dependencies:
     "@expo/next-adapter": ^4.0.13
-    "@hot-loader/react-dom": ^17.0.2
     "@vespaiach/axios-fetch-adapter": ^0.3.1
     cheerio: ^1.0.0-rc.12
     cross-env: ^7.0.3
     next: ^11.1.2
     next-compose-plugins: ^2.2.0
     next-transpile-modules: ^8.0.0
-    react: 17.0.2
-    react-dom: 17.0.2
-    react-hot-loader: ^4.13.0
+    react: 18.2.0
+    react-dom: 18.2.0
   languageName: unknown
   linkType: soft
 
@@ -5776,7 +5743,6 @@ __metadata:
     dotbit: ^0.4.1
     react-native-restart: 0.0.24
     react-native-uuid: ^2.0.1
-    react-redux: ^7.2.6
     rimraf: ^3.0.2
     semver: ^7.3.7
     socket.io-client: ^4.5.2
@@ -8718,7 +8684,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/hoist-non-react-statics@npm:^3.3.0, @types/hoist-non-react-statics@npm:^3.3.1":
+"@types/hoist-non-react-statics@npm:^3.3.1":
   version: 3.3.1
   resolution: "@types/hoist-non-react-statics@npm:3.3.1"
   dependencies:
@@ -9050,18 +9016,6 @@ __metadata:
   dependencies:
     "@types/react": "*"
   checksum: 067325c549e7181c73cdf8da1cb7bdef226124d91c3f72fcc2fb8b3c98a2d184f74a16ba627e3192253103bd651e8238d0e722b93f762b3f1a3f5b96773ec7a5
-  languageName: node
-  linkType: hard
-
-"@types/react-redux@npm:^7.1.20":
-  version: 7.1.20
-  resolution: "@types/react-redux@npm:7.1.20"
-  dependencies:
-    "@types/hoist-non-react-statics": ^3.3.0
-    "@types/react": "*"
-    hoist-non-react-statics: ^3.3.0
-    redux: ^4.0.0
-  checksum: 5e0405d0d312f1b5e2dd48ab5833d3226295931fe8d276bd0891fafe4dd7ba9efbc74b1e8b30685ba96e9dc1a63d57444ae335785ce6fda96900d5fc9f800dcf
   languageName: node
   linkType: hard
 
@@ -19032,7 +18986,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"global@npm:^4.3.0, global@npm:~4.4.0":
+"global@npm:~4.4.0":
   version: 4.4.0
   resolution: "global@npm:4.4.0"
   dependencies:
@@ -23010,7 +22964,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"loader-utils@npm:^2.0.0, loader-utils@npm:^2.0.3, loader-utils@npm:^2.0.4":
+"loader-utils@npm:^2.0.0, loader-utils@npm:^2.0.4":
   version: 2.0.4
   resolution: "loader-utils@npm:2.0.4"
   dependencies:
@@ -27115,7 +27069,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"prop-types@npm:*, prop-types@npm:15.8.1, prop-types@npm:^15.0.0, prop-types@npm:^15.5.10, prop-types@npm:^15.5.7, prop-types@npm:^15.6.1, prop-types@npm:^15.6.2, prop-types@npm:^15.7.2, prop-types@npm:^15.8.1":
+"prop-types@npm:*, prop-types@npm:15.8.1, prop-types@npm:^15.0.0, prop-types@npm:^15.5.10, prop-types@npm:^15.5.7, prop-types@npm:^15.6.2, prop-types@npm:^15.7.2, prop-types@npm:^15.8.1":
   version: 15.8.1
   resolution: "prop-types@npm:15.8.1"
   dependencies:
@@ -27571,19 +27525,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-dom@npm:17.0.2":
-  version: 17.0.2
-  resolution: "react-dom@npm:17.0.2"
-  dependencies:
-    loose-envify: ^1.1.0
-    object-assign: ^4.1.1
-    scheduler: ^0.20.2
-  peerDependencies:
-    react: 17.0.2
-  checksum: 1c1eaa3bca7c7228d24b70932e3d7c99e70d1d04e13bb0843bbf321582bc25d7961d6b8a6978a58a598af2af496d1cedcfb1bf65f6b0960a0a8161cb8dab743c
-  languageName: node
-  linkType: hard
-
 "react-dom@npm:18.2.0":
   version: 18.2.0
   resolution: "react-dom@npm:18.2.0"
@@ -27641,29 +27582,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-hot-loader@npm:^4.13.0":
-  version: 4.13.1
-  resolution: "react-hot-loader@npm:4.13.1"
-  dependencies:
-    fast-levenshtein: ^2.0.6
-    global: ^4.3.0
-    hoist-non-react-statics: ^3.3.0
-    loader-utils: ^2.0.3
-    prop-types: ^15.6.1
-    react-lifecycles-compat: ^3.0.4
-    shallowequal: ^1.1.0
-    source-map: ^0.7.3
-  peerDependencies:
-    "@types/react": ^15.0.0 || ^16.0.0 || ^17.0.0
-    react: ^15.0.0 || ^16.0.0 || ^17.0.0
-    react-dom: ^15.0.0 || ^16.0.0 || ^17.0.0
-  peerDependenciesMeta:
-    "@types/react":
-      optional: true
-  checksum: f90890d5160dcb2bfae4022cba065d8e5c26b86f34c4604cbbdd39f5e4dfd82c05c317bb05ef3d4da2aa0be7e8e205c905daea1af40d3a7ef0d07c3d289da11c
-  languageName: node
-  linkType: hard
-
 "react-inspector@npm:^5.1.0":
   version: 5.1.1
   resolution: "react-inspector@npm:5.1.1"
@@ -27705,13 +27623,6 @@ __metadata:
   version: 17.0.2
   resolution: "react-is@npm:17.0.2"
   checksum: 9d6d111d8990dc98bc5402c1266a808b0459b5d54830bbea24c12d908b536df7883f268a7868cfaedde3dd9d4e0d574db456f84d2e6df9c4526f99bb4b5344d8
-  languageName: node
-  linkType: hard
-
-"react-lifecycles-compat@npm:^3.0.4":
-  version: 3.0.4
-  resolution: "react-lifecycles-compat@npm:3.0.4"
-  checksum: a904b0fc0a8eeb15a148c9feb7bc17cec7ef96e71188280061fc340043fd6d8ee3ff233381f0e8f95c1cf926210b2c4a31f38182c8f35ac55057e453d6df204f
   languageName: node
   linkType: hard
 
@@ -28420,27 +28331,6 @@ __metadata:
   peerDependencies:
     react: ">=16.6.0"
   checksum: 77d3e55ed67cd9c1e2300a990d8015d270072daad41f8a0750c32748f3fbfbc5bd2a2f06e78ac6828c2260b84537b9571d0abac31d3e888b74a3dccb59a56365
-  languageName: node
-  linkType: hard
-
-"react-redux@npm:^7.2.6":
-  version: 7.2.6
-  resolution: "react-redux@npm:7.2.6"
-  dependencies:
-    "@babel/runtime": ^7.15.4
-    "@types/react-redux": ^7.1.20
-    hoist-non-react-statics: ^3.3.2
-    loose-envify: ^1.4.0
-    prop-types: ^15.7.2
-    react-is: ^17.0.2
-  peerDependencies:
-    react: ^16.8.3 || ^17
-  peerDependenciesMeta:
-    react-dom:
-      optional: true
-    react-native:
-      optional: true
-  checksum: 0bf142ce0d0b80aef955650fd5e9489fca32d94f19ee23893b332f1b01ceee7bd3623337c942cbda642667d1dc9de5ac869c3c1946afa6cf2046407b57d24741
   languageName: node
   linkType: hard
 
@@ -29580,16 +29470,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"scheduler@npm:^0.20.2":
-  version: 0.20.2
-  resolution: "scheduler@npm:0.20.2"
-  dependencies:
-    loose-envify: ^1.1.0
-    object-assign: ^4.1.1
-  checksum: c4b35cf967c8f0d3e65753252d0f260271f81a81e427241295c5a7b783abf4ea9e905f22f815ab66676f5313be0a25f47be582254db8f9241b259213e999b8fc
-  languageName: node
-  linkType: hard
-
 "scheduler@npm:^0.22.0":
   version: 0.22.0
   resolution: "scheduler@npm:0.22.0"
@@ -29936,13 +29816,6 @@ __metadata:
   dependencies:
     kind-of: ^6.0.2
   checksum: 39b3dd9630a774aba288a680e7d2901f5c0eae7b8387fc5c8ea559918b29b3da144b7bdb990d7ccd9e11be05508ac9e459ce51d01fd65e583282f6ffafcba2e7
-  languageName: node
-  linkType: hard
-
-"shallowequal@npm:^1.1.0":
-  version: 1.1.0
-  resolution: "shallowequal@npm:1.1.0"
-  checksum: f4c1de0837f106d2dbbfd5d0720a5d059d1c66b42b580965c8f06bb1db684be8783538b684092648c981294bf817869f743a066538771dbecb293df78f765e00
   languageName: node
   linkType: hard
 

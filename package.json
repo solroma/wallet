@@ -78,7 +78,7 @@
     "axios": "^0.27.2",
     "bitcoinjs-lib": "6.1.0",
     "bitcoinjs-message": "2.2.0",
-    "expo": "^48.0.11",
+    "expo": "^48.0.12",
     "expo-device": "^5.0.0",
     "jsrsasign": "^10.6.1",
     "memoizee": "^0.4.15",
@@ -130,7 +130,7 @@
     "eslint-plugin-react": "^7.31.11",
     "eslint-plugin-react-hooks": "^4.6.0",
     "eth-rpc-errors": "^4.0.3",
-    "expo": "^48.0.11",
+    "expo": "^48.0.12",
     "file-loader": "^6.2.0",
     "fs-extra": "^10.0.0",
     "globalthis": "^1.0.2",
@@ -209,7 +209,6 @@
     "cross-fetch": "patch:cross-fetch@npm%3A3.1.5#./.yarn/patches/cross-fetch-npm-3.1.5-e414995db9.patch",
     "protobufjs": "patch:protobufjs@npm%3A6.11.3#./.yarn/patches/protobufjs-npm-6.11.3-566fb31188.patch",
     "react": "18.2.0",
-    "@noble/curves": "^1.0.0",
     "jsc-android": "294992.0.0"
   },
   "packageManager": "yarn@3.5.0"

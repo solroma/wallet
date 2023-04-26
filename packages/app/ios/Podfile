@@ -119,6 +119,7 @@ target 'OneKeyWallet' do
       # workaround for apple silicon simulator
       installer.pods_project.targets.each do |target|
         target.build_configurations.each do |config|
+          config.build_settings["EXCLUDED_ARCHS[sdk=iphonesimulator*]"] = "arm64"
           if config.name == 'Debug'
             config.build_settings["ONLY_ACTIVE_ARCH"] = "NO"
           else
@@ -126,6 +127,7 @@ target 'OneKeyWallet' do
           end
         end
       end
+
     end
   end
 

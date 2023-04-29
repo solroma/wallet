@@ -2468,9 +2468,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@expo/cli@npm:0.7.0":
-  version: 0.7.0
-  resolution: "@expo/cli@npm:0.7.0"
+"@expo/cli@npm:0.7.1":
+  version: 0.7.1
+  resolution: "@expo/cli@npm:0.7.1"
   dependencies:
     "@babel/runtime": ^7.20.0
     "@expo/code-signing-certificates": 0.0.5
@@ -2483,7 +2483,7 @@ __metadata:
     "@expo/osascript": ^2.0.31
     "@expo/package-manager": ~1.0.0
     "@expo/plist": ^0.0.20
-    "@expo/prebuild-config": 6.0.0
+    "@expo/prebuild-config": 6.0.1
     "@expo/rudder-sdk-node": 1.1.1
     "@expo/spawn-async": 1.5.0
     "@expo/xcpretty": ^4.2.1
@@ -2535,7 +2535,7 @@ __metadata:
     ws: ^8.12.1
   bin:
     expo-internal: build/bin/cli
-  checksum: 08f217608ec425266913140a040ed94b9b0bced11f218bea63b692486d8173a5cbb0da9fab2ecb2e43c585c9e2270188bc8d661a1b8f06a4ccbcdee683126b43
+  checksum: 5b84f3ad6c57fa9c64a0edd99558ada7fca8556d6137213df141b90cd4c93b3605dafce1a72cb11f0448857c220c7be63cde295a2cb13d99ba1f122ea362da05
   languageName: node
   linkType: hard
 
@@ -2925,6 +2925,26 @@ __metadata:
   peerDependencies:
     expo-modules-autolinking: ">=0.8.1"
   checksum: 56be876959ce4d71734e26cd71f743fc06f1563548d8a41a9378c05ca075c073bfebbd89170188ea4ff2a1677eb2bae330f8f803b060796e4fd8cfc3a312302d
+  languageName: node
+  linkType: hard
+
+"@expo/prebuild-config@npm:6.0.1":
+  version: 6.0.1
+  resolution: "@expo/prebuild-config@npm:6.0.1"
+  dependencies:
+    "@expo/config": ~8.0.0
+    "@expo/config-plugins": ~6.0.0
+    "@expo/config-types": ^48.0.0
+    "@expo/image-utils": 0.3.22
+    "@expo/json-file": ^8.2.37
+    debug: ^4.3.1
+    fs-extra: ^9.0.0
+    resolve-from: ^5.0.0
+    semver: 7.3.2
+    xml2js: 0.4.23
+  peerDependencies:
+    expo-modules-autolinking: ">=0.8.1"
+  checksum: 81ea222fe64ba18e958535c9ee36682ffc533daf1567910311fae19f4a6ded4712b1c0db997658e34911868d66bf911a6af02c5a7d8a8a942ef3b98b34c2986a
   languageName: node
   linkType: hard
 
@@ -5364,7 +5384,7 @@ __metadata:
     eslint-plugin-react: ^7.31.11
     eslint-plugin-react-hooks: ^4.6.0
     eth-rpc-errors: ^4.0.3
-    expo: ^48.0.12
+    expo: ^48.0.15
     expo-device: ^5.0.0
     file-loader: ^6.2.0
     fs-extra: ^10.0.0
@@ -5433,7 +5453,7 @@ __metadata:
     "@walletconnect/react-native-dapp": ^1.8.0
     asyncstorage-down: ^4.2.0
     buffer: ^6.0.3
-    expo: ^48.0.12
+    expo: ^48.0.15
     expo-clipboard: ^4.1.2
     expo-device: ^5.2.1
     expo-haptics: ^12.2.1
@@ -5552,7 +5572,7 @@ __metadata:
     electron-store: ^8.1.0
     electron-updater: ^5.2.1
     esbuild: ^0.15.11
-    expo: ^48.0.12
+    expo: ^48.0.15
     glob: ^7.2.0
     keytar: ^7.9.0
     node-fetch: ^2.6.7
@@ -5678,7 +5698,7 @@ __metadata:
     date-fns: ^2.29.3
     dotbit: ^0.4.1
     eth-chains: ^1.0.0
-    expo: ^48.0.12
+    expo: ^48.0.15
     expo-application: ^5.1.1
     expo-av: ^13.2.1
     expo-barcode-scanner: ^12.3.2
@@ -5746,7 +5766,7 @@ __metadata:
     "@onekeyhq/components": "*"
     "@onekeyhq/engine": "*"
     "@onekeyhq/kit": "*"
-    expo: ^48.0.12
+    expo: ^48.0.15
     firebase: ^9.8.2
     react-native-web: 0.18.10
     react-router-dom: ^6.3.0
@@ -5759,7 +5779,7 @@ __metadata:
   dependencies:
     "@onekeyhq/components": "*"
     "@onekeyhq/kit": "*"
-    expo: ^48.0.12
+    expo: ^48.0.15
     firebase: ^9.8.2
     moti: ^0.24.2
     react-native-web: 0.18.10
@@ -17358,12 +17378,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"expo@npm:^48.0.12":
-  version: 48.0.12
-  resolution: "expo@npm:48.0.12"
+"expo@npm:^48.0.15":
+  version: 48.0.15
+  resolution: "expo@npm:48.0.15"
   dependencies:
     "@babel/runtime": ^7.20.0
-    "@expo/cli": 0.7.0
+    "@expo/cli": 0.7.1
     "@expo/config": 8.0.2
     "@expo/config-plugins": 6.0.1
     "@expo/vector-icons": ^13.0.0
@@ -17386,7 +17406,7 @@ __metadata:
     uuid: ^3.4.0
   bin:
     expo: bin/cli.js
-  checksum: 013b29aaf741143bd1afaad867af2a1acee94ceb7e226bd1f0c40bf108b7ee41ff20617fa81c65a6680fd3dbf68a66fbddb0ead60d3bb13e825066e092cfc0c1
+  checksum: afd0b5b13af37608bba0746ade8868cbd924bca7c8a017fe266ae466059938baa9c556ab3917d15e9f2cbe65e80b0517058bf78524311c4b9aea8dc51b0aa85e
   languageName: node
   linkType: hard
 

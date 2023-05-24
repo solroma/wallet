@@ -4,14 +4,15 @@ import BigNumber from 'bignumber.js';
 import { last } from 'lodash';
 import memoizee from 'memoizee';
 
-import { NearCli } from '@onekeyhq/blockchain-libs/src/provider/chains/near';
-import type { Provider as NearProvider } from '@onekeyhq/blockchain-libs/src/provider/chains/near';
-import type { NearAccessKey } from '@onekeyhq/blockchain-libs/src/provider/chains/near/nearcli';
 import { ed25519 } from '@onekeyhq/engine/src/secret/curves';
 import { decrypt } from '@onekeyhq/engine/src/secret/encryptors/aes256';
 import { UnsignedTx } from '@onekeyhq/engine/src/types/provider';
 import type { PartialTokenInfo } from '@onekeyhq/engine/src/types/provider';
-import debugLogger from '@onekeyhq/shared/src/logger/debugLogger';
+import { NearCli } from '@onekeyhq/engine/src/vaults/impl/near/provider';
+import type {
+  NearAccessKey,
+  Provider as NearProvider,
+} from '@onekeyhq/engine/src/vaults/impl/near/provider';
 
 import {
   NotImplemented,

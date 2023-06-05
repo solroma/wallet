@@ -477,6 +477,8 @@ class DeviceUtils {
           window.desktopApi.reloadBridgeProcess();
         }
         return new Error.BridgeTimeoutError(payload);
+      case HardwareErrorCode.BridgeForbiddenError:
+        return new Error.BridgeForbiddenError(payload);
       case HardwareErrorCode.PollingTimeout:
         return new Error.ConnectTimeoutError(payload);
       case HardwareErrorCode.BlindSignDisabled:

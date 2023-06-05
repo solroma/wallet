@@ -1,0 +1,1 @@
+export const NEW_RELEASE_BRIDGE_VERSION = '2.2.0';

@@ -404,7 +404,7 @@ function createMainWindow() {
         url.startsWith('http://localhost:21320')
       ) {
         // resolve onekey bridge CORS error
-        details.requestHeaders.Origin = 'https://jssdk.onekey.so';
+        details.requestHeaders.Origin = 'https://jssdk.onekeycn.com';
       } else if (url.startsWith('https://mainnet.optimism.io')) {
         // add metamask header to resolve rate-limit
         details.requestHeaders.Origin =

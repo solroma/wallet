@@ -1,6 +1,7 @@
 import type { FC } from 'react';
 import { useCallback, useEffect, useRef } from 'react';
 
+import { HardwareErrorCode } from '@onekeyfe/hd-shared';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { useIntl } from 'react-intl';
 
@@ -29,6 +30,7 @@ import type { IOneKeyDeviceFeatures } from '@onekeyhq/shared/types';
 import { closeExtensionWindowIfOnboardingFinished } from '../../../hooks/useOnboardingRequired';
 import { setOnBoardingLoadingBehindModal } from '../../../store/reducers/runtime';
 import { deviceUtils } from '../../../utils/hardware';
+import { NEW_RELEASE_BRIDGE_VERSION } from '../../../utils/hardware/constants/versions';
 import { wait } from '../../../utils/helper';
 import { showDialog } from '../../../utils/overlayUtils';
 import { EOnboardingRoutes } from '../../Onboarding/routes/enums';
@@ -85,6 +87,12 @@ const DeviceStatusCheckModal: FC = () => {
       } catch (e: any) {
         safeGoBack();
         const { code } = e || {};
+        if (code === HardwareErrorCode.BridgeForbiddenError) {
+          showDialog(
+            <NeedBridgeDialog update version={NEW_RELEASE_BRIDGE_VERSION} />,
+          );
+          return;
+        }
         if (code === CustomOneKeyHardwareError.NeedOneKeyBridge) {
           showDialog(<NeedBridgeDialog />);
           return;

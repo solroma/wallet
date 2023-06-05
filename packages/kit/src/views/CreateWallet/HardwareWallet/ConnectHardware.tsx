@@ -24,8 +24,8 @@ import ClassicDeviceIcon from '@onekeyhq/components/img/deviceIcon_classic.png';
 import MiniDeviceIcon from '@onekeyhq/components/img/deviceIcon_mini.png';
 import TouchDeviceIcon from '@onekeyhq/components/img/deviceicon_touch.png';
 import PressableItem from '@onekeyhq/components/src/Pressable/PressableItem';
-import type { OneKeyHardwareError } from '@onekeyhq/engine/src/errors';
 import { OneKeyErrorClassNames } from '@onekeyhq/engine/src/errors';
+import type { OneKeyHardwareError } from '@onekeyhq/engine/src/errors';
 import type { Device } from '@onekeyhq/engine/src/types/device';
 import type { Wallet } from '@onekeyhq/engine/src/types/wallet';
 import KeepDeviceAroundSource from '@onekeyhq/kit/assets/wallet/keep_device_close.png';
@@ -48,6 +48,7 @@ import debugLogger from '@onekeyhq/shared/src/logger/debugLogger';
 import platformEnv from '@onekeyhq/shared/src/platformEnv';
 import type { IOneKeyDeviceType } from '@onekeyhq/shared/types';
 
+import { NEW_RELEASE_BRIDGE_VERSION } from '../../../utils/hardware/constants/versions';
 import {
   BleLocationServiceError,
   InitIframeLoadFail,
@@ -174,7 +175,12 @@ const ConnectHardwareModal: FC = () => {
       (checkBridge as unknown as OneKeyHardwareError).className ===
       OneKeyErrorClassNames.OneKeyHardwareError
     ) {
-      if (platformEnv.isDesktop) {
+      const { code } = checkBridge as unknown as OneKeyHardwareError;
+      if (code === HardwareErrorCode.BridgeForbiddenError) {
+        showDialog(
+          <NeedBridgeDialog update version={NEW_RELEASE_BRIDGE_VERSION} />,
+        );
+      } else if (platformEnv.isDesktop) {
         window.desktopApi.reloadBridgeProcess();
         ToastManager.show(
           {

@@ -19,7 +19,6 @@ import {
 } from '@onekeyhq/kit/src/store/reducers/settings';
 import { deviceUtils } from '@onekeyhq/kit/src/utils/hardware';
 import {
-  BridgeTimeoutError,
   FirmwareVersionTooLow,
   InitIframeLoadFail,
   InitIframeTimeout,
@@ -600,6 +599,7 @@ class ServiceHardware extends ServiceBase {
 
     if (!bridgeStatus.success) {
       const error = deviceUtils.convertDeviceError(bridgeStatus.payload);
+      const { code } = error || {};
       if (
         error instanceof InitIframeLoadFail ||
         error instanceof InitIframeTimeout
@@ -610,7 +610,10 @@ class ServiceHardware extends ServiceBase {
        * Sometimes we need to capture the Bridge timeout error
        * it does not mean that the user does not have bridge installed
        */
-      if (error instanceof BridgeTimeoutError) {
+      if (
+        code === HardwareErrorCode.BridgeTimeoutError ||
+        code === HardwareErrorCode.BridgeForbiddenError
+      ) {
         return Promise.resolve(error);
       }
 

@@ -85,7 +85,8 @@ export class BridgeTimeoutErrorForDesktop extends OneKeyHardwareError {
 export class BridgeForbiddenError extends OneKeyHardwareError {
   override code = HardwareErrorCode.BridgeForbiddenError;
 
-  override key: LocaleIds = 'msg__hardware_bridge_timeout';
+  override key: LocaleIds =
+    'msg__please_upgrade_to_the_lastest_version_of_onekey_bridge';
 }
 
 export class ConnectTimeoutError extends OneKeyHardwareError {

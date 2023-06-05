@@ -278,7 +278,7 @@ const UpdateInfoModal: FC = () => {
             setTimeout(() => {
               showDialog(
                 <NeedBridgeDialog
-                  update
+                  requiredUpdate
                   version={shouldUpdateBridge.releaseVersion ?? ''}
                 />,
               );

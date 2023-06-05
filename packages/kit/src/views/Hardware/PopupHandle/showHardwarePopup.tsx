@@ -262,6 +262,10 @@ export default async function showHardwarePopup({
     return;
   }
 
+  if (uiRequest === CUSTOM_UI_RESPONSE.CUSTOM_NEED_ONEKEY_BRIDGE_UPDATE) {
+    showDialog(<NeedBridgeDialog commonUpdate />);
+  }
+
   if (uiRequest === CUSTOM_UI_RESPONSE.CUSTOM_FORCE_UPGRADE_FIRMWARE) {
     showDialog(
       <HandlerFirmwareUpgradeView

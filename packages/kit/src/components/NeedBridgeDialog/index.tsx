@@ -14,42 +14,46 @@ import type { MessageDescriptor } from 'react-intl';
 
 export type NeedBridgeDialogProps = {
   onClose?: () => void;
-  update?: boolean;
+  requiredUpdate?: boolean;
+  commonUpdate?: boolean;
   version?: string;
 };
 
 const NeedBridgeDialog: FC<NeedBridgeDialogProps> = ({
   onClose,
-  update,
+  requiredUpdate,
+  commonUpdate,
   version,
 }) => {
   const intl = useIntl();
 
   const icon = useMemo(
     () =>
-      update ? (
+      requiredUpdate || commonUpdate ? (
         <Center p={3} rounded="full" bgColor="surface-warning-default">
           <Icon name="UploadOutline" color="icon-warning" size={24} />
         </Center>
       ) : (
         <Icon name="ExclamationTriangleOutline" size={48} />
       ),
-    [update],
+    [requiredUpdate, commonUpdate],
   );
   const title = useMemo<MessageDescriptor['id']>(
     () =>
-      update
+      requiredUpdate || commonUpdate
         ? 'title__requires_updating_of_onekey_bridge'
         : 'modal__need_install_onekey_bridge',
-    [update],
+    [requiredUpdate, commonUpdate],
   );
-  const content = useMemo<MessageDescriptor['id']>(
-    () =>
-      update
-        ? 'content__onekey_bridge_str_is_now_available_do_you_want_to_download'
-        : 'modal__need_install_onekey_bridge_desc',
-    [update],
-  );
+  const content = useMemo<MessageDescriptor['id']>(() => {
+    if (requiredUpdate) {
+      return 'content__onekey_bridge_str_is_now_available_do_you_want_to_download';
+    }
+    if (commonUpdate) {
+      return 'msg__please_upgrade_to_the_lastest_version_of_onekey_bridge';
+    }
+    return 'modal__need_install_onekey_bridge_desc';
+  }, [requiredUpdate, commonUpdate]);
 
   return (
     <Dialog
@@ -62,7 +66,7 @@ const NeedBridgeDialog: FC<NeedBridgeDialogProps> = ({
           {
             id: content,
           },
-          update ? { 0: version ?? '' } : undefined,
+          requiredUpdate ? { 0: version ?? '' } : undefined,
         ),
       }}
       footerButtonProps={{

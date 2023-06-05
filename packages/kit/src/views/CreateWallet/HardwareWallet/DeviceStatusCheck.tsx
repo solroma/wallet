@@ -30,7 +30,6 @@ import type { IOneKeyDeviceFeatures } from '@onekeyhq/shared/types';
 import { closeExtensionWindowIfOnboardingFinished } from '../../../hooks/useOnboardingRequired';
 import { setOnBoardingLoadingBehindModal } from '../../../store/reducers/runtime';
 import { deviceUtils } from '../../../utils/hardware';
-import { NEW_RELEASE_BRIDGE_VERSION } from '../../../utils/hardware/constants/versions';
 import { wait } from '../../../utils/helper';
 import { showDialog } from '../../../utils/overlayUtils';
 import { EOnboardingRoutes } from '../../Onboarding/routes/enums';
@@ -88,9 +87,7 @@ const DeviceStatusCheckModal: FC = () => {
         safeGoBack();
         const { code } = e || {};
         if (code === HardwareErrorCode.BridgeForbiddenError) {
-          showDialog(
-            <NeedBridgeDialog update version={NEW_RELEASE_BRIDGE_VERSION} />,
-          );
+          showDialog(<NeedBridgeDialog commonUpdate />);
           return;
         }
         if (code === CustomOneKeyHardwareError.NeedOneKeyBridge) {

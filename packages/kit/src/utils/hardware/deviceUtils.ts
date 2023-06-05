@@ -257,6 +257,13 @@ class DeviceUtils {
         return true;
       }
 
+      if (code === HardwareErrorCode.BridgeForbiddenError) {
+        this.delayShowHardwarePopup({
+          uiRequest: CUSTOM_UI_RESPONSE.CUSTOM_NEED_ONEKEY_BRIDGE_UPDATE,
+        });
+        return true;
+      }
+
       if (className === OneKeyErrorClassNames.OneKeyHardwareError) {
         const { data } = error || {};
 

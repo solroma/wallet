@@ -48,7 +48,6 @@ import debugLogger from '@onekeyhq/shared/src/logger/debugLogger';
 import platformEnv from '@onekeyhq/shared/src/platformEnv';
 import type { IOneKeyDeviceType } from '@onekeyhq/shared/types';
 
-import { NEW_RELEASE_BRIDGE_VERSION } from '../../../utils/hardware/constants/versions';
 import {
   BleLocationServiceError,
   InitIframeLoadFail,
@@ -177,9 +176,7 @@ const ConnectHardwareModal: FC = () => {
     ) {
       const { code } = checkBridge as unknown as OneKeyHardwareError;
       if (code === HardwareErrorCode.BridgeForbiddenError) {
-        showDialog(
-          <NeedBridgeDialog update version={NEW_RELEASE_BRIDGE_VERSION} />,
-        );
+        showDialog(<NeedBridgeDialog commonUpdate />);
       } else if (platformEnv.isDesktop) {
         window.desktopApi.reloadBridgeProcess();
         ToastManager.show(

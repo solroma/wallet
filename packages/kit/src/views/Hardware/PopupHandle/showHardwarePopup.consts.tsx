@@ -12,6 +12,7 @@ export const CUSTOM_UI_RESPONSE = {
   CUSTOM_CANCEL: 'ui-custom_cancel',
   CUSTOM_REQUEST_PIN_ON_DEVICE: 'ui-custom_request_pin_on_device',
   CUSTOM_NEED_ONEKEY_BRIDGE: 'ui-custom_need_onekey_bridge',
+  CUSTOM_NEED_ONEKEY_BRIDGE_UPDATE: 'ui-custom_need_onekey_bridge_update',
   CUSTOM_FORCE_UPGRADE_FIRMWARE: 'ui-custom_force_onekey_bridge',
   CUSTOM_NEED_UPGRADE_FIRMWARE: 'ui-custom_need_upgrade_firmware',
   CUSTOM_NEED_OPEN_PASSPHRASE: 'ui-custom_need_open_passphrase',

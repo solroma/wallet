@@ -4,24 +4,27 @@
 /* eslint no-unused-vars: ["warn", { "argsIgnorePattern": "^_" }] */
 /* eslint @typescript-eslint/no-unused-vars: ["warn", { "argsIgnorePattern": "^_" }] */
 import { arrayify } from '@ethersproject/bytes';
+import { starcoin_types, utils } from '@starcoin/starcoin';
 
+import {
+  buildSignedTx,
+  buildUnsignedRawTx,
+} from '@onekeyhq/blockchain-libs/src/provider/chains/stc/provider';
+import type { SignedTx, UnsignedTx } from '@onekeyhq/engine/src/types/provider';
 import { convertDeviceError } from '@onekeyhq/shared/src/device/deviceErrorUtils';
 import { COINTYPE_STC as COIN_TYPE } from '@onekeyhq/shared/src/engine/engineConsts';
 import debugLogger from '@onekeyhq/shared/src/logger/debugLogger';
 
-import { OneKeyHardwareError } from '../../../../errors';
-import { AccountType } from '../../../../types/account';
-import { KeyringHardwareBase } from '../../../keyring/KeyringHardwareBase';
-import { StarcoinTypes, utils } from '../sdk';
-import { buildSignedTx, buildUnsignedRawTx } from '../utils';
+import { OneKeyHardwareError } from '../../../errors';
+import { AccountType } from '../../../types/account';
+import { KeyringHardwareBase } from '../../keyring/KeyringHardwareBase';
 
-import type { DBSimpleAccount } from '../../../../types/account';
-import type { SignedTx, UnsignedTx } from '../../../../types/provider';
+import type { DBSimpleAccount } from '../../../types/account';
 import type {
   IGetAddressParams,
   IPrepareHardwareAccountsParams,
   ISignCredentialOptions,
-} from '../../../types';
+} from '../../types';
 
 const PATH_PREFIX = `m/44'/${COIN_TYPE}'/0'/0'`;
 
@@ -109,7 +112,7 @@ export class KeyringHardware extends KeyringHardwareBase {
         if (type === 1) {
           // personal sign
           const msgBytes = arrayify(messageHex);
-          const signingMessage = new StarcoinTypes.SigningMessage(msgBytes);
+          const signingMessage = new starcoin_types.SigningMessage(msgBytes);
           const signedMessageHex =
             await utils.signedMessage.generateSignedMessage(
               signingMessage,

@@ -54,7 +54,7 @@ export function useBtcCustomFeeForm({
           'msg__enter_a_fee_rate_between_str_and_str',
           {
             min: '0',
-            max: '2000',
+            max: '20000',
           },
         );
       }

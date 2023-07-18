@@ -3,6 +3,7 @@ import { BigNumber, Contract, utils } from 'ethers';
 import { getAddress, hexDataSlice } from 'ethers/lib/utils';
 
 import { getFiatEndpoint } from '../endpoint';
+import { RevokeExcessiveGasCostError } from '../errors';
 import { OPENSEA_REGISTRY_ABI } from '../vaults/impl/evm/decoder/abi';
 
 import type { Token } from '../types/token';
@@ -121,6 +122,8 @@ enum ChainId {
   AuroraTestnet = 1313161555,
   HarmonyMainnetShard0 = 1666600000,
   Palm = 11297108109,
+  ZkSyncEraMainnet = 324,
+  ZkSyncEraTestnet = 280,
 }
 
 export const PROVIDER_SUPPORTED_CHAINS = [
@@ -493,3 +496,21 @@ export const withFallback = async (promise: Promise<any>, fallback: any) => {
 
 export const convertString = async (promise: Promise<any>) =>
   String(await promise);
+
+export const throwIfExcessiveGas = (
+  networkId: string,
+  estimatedGas: string,
+) => {
+  const EXCESSIVE_GAS = [
+    `evm--${ChainId.ZkSyncEraMainnet}`,
+    `evm--${ChainId.ZkSyncEraTestnet}`,
+  ].includes(networkId)
+    ? 10000000
+    : 1000000;
+
+  if (BigNumber.from(estimatedGas).gt(EXCESSIVE_GAS)) {
+    throw new RevokeExcessiveGasCostError(
+      'This transaction has an excessive gas cost. It is most likely a spam token, so you do not need to revoke this approval.',
+    );
+  }
+};

@@ -2,9 +2,11 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { useNavigation } from '@react-navigation/core';
 import { useAsync } from 'react-async-hook';
+import { useIntl } from 'react-intl';
 
 import { useUserDevice } from '@onekeyhq/components';
 import { shortenAddress } from '@onekeyhq/components/src/utils';
+import { showNotification } from '@onekeyhq/components/src/utils/showNotification';
 import { ADDRESS_ZERO } from '@onekeyhq/engine/src/managers/revoke';
 import { WALLET_TYPE_WATCHING } from '@onekeyhq/engine/src/types/wallet';
 import type { IEncodedTx } from '@onekeyhq/engine/src/vaults/types';
@@ -133,8 +135,10 @@ export const useUpdateAllowance = ({
   spender: string;
   contract: string;
 }) => {
+  const intl = useIntl();
   const navigation = useNavigation();
   const { accountId, accountAddress } = useActiveWalletAccount();
+
   const update = useCallback(
     async ({
       amount,
@@ -146,36 +150,52 @@ export const useUpdateAllowance = ({
       amount: string;
     }) => {
       let encodedApproveTx: IEncodedTx;
-      // erc20 tokens
-      if (assetType === AssetType.tokens) {
-        encodedApproveTx =
-          await backgroundApiProxy.engine.buildEncodedTxFromApprove({
-            amount,
-            networkId,
-            spender,
-            accountId,
-            token: contract,
-          });
-      } else if (typeof tokenId !== 'undefined') {
-        // erc721
-        encodedApproveTx =
-          await backgroundApiProxy.serviceRevoke.buildEncodedTxsFromApprove({
-            from: accountAddress,
-            to: contract ?? '',
-            approve: ADDRESS_ZERO,
-            tokenId,
-          });
-      } else {
-        // erc1155
-        encodedApproveTx =
-          await backgroundApiProxy.serviceRevoke.buildEncodedTxsFromSetApprovalForAll(
-            {
-              from: accountAddress,
-              to: contract ?? '',
-              approved: false,
+      try {
+        // erc20 tokens
+        if (assetType === AssetType.tokens) {
+          encodedApproveTx =
+            await backgroundApiProxy.serviceRevoke.buildEncodedTxFromApprove({
+              amount,
+              networkId,
               spender,
-            },
-          );
+              accountId,
+              token: contract,
+            });
+        } else if (typeof tokenId !== 'undefined') {
+          // erc721
+          encodedApproveTx =
+            await backgroundApiProxy.serviceRevoke.buildEncodedTxsFromApprove(
+              networkId,
+              {
+                from: accountAddress,
+                to: contract ?? '',
+                approve: ADDRESS_ZERO,
+                tokenId,
+              },
+            );
+        } else {
+          // erc1155
+          encodedApproveTx =
+            await backgroundApiProxy.serviceRevoke.buildEncodedTxsFromSetApprovalForAll(
+              networkId,
+              {
+                from: accountAddress,
+                to: contract ?? '',
+                approved: false,
+                spender,
+              },
+            );
+        }
+      } catch (error) {
+        console.error(error);
+        if (error?.key && error?.desc) {
+          showNotification({
+            title: intl.formatMessage({ id: error?.key }),
+            subtitle: intl.formatMessage({ id: error.desc }),
+          });
+          return;
+        }
+        throw error;
       }
       navigation.navigate(RootRoutes.Modal, {
         screen: ModalRoutes.Send,

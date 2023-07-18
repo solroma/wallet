@@ -398,3 +398,9 @@ export class InscribeFileTooLargeError extends OneKeyError {
 export class UtxoNotFoundError extends OneKeyError {
   override key = 'msg__nft_does_not_exist';
 }
+
+export class RevokeExcessiveGasCostError extends OneKeyError {
+  override key = 'msg__revoking_failed__excessive_gas_cost';
+
+  desc = 'msg__revoking_failed__excessive_gas_cost_desc';
+}

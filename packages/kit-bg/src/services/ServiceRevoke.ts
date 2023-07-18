@@ -41,6 +41,7 @@ import {
   getUnlimitedAllowancesFromApprovals,
   isBackendSupportedChain,
   isSpamToken,
+  throwIfExcessiveGas,
   toFloat,
   unpackResult,
   withFallback,
@@ -242,6 +243,15 @@ export default class ServiceRevoke extends ServiceBase {
             (approval) => approval.address === contract.address,
           );
           try {
+            const [allowance]: B[] = await contract.functions.allowance(
+              DUMMY_ADDRESS,
+              DUMMY_ADDRESS_2,
+            );
+            if (allowance.toString() !== '0') {
+              throw new Error(
+                'Response to allowance was not 0, indicating that the contract is not ERC20',
+              );
+            }
             const token = await engine.findToken({
               networkId,
               tokenIdOnNetwork: contract.address,
@@ -508,23 +518,29 @@ export default class ServiceRevoke extends ServiceBase {
   }
 
   @backgroundMethod()
-  buildEncodedTxsFromSetApprovalForAll(
+  async buildEncodedTxsFromSetApprovalForAll(
+    networkId: string,
     approveInfo: ISetApprovalForAll,
   ): Promise<IEncodedTxEvm> {
     const methodID = Erc721MethodSelectors.setApprovalForAll;
     const data = `${methodID}${defaultAbiCoder
       .encode(['address', 'bool'], [approveInfo.spender, approveInfo.approved])
       .slice(2)}`;
-    return Promise.resolve({
+    const tx = {
       from: approveInfo.from,
       to: approveInfo.to,
       value: '0x0',
       data,
-    });
+    };
+
+    await this.throwIfExcessiveGas(networkId, tx);
+
+    return Promise.resolve(tx);
   }
 
   @backgroundMethod()
-  buildEncodedTxsFromApprove(
+  async buildEncodedTxsFromApprove(
+    networkId: string,
     approveInfo: IERC721Approve,
   ): Promise<IEncodedTxEvm> {
     const methodID = Erc721MethodSelectors.Approval;
@@ -534,12 +550,48 @@ export default class ServiceRevoke extends ServiceBase {
         [approveInfo.approve, approveInfo.tokenId],
       )
       .slice(2)}`;
-    return Promise.resolve({
+    const tx = {
       from: approveInfo.from,
       to: approveInfo.to,
       value: '0x0',
       data,
+    };
+    await this.throwIfExcessiveGas(networkId, tx);
+    return Promise.resolve(tx);
+  }
+
+  @backgroundMethod()
+  async buildEncodedTxFromApprove(params: {
+    networkId: string;
+    accountId: string;
+    token: string;
+    amount: string;
+    spender: string;
+  }) {
+    const { engine } = this.backgroundApi;
+    const tx = (await engine.buildEncodedTxFromApprove(
+      params,
+    )) as IEncodedTxEvm;
+
+    await this.throwIfExcessiveGas(params.networkId, tx);
+    return tx;
+  }
+
+  @backgroundMethod()
+  async throwIfExcessiveGas(networkId: string, tx: IEncodedTxEvm) {
+    const { engine } = this.backgroundApi;
+
+    const gas: string = await engine.proxyJsonRPCCall(networkId, {
+      method: 'eth_estimateGas',
+      params: [
+        {
+          from: tx.from,
+          to: tx.to,
+          data: tx.data,
+        },
+      ],
     });
+    throwIfExcessiveGas(networkId, gas);
   }
 
   @backgroundMethod()

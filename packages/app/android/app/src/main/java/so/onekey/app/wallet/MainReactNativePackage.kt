@@ -12,6 +12,8 @@ import so.onekey.app.wallet.reactModule.CacheModule
 import so.onekey.app.wallet.reactModule.AppRestartManager
 import so.onekey.app.wallet.reactModule.LoggerManager
 import so.onekey.app.wallet.viewManager.homePage.HomePageManager
+import so.onekey.app.wallet.viewManager.recyclerList.RecyclerListItemViewManager
+import so.onekey.app.wallet.viewManager.recyclerList.RecyclerListViewManager
 
 
 class MainReactNativePackage : ReactPackage {
@@ -32,6 +34,8 @@ class MainReactNativePackage : ReactPackage {
     override fun createViewManagers(reactContext: ReactApplicationContext): MutableList<ViewManager<*, *>> {
         val managers = mutableListOf<ViewManager<*, *>>()
         managers.add(HomePageManager())
+        managers.add(RecyclerListViewManager())
+        managers.add(RecyclerListItemViewManager())
         return managers
     }
 }

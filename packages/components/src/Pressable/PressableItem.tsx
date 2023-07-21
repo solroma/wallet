@@ -1,9 +1,7 @@
 import type { ComponentProps, FC } from 'react';
 import { memo } from 'react';
 
-import { Pressable as NBPressable } from 'native-base';
-
-import { useBeforeOnPress } from '../utils/useBeforeOnPress';
+import NBPressable from './Pressable';
 
 export type PressableItemProps = ComponentProps<typeof NBPressable>;
 
@@ -12,8 +10,6 @@ const PressableItem: FC<PressableItemProps> = ({
   onPress,
   ...props
 }) => {
-  const onPressOverride = useBeforeOnPress(onPress);
-
   // TODO: use child function to check hover state
   return (
     <NBPressable
@@ -34,7 +30,7 @@ const PressableItem: FC<PressableItemProps> = ({
       }}
       bg="surface-default"
       {...props}
-      onPress={onPressOverride}
+      onPress={onPress}
     >
       {children}
     </NBPressable>

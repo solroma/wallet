@@ -2,13 +2,17 @@ import type { FC } from 'react';
 
 import { useIntl } from 'react-intl';
 
-import { Switch, Typography } from '@onekeyhq/components';
+import { Box, Switch, Typography } from '@onekeyhq/components';
 
 import backgroundApiProxy from '../../background/instance/backgroundApiProxy';
-import { useAppSelector } from '../../hooks';
+import { useActiveWalletAccount, useAppSelector } from '../../hooks';
 import { setIncludeNFTsInTotal } from '../../store/reducers/settings';
 import { showOverlay } from '../../utils/overlayUtils';
 
+import {
+  AccountBalanceDetailsPanel,
+  useAccountBalanceDetailsInfo,
+} from './AccountBalanceDetailsPanel';
 import {
   BottomSheetSettingRow,
   BottomSheetSettings,
@@ -18,8 +22,14 @@ const AccountValueSettings: FC = () => {
   const intl = useIntl();
   const includeNFTsInTotal =
     useAppSelector((s) => s.settings.includeNFTsInTotal) ?? true;
+
+  const { accountId, networkId } = useActiveWalletAccount();
+  const info = useAccountBalanceDetailsInfo({ networkId, accountId });
+
   return (
     <>
+      <AccountBalanceDetailsPanel info={info} />
+      {info.enabled ? <Box h={4} /> : null}
       <BottomSheetSettingRow
       // borderBottomRadius={0}
       >

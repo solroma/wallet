@@ -1362,6 +1362,9 @@ const serverPresetNetworks = [
       {
         'url': 'https://1rpc.io/eth',
       },
+      {
+        'url': 'https://onekey-eth.rpc.blxrbdn.com',
+      },
     ],
     'shortcode': 'eth',
     'shortname': 'ETH',
@@ -1786,6 +1789,9 @@ const serverPresetNetworks = [
       {
         'url': 'https://1rpc.io/matic',
       },
+      {
+        'url': 'https://onekey-polygon.rpc.blxrbdn.com',
+      },
     ],
     'shortcode': 'polygon',
     'shortname': 'Polygon',
@@ -2093,6 +2099,9 @@ const serverPresetNetworks = [
     'rpcURLs': [
       {
         'url': 'https://zksync2-mainnet.zksync.io',
+      },
+      {
+        'url': 'https://1rpc.io/zksync2-era',
       },
     ],
     'shortcode': 'zksyncera',
@@ -2432,6 +2441,9 @@ const serverPresetNetworks = [
       },
       {
         'url': 'https://1rpc.io/bnb',
+      },
+      {
+        'url': 'https://onekey-bnb.rpc.blxrbdn.com',
       },
     ],
     'shortcode': 'bsc',
@@ -3498,6 +3510,9 @@ const serverPresetNetworks = [
       {
         'url': 'https://fullnode.mainnet.sui.io',
       },
+      {
+        'url': 'https://1rpc.io/sui',
+      },
     ],
     'shortcode': 'sui',
     'shortname': 'SUI',
@@ -3827,6 +3842,37 @@ const serverPresetNetworks = [
         'channel': 'coingecko',
         'native': 'bitcoin',
         'platform': 'ordinals',
+      },
+    ],
+    'explorers': [],
+    'status': 'LISTED',
+    'createdAt': '2023-05-31T00:29:24.951Z',
+    'updatedAt': '2023-05-31T00:29:24.951Z',
+  },
+  {
+    'balance2FeeDecimals': 0,
+    'chainId': '0',
+    'code': 'tlightning',
+    'decimals': 0,
+    'id': 'tlightning--0',
+    'impl': 'tlightning',
+    'isTestnet': true,
+    'logoURI': 'https://onekey-asset.com/assets/lnd/lnd.png',
+    'name': 'Lightning Network Testnet',
+    'rpcURLs': [],
+    'shortcode': 'tlightning',
+    'shortname': 'LightningTestnet',
+    'symbol': 'sats',
+    'feeMeta': {
+      'code': 'lightning',
+      'decimals': 0,
+      'symbol': 'sats',
+    },
+    'defaultEnabled': false,
+    'priceConfigs': [
+      {
+        'channel': 'coingecko',
+        'native': 'bitcoin',
       },
     ],
     'explorers': [],

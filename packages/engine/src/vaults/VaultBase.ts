@@ -47,6 +47,7 @@ import type { IEncodedTxEvm } from './impl/evm/Vault';
 import type { KeyringBase, KeyringBaseMock } from './keyring/KeyringBase';
 import type {
   IApproveInfo,
+  IBalanceDetails,
   IClientEndpointStatus,
   IDecodedTx,
   IDecodedTxAction,
@@ -125,6 +126,7 @@ export abstract class VaultBaseChainOnly extends VaultContext {
     return Promise.resolve(address);
   }
 
+  // TODO rename to validateAddressAsync
   async validateAddress(address: string): Promise<string> {
     const { normalizedAddress, isValid } =
       await this.engineProvider.verifyAddress(address);
@@ -189,6 +191,12 @@ export abstract class VaultBaseChainOnly extends VaultContext {
     password?: string,
   ): Promise<number | Record<string, number>> {
     return 0;
+  }
+
+  async fetchBalanceDetails({ password }: { password?: string } = {}): Promise<
+    IBalanceDetails | undefined
+  > {
+    return Promise.resolve(undefined);
   }
 
   getTransactionStatuses(

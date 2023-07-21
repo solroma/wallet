@@ -1,11 +1,15 @@
 import { useMemo } from 'react';
 
+import { createSelector } from '@reduxjs/toolkit';
+
 import {
   allNetworksAccountRegex,
   generateFakeAllnetworksAccount,
 } from '@onekeyhq/engine/src/managers/account';
 
 import { useAppSelector } from './useAppSelector';
+
+import type { IAppState } from '../store';
 
 export const useAllNetworkAccountInfo = ({
   accountId,
@@ -19,16 +23,39 @@ export const useAllNetworkAccountInfo = ({
     return generateFakeAllnetworksAccount({ accountId });
   }, [accountId]);
 
+const selectAllNetworksAccountsMap = (state: IAppState) =>
+  state.overview.allNetworksAccountsMap;
+
+export const makeGetAllNetworksAccountsSelector = (accountId?: string | null) =>
+  createSelector(
+    [selectAllNetworksAccountsMap],
+    (map) => map?.[accountId || ''] ?? {},
+  );
+
 export const useAllNetworksWalletAccounts = ({
   accountId,
 }: {
   accountId?: string | null;
 }) => {
-  const map = useAppSelector((s) => s.overview.allNetworksAccountsMap);
+  const getAllNetworksAccounts = useMemo(
+    () => makeGetAllNetworksAccountsSelector(accountId),
+    [accountId],
+  );
+  const data = useAppSelector(getAllNetworksAccounts);
 
-  const data = useMemo(() => map?.[accountId || ''] ?? {}, [map, accountId]);
+  const loading = useAppSelector(
+    useMemo(
+      () =>
+        createSelector(
+          (s: IAppState) => s.overview.allNetworksAccountsLoading,
+          (l) => l?.[accountId ?? ''],
+        ),
+      [accountId],
+    ),
+  );
 
   return {
     data,
+    loading,
   };
 };

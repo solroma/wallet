@@ -147,8 +147,6 @@ class BlockBook {
       .then((res) => res.data as unknown as Array<IBtcUTXO>);
     return {
       utxos,
-      utxosFiltered: utxos,
-      totalInscriptionValue: '0',
     };
   }
 
@@ -265,7 +263,7 @@ class BlockBook {
       .post('/history', {
         network,
         address,
-        xpub,
+        xpub: xpub || undefined,
         symbol,
         decimals,
       })

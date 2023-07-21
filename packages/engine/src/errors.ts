@@ -13,6 +13,7 @@ export enum OneKeyErrorClassNames {
   OneKeyAbortError = 'OneKeyAbortError',
   OneKeyWalletConnectModalCloseError = 'OneKeyWalletConnectModalCloseError',
   OneKeyAlreadyExistWalletError = 'OneKeyAlreadyExistWalletError',
+  OneKeyErrorInsufficientNativeBalance = 'OneKeyErrorInsufficientNativeBalance',
 }
 
 export type IOneKeyErrorInfo = Record<string | number, string | number>;
@@ -37,7 +38,7 @@ export class OneKeyError<T = Error> extends Web3RpcError<T> {
 
   info: IOneKeyErrorInfo;
 
-  key = 'onekey_error';
+  key: LocaleIds | string = 'onekey_error';
 
   constructor(message?: string, info?: IOneKeyErrorInfo) {
     super(-99999, message || 'Unknown onekey internal error.');
@@ -267,7 +268,11 @@ export class TransferValueTooSmall extends OneKeyError {
   }
 }
 
+// **** only for Native Token  InsufficientBalance
 export class InsufficientBalance extends OneKeyError {
+  override className =
+    OneKeyErrorClassNames.OneKeyErrorInsufficientNativeBalance;
+
   // For situations that utxo selection failed.
   override key = 'form__amount_invalid';
 }
@@ -370,8 +375,16 @@ export class NoRouteFoundError extends OneKeyError {
   override key = 'msg__no_route_found';
 }
 
+export class ChannelInsufficientLiquidityError extends OneKeyError {
+  override key = 'msg__insufficient_liquidity_of_lightning_node_channels';
+}
+
 export class BadAuthError extends OneKeyError {
   override key = 'msg__authentication_failed_verify_again';
+}
+
+export class InvoiceExpiredError extends OneKeyError {
+  override key = 'msg__the_invoice_has_expired';
 }
 
 export class TaprootAddressError extends OneKeyError {
@@ -383,7 +396,7 @@ export class InscribeFileTooLargeError extends OneKeyError {
   override key = 'msg__file_size_should_less_than_str';
 
   constructor(key?: LocaleIds) {
-    super('', { '0': '380KB' });
+    super('', { '0': '200KB' });
     if (key) {
       this.key = key;
     }
@@ -392,4 +405,13 @@ export class InscribeFileTooLargeError extends OneKeyError {
 
 export class UtxoNotFoundError extends OneKeyError {
   override key = 'msg__nft_does_not_exist';
+}
+
+// all networks ----------------------------------------------
+export class AllNetworksMinAccountsError extends OneKeyError {
+  override key = 'msg__you_need_str_accounts_on_any_network_to_create';
+}
+
+export class AllNetworksUpto3LimitsError extends OneKeyError {
+  override key = 'msg__currently_supports_up_to_str_all_networks_accounts';
 }

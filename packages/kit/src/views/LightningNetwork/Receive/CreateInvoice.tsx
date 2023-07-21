@@ -60,12 +60,13 @@ const CreateInvoice = () => {
       if (isLoading) return;
       if (!networkId || !accountId) return;
       setIsLoading(true);
+      const amount = values.amount || '0';
       try {
         const invoice =
           await backgroundApiProxy.serviceLightningNetwork.createInvoice({
             networkId,
             accountId,
-            amount: values.amount,
+            amount,
             description: values.description,
           });
         navigation.navigate(RootRoutes.Modal, {
@@ -133,7 +134,7 @@ const CreateInvoice = () => {
         isLoading,
       }}
       onPrimaryActionPress={() => doSubmit()}
-      height="auto"
+      height="418px"
       scrollViewProps={{
         contentContainerStyle: {
           flex: 1,
@@ -150,12 +151,6 @@ const CreateInvoice = () => {
               name="amount"
               formControlProps={{ width: 'full' }}
               rules={{
-                required: {
-                  value: true,
-                  message: intl.formatMessage({
-                    id: 'form__field_is_required',
-                  }),
-                },
                 min: {
                   value: 0,
                   message: intl.formatMessage(
@@ -181,20 +176,23 @@ const CreateInvoice = () => {
                 size={isVerticalLayout ? 'xl' : 'default'}
                 placeholder={intl.formatMessage({ id: 'form__enter_amount' })}
                 rightCustomElement={
-                  <FormatCurrencyTokenOfAccount
-                    accountId={accountId ?? ''}
-                    networkId={network?.id ?? ''}
-                    token={nativeToken}
-                    value={new BigNumber(amountValue)}
-                    render={(ele) => (
-                      <Text px={4} typography="Button1" color="text-subdued">
-                        ~{ele}
-                      </Text>
-                    )}
-                  />
+                  <Text px={4} typography="Button1" color="text-subdued">
+                    {intl.formatMessage({ id: 'form__sats__units' })}
+                  </Text>
                 }
               />
             </Form.Item>
+            <FormatCurrencyTokenOfAccount
+              accountId={accountId ?? ''}
+              networkId={network?.id ?? ''}
+              token={nativeToken}
+              value={new BigNumber(amountValue)}
+              render={(ele) => (
+                <Text typography="Body2" color="text-subdued" mt="-18px">
+                  {ele}
+                </Text>
+              )}
+            />
             <Form.Item
               label={intl.formatMessage({ id: 'form__description__optional' })}
               control={control}

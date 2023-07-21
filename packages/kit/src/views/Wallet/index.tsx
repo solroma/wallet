@@ -1,5 +1,5 @@
 import type { FC } from 'react';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { useIntl } from 'react-intl';
 
@@ -24,7 +24,6 @@ import backgroundApiProxy from '../../background/instance/backgroundApiProxy';
 import IdentityAssertion from '../../components/IdentityAssertion';
 import { OneKeyPerfTraceLog } from '../../components/OneKeyPerfTraceLog';
 import Protected, { ValidationFields } from '../../components/Protected';
-import { useManageNetworks } from '../../hooks';
 import { useHtmlPreloadSplashLogoRemove } from '../../hooks/useHtmlPreloadSplashLogoRemove';
 import { useOnboardingRequired } from '../../hooks/useOnboardingRequired';
 import { setHomeTabName } from '../../store/reducers/status';
@@ -52,7 +51,6 @@ const WalletTabs: FC = () => {
   const homeTabName = useAppSelector((s) => s.status.homeTabName);
   const { wallet, network, accountId, networkId, walletId } =
     useActiveWalletAccount();
-  const { enabledNetworks } = useManageNetworks();
   const [refreshing, setRefreshing] = useState(false);
 
   const timer = useRef<ReturnType<typeof setTimeout>>();
@@ -170,13 +168,19 @@ const WalletTabs: FC = () => {
 
   const onIndexChange = useCallback(
     (index: number) => {
-      // Android animation redux causes ui stuttering
       if (timer.current) clearTimeout(timer.current);
+
+      let intervalTime = 0;
+      if (platformEnv.isNativeAndroid) {
+        intervalTime = 500;
+      }
+
+      // Android animation redux causes ui stuttering
       timer.current = setTimeout(() => {
         backgroundApiProxy.dispatch(
           setHomeTabName(getHomeTabNameByIndex(index)),
         );
-      }, 500);
+      }, intervalTime);
     },
     [getHomeTabNameByIndex],
   );
@@ -210,20 +214,16 @@ const WalletTabs: FC = () => {
     });
   }, []);
 
-  useEffect(() => {
-    onRefresh();
-  }, [networkId, accountId, walletId, onRefresh]);
-
-  useEffect(() => {
-    if (isAllNetworks(networkId)) {
-      onRefresh();
-    }
-  }, [onRefresh, enabledNetworks, networkId]);
-
-  const tabContents = useMemo(() => usedTabs.map((t) => t.tab), [usedTabs]);
+  const tabContents = useMemo(
+    () => usedTabs.map((t) => t.tab).filter(Boolean),
+    [usedTabs],
+  );
 
   const walletTabsContainer = (
     <Tabs.Container
+      // IMPORTANT: key is used to force re-render when the tab is changed
+      // otherwise android app will crash when tabs are changed
+      key={platformEnv.isNativeAndroid ? `${tabContents.length}` : undefined}
       canOpenDrawer
       initialTabName={homeTabName}
       refreshing={refreshing}
@@ -250,7 +250,7 @@ const WalletTabs: FC = () => {
         flex: 1,
       }}
     >
-      {tabContents.filter(Boolean).map((tab) => tab)}
+      {tabContents}
     </Tabs.Container>
   );
 
@@ -288,7 +288,7 @@ const WalletTabs: FC = () => {
   return walletTabsContainer;
 };
 
-export default function Wallet() {
+const Wallet = () => {
   useOnboardingRequired(true);
   useHtmlPreloadSplashLogoRemove();
 
@@ -302,4 +302,6 @@ export default function Wallet() {
       <BottomView />
     </>
   );
-}
+};
+
+export default memo(Wallet);

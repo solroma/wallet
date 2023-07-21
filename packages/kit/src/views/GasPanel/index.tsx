@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { useRoute } from '@react-navigation/native';
 import { useIntl } from 'react-intl';
@@ -8,7 +8,8 @@ import type { IGasInfo } from '@onekeyhq/engine/src/types/gas';
 import { OnekeyNetwork } from '@onekeyhq/shared/src/config/networkIds';
 
 import backgroundApiProxy from '../../background/instance/backgroundApiProxy';
-import { useSettings } from '../../hooks';
+import { useNativeToken, useSettings } from '../../hooks';
+import { appSelector } from '../../store';
 import { setGasPanelEIP1559Enabled } from '../../store/reducers/settings';
 
 import { supportedNetworks, supportedNetworksSettings } from './config';
@@ -29,8 +30,11 @@ let timer: NodeJS.Timeout | null = null;
 function GasPanel() {
   const intl = useIntl();
   const route = useRoute<RouteProps>();
+  const fetchIdRef = useRef('');
 
   const { networkId = '' } = route.params;
+
+  const { selectedFiatMoneySymbol } = appSelector((s) => s.settings);
 
   const [selectedNetworkId, setSelectedNetworkId] = useState(
     supportedNetworks.includes(networkId) ? networkId : DEFAULT_NETWORK,
@@ -41,6 +45,8 @@ function GasPanel() {
     REFRESH_GAS_INFO_INTERVAL / 1000,
   );
   const settings = useSettings();
+
+  const token = useNativeToken(selectedNetworkId);
 
   const { serviceGas } = backgroundApiProxy;
 
@@ -67,6 +73,8 @@ function GasPanel() {
       clearTimeout(timer);
     }
     const fetchGasInfo = async () => {
+      const fetchId = Math.random().toString();
+      fetchIdRef.current = fetchId;
       const resp = await serviceGas.getGasInfo({
         networkId: selectedNetworkId,
       });
@@ -75,10 +83,12 @@ function GasPanel() {
         resp.prices = [resp.prices[0], resp.prices[2], resp.prices[4]];
       }
 
-      setGasInfo(resp);
-      setIsGasInfoInit(true);
-      timer = setTimeout(() => fetchGasInfo(), REFRESH_GAS_INFO_INTERVAL);
-      setLeftSeconds(REFRESH_GAS_INFO_INTERVAL / 1000);
+      if (fetchId === fetchIdRef.current) {
+        setGasInfo(resp);
+        setIsGasInfoInit(true);
+        timer = setTimeout(() => fetchGasInfo(), REFRESH_GAS_INFO_INTERVAL);
+        setLeftSeconds(REFRESH_GAS_INFO_INTERVAL / 1000);
+      }
     };
     fetchGasInfo();
     return () => {
@@ -93,6 +103,19 @@ function GasPanel() {
       setSelectedNetworkId(networkId);
     }
   }, [networkId]);
+
+  useEffect(() => {
+    backgroundApiProxy.servicePrice.fetchSimpleTokenPrice({
+      networkId: selectedNetworkId,
+      tokenIds: [token?.tokenIdOnNetwork ?? ''],
+      vsCurrency: selectedFiatMoneySymbol,
+    });
+  }, [
+    networkId,
+    selectedFiatMoneySymbol,
+    selectedNetworkId,
+    token?.tokenIdOnNetwork,
+  ]);
 
   return (
     <Modal

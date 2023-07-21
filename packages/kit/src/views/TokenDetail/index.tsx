@@ -13,6 +13,7 @@ import {
 } from '@onekeyhq/components';
 import { Tabs } from '@onekeyhq/components/src/CollapsibleTabView';
 import { isAllNetworks } from '@onekeyhq/engine/src/managers/network';
+import { isLightningNetworkByNetworkId } from '@onekeyhq/shared/src/engine/engineConsts';
 
 import { useTokenDetailInfo, useTokenPositionInfo } from '../../hooks';
 import { SwapPlugins } from '../Swap/Plugins/Swap';
@@ -57,15 +58,14 @@ const TokenDetail: FC<TokenDetailViewProps> = () => {
     tokenAddress,
     accountId,
     sendAddress,
-    symbol,
-    name,
-    logoURI,
+    ...defaultInfo
   } = route.params;
 
   const detailInfo = useTokenDetailInfo({
     networkId,
     tokenAddress,
     coingeckoId,
+    defaultInfo,
   });
 
   const positionInfo = useTokenPositionInfo({
@@ -77,13 +77,18 @@ const TokenDetail: FC<TokenDetailViewProps> = () => {
     walletId,
   });
 
+  const isLightningNetwork = useMemo(
+    () => isLightningNetworkByNetworkId(networkId),
+    [networkId],
+  );
+
   const headerHeight = useMemo(() => {
-    let height = 529;
+    let height = isVerticalLayout ? 210 : 194;
     if (detailInfo?.ethereumNativeToken && !isAllNetworks(networkId)) {
       height += 132;
     }
     return height;
-  }, [networkId, detailInfo?.ethereumNativeToken]);
+  }, [networkId, detailInfo?.ethereumNativeToken, isVerticalLayout]);
 
   const headerTitle = useCallback(() => {
     if (!isVerticalLayout) {
@@ -91,19 +96,11 @@ const TokenDetail: FC<TokenDetailViewProps> = () => {
     }
     return (
       <HStack space="8px" alignItems="center">
-        <TokenIcon
-          size="24px"
-          showTokenVerifiedIcon
-          token={{
-            symbol,
-            name,
-            logoURI,
-          }}
-        />
-        <Typography.Heading>{symbol}</Typography.Heading>
+        <TokenIcon size="24px" showTokenVerifiedIcon token={detailInfo} />
+        <Typography.Heading>{detailInfo?.symbol}</Typography.Heading>
       </HStack>
     );
-  }, [isVerticalLayout, symbol, name, logoURI]);
+  }, [isVerticalLayout, detailInfo]);
 
   const headerRight = useCallback(() => {
     if (!isVerticalLayout) {
@@ -175,7 +172,10 @@ const TokenDetail: FC<TokenDetailViewProps> = () => {
             <MarketInfo coingeckoId={coingeckoId} />
           </Tabs.Tab>
         </Tabs.Container>
-        {!isVerticalLayout && showSwapPanel && !isAllNetworks(networkId) ? (
+        {!isVerticalLayout &&
+        showSwapPanel &&
+        !isAllNetworks(networkId) &&
+        !isLightningNetwork ? (
           <Box width="360px" mt="6" mr="8">
             <SwapPlugins
               tokenId={tokenAddress ?? 'main'}

@@ -1,22 +1,36 @@
 import { debounce } from 'lodash';
 
+import simpleDb from '@onekeyhq/engine/src/dbs/simple/simpleDb';
+import {
+  AllNetworksMinAccountsError,
+  AllNetworksUpto3LimitsError,
+} from '@onekeyhq/engine/src/errors';
 import {
   allNetworksAccountRegex,
   generateFakeAllnetworksAccount,
+  getWalletIdFromAccountId,
+  isAccountCompatibleWithNetwork,
 } from '@onekeyhq/engine/src/managers/account';
 import { getPath } from '@onekeyhq/engine/src/managers/derivation';
 import { isAllNetworks } from '@onekeyhq/engine/src/managers/network';
 import { isWalletCompatibleAllNetworks } from '@onekeyhq/engine/src/managers/wallet';
 import type { Account } from '@onekeyhq/engine/src/types/account';
+import { AccountType } from '@onekeyhq/engine/src/types/account';
 import {
   clearOverviewPendingTasks,
+  removeAllNetworksAccountsMapByAccountId,
+  setAllNetworksAccountsLoading,
   setAllNetworksAccountsMap,
+  setOverviewPortfolioUpdatedAt,
 } from '@onekeyhq/kit/src/store/reducers/overview';
+import { EOverviewScanTaskType } from '@onekeyhq/kit/src/views/Overview/types';
 import {
   backgroundClass,
   backgroundMethod,
   bindThis,
 } from '@onekeyhq/shared/src/background/backgroundDecorators';
+import { FAKE_ALL_NETWORK } from '@onekeyhq/shared/src/config/fakeAllNetwork';
+import { OnekeyNetwork } from '@onekeyhq/shared/src/config/networkIds';
 import {
   IMPL_EVM,
   IMPL_SOL,
@@ -72,12 +86,27 @@ export default class ServiceAllNetwork extends ServiceBase {
       { walletId },
     );
 
+    const isValidUtxoAccount = (account: Account) =>
+      account.type === AccountType.UTXO &&
+      !![
+        OnekeyNetwork.btc,
+        OnekeyNetwork.ltc,
+        OnekeyNetwork.bch,
+        OnekeyNetwork.doge,
+        OnekeyNetwork.ada,
+      ].find((nid) => isAccountCompatibleWithNetwork(account.id, nid));
+
     for (const [template, info] of Object.entries(accountDerivation)) {
       if (info?.accounts?.length) {
-        for (const accountId of info.accounts) {
-          const match = accountId.match(
+        const accounts = await engine.getAccounts(info.accounts);
+        for (const account of accounts) {
+          const replaceStr = isValidUtxoAccount(account)
+            ? new RegExp(`${INDEX_PLACEHOLDER.replace(/\$/g, '\\$')}.*$`)
+            : INDEX_PLACEHOLDER;
+
+          const match = account.id.match(
             new RegExp(
-              `${walletId}--${template}`.replace(INDEX_PLACEHOLDER, '(\\d+)'),
+              `${walletId}--${template}`.replace(replaceStr, '(\\d+)'),
             ),
           );
 
@@ -175,7 +204,15 @@ export default class ServiceAllNetwork extends ServiceBase {
     if (!wallet) {
       return {};
     }
+    const activeAccountId = accountId ?? `${walletId}--${index}`;
     const networks = appSelector((s) => s.runtime.networks ?? []);
+
+    dispatch(
+      setAllNetworksAccountsLoading({
+        accountId: activeAccountId,
+        data: true,
+      }),
+    );
 
     for (const n of networks.filter(
       (item) =>
@@ -197,14 +234,43 @@ export default class ServiceAllNetwork extends ServiceBase {
         networkAccountsMap[n.id] = filteredAccoutns;
       }
     }
-    const activeAccountId = accountId ?? `${walletId}--${index}`;
-    dispatch(
+
+    const dispatchKey = `${FAKE_ALL_NETWORK.id}___${activeAccountId}`;
+
+    const actions: any[] = [
       clearOverviewPendingTasks(),
       setAllNetworksAccountsMap({
         accountId: activeAccountId,
         data: networkAccountsMap,
       }),
-    );
+    ];
+
+    if (Object.keys(networkAccountsMap).length === 0) {
+      // remove assets
+      await simpleDb.accountPortfolios.setAllNetworksPortfolio({
+        key: dispatchKey,
+        scanTypes: [
+          EOverviewScanTaskType.token,
+          EOverviewScanTaskType.nfts,
+          EOverviewScanTaskType.defi,
+        ],
+        data: {
+          token: [],
+          nfts: [],
+          defi: [],
+        },
+      });
+      actions.push(
+        setOverviewPortfolioUpdatedAt({
+          key: dispatchKey,
+          data: {
+            updatedAt: Date.now(),
+          },
+        }),
+      );
+    }
+
+    dispatch(...actions);
 
     if (!refreshCurrentAccount) {
       return networkAccountsMap;
@@ -251,5 +317,77 @@ export default class ServiceAllNetwork extends ServiceBase {
   @backgroundMethod()
   refreshCurrentAllNetworksAccountMap() {
     return this._refreshCurrentAllNetworksAccountMapWithDebounce();
+  }
+
+  @backgroundMethod()
+  async createAllNetworksFakeAccount({ walletId }: { walletId: string }) {
+    const { appSelector, serviceAccount } = this.backgroundApi;
+    const maxIndex = await this.getAllNetworkAccountIndex({
+      walletId,
+    });
+
+    if (maxIndex === -1) {
+      throw new AllNetworksMinAccountsError('', {
+        0: 1,
+      });
+    }
+
+    const allNetworksAccountsMap = appSelector(
+      (s) => s.overview.allNetworksAccountsMap,
+    );
+
+    const accountIds = Object.keys(allNetworksAccountsMap ?? {}).filter((n) =>
+      n.startsWith(walletId),
+    );
+
+    if (accountIds.length >= 3) {
+      throw new AllNetworksUpto3LimitsError('', {
+        0: 3,
+      });
+    }
+
+    let accountMaxIndex = 0;
+
+    for (; accountMaxIndex < Math.min(maxIndex, 2); accountMaxIndex += 1) {
+      if (!allNetworksAccountsMap?.[`${walletId}--${accountMaxIndex}`]) {
+        break;
+      }
+    }
+
+    const fakeNewAccountId = `${walletId}--${accountMaxIndex}`;
+
+    if (allNetworksAccountsMap?.[fakeNewAccountId]) {
+      throw new AllNetworksMinAccountsError('', {
+        0: accountMaxIndex + 2,
+      });
+    }
+
+    const account = await this.generateAllNetworksWalletAccounts({
+      walletId,
+      accountId: fakeNewAccountId,
+    });
+
+    await serviceAccount.autoChangeAccount({
+      walletId,
+    });
+
+    return account;
+  }
+
+  @backgroundMethod()
+  async deleteAllNetworksFakeAccount({ accountId }: { accountId: string }) {
+    const { dispatch, serviceAccount } = this.backgroundApi;
+
+    dispatch(
+      removeAllNetworksAccountsMapByAccountId({
+        accountId,
+      }),
+    );
+
+    await serviceAccount.autoChangeAccount({
+      walletId: getWalletIdFromAccountId(accountId),
+    });
+
+    return Promise.resolve(undefined);
   }
 }

@@ -2,17 +2,20 @@ import { useCallback, useEffect, useMemo } from 'react';
 
 import { useNavigation } from '@react-navigation/core';
 import { omit } from 'lodash';
+import { useIntl } from 'react-intl';
 import { useDebounce } from 'use-debounce';
 
 import {
   Box,
   Divider,
+  Empty,
   FlatList,
   useIsVerticalLayout,
   useUserDevice,
 } from '@onekeyhq/components';
 import { Tabs } from '@onekeyhq/components/src/CollapsibleTabView';
 import type { FlatListProps } from '@onekeyhq/components/src/FlatList';
+import { isAllNetworks } from '@onekeyhq/engine/src/managers/network';
 import type { RootRoutes } from '@onekeyhq/kit/src/routes/routesEnum';
 import { HomeRoutes } from '@onekeyhq/kit/src/routes/routesEnum';
 import type {
@@ -23,19 +26,21 @@ import { MAX_PAGE_CONTAINER_WIDTH } from '@onekeyhq/shared/src/config/appConfig'
 import platformEnv from '@onekeyhq/shared/src/platformEnv';
 
 import backgroundApiProxy from '../../../background/instance/backgroundApiProxy';
-import { useActiveSideAccount } from '../../../hooks';
-import { useStatus } from '../../../hooks/redux';
+import { useActiveSideAccount, useAppSelector } from '../../../hooks';
 import {
-  useAccountTokenLoading,
+  useAccountPortfolios,
   useAccountTokens,
+  useOverviewAccountUpdateInfo,
 } from '../../../hooks/useOverview';
 import { useVisibilityFocused } from '../../../hooks/useVisibilityFocused';
 import { OverviewDefiThumbnal } from '../../Overview/Thumbnail';
+import { EOverviewScanTaskType } from '../../Overview/types';
 import { WalletHomeTabEnum } from '../type';
 
 import AssetsListHeader from './AssetsListHeader';
 import { EmptyListOfAccount } from './EmptyList';
 import AssetsListSkeleton from './Skeleton';
+import SvgAllNetwrorksLoadingLight from './Svg/SvgAllNetworksLoadingDark';
 import TokenCell from './TokenCell';
 
 import type { IAccountToken } from '../../Overview/types';
@@ -59,6 +64,7 @@ export type IAssetsListProps = Omit<FlatListProps, 'data' | 'renderItem'> & {
   renderDefiList?: boolean;
   walletId: string;
 };
+
 function AssetsList({
   showRoundTop,
   hidePriceInfo,
@@ -74,23 +80,32 @@ function AssetsList({
   renderDefiList,
   singleton,
 }: IAssetsListProps) {
+  const intl = useIntl();
   const isVerticalLayout = useIsVerticalLayout();
-  const { homeTabName, isUnlock } = useStatus();
-  const chainAccountTokenLoading = useAccountTokenLoading(networkId, accountId);
-  const { data: accountTokens, loading: allNetworksAccountTokensLoading } =
-    useAccountTokens({
-      networkId,
-      accountId,
-      useFilter: true,
-      limitSize,
-    });
+  const homeTabName = useAppSelector((s) => s.status.homeTabName);
+  const isUnlock = useAppSelector((s) => s.status.isUnlock);
+  const { data: accountTokens, loading } = useAccountTokens({
+    networkId,
+    accountId,
+    useFilter: true,
+    limitSize,
+  });
+
+  const updateInfo = useOverviewAccountUpdateInfo({
+    networkId: networkId ?? '',
+    accountId: accountId ?? '',
+  });
 
   const { account, network } = useActiveSideAccount({
     accountId,
     networkId,
   });
 
-  const loading = chainAccountTokenLoading || allNetworksAccountTokensLoading;
+  const { data: defis } = useAccountPortfolios({
+    networkId,
+    accountId,
+    type: EOverviewScanTaskType.defi,
+  });
 
   const navigation = useNavigation<NavigationProps>();
 
@@ -154,10 +169,24 @@ function AssetsList({
   }, [shouldRefreshBalances, startRefresh, stopRefresh]);
 
   useEffect(() => {
-    if (isFocused && isUnlock) {
-      backgroundApiProxy.serviceToken.refreshAccountTokens();
+    if (!isFocused || !isUnlock) {
+      return;
     }
-  }, [isFocused, isUnlock]);
+    if (isAllNetworks(networkId)) {
+      return;
+    }
+    backgroundApiProxy.serviceToken.refreshAccountTokens();
+  }, [isFocused, isUnlock, networkId]);
+
+  useEffect(() => {
+    if (networkId && !isAllNetworks(networkId) && accountId) {
+      backgroundApiProxy.serviceOverview.fetchAccountOverview({
+        networkId,
+        accountId,
+        scanTypes: [EOverviewScanTaskType.defi],
+      });
+    }
+  }, [networkId, accountId]);
 
   const onTokenCellPress = useCallback(
     (item: IAccountToken) => {
@@ -222,11 +251,13 @@ function AssetsList({
             networkId={networkId}
             address={account?.address ?? ''}
             limitSize={limitSize}
+            data={defis}
           />
         ) : null}
       </Box>
     ),
     [
+      defis,
       ListFooterComponent,
       networkId,
       accountId,
@@ -235,6 +266,29 @@ function AssetsList({
       limitSize,
     ],
   );
+
+  const empty = useMemo(() => {
+    if (loading) {
+      if (isAllNetworks(network?.id) && !updateInfo?.updatedAt) {
+        return (
+          <Box alignItems="center" mt="8">
+            <Empty
+              w="260px"
+              icon={
+                <Box mb="6">
+                  <SvgAllNetwrorksLoadingLight />
+                </Box>
+              }
+              title={intl.formatMessage({ id: 'empty__creating_data' })}
+              subTitle={intl.formatMessage({ id: 'empty__creating_data_desc' })}
+            />
+          </Box>
+        );
+      }
+      return <AssetsListSkeleton />;
+    }
+    return <EmptyListOfAccount network={network} accountId={accountId} />;
+  }, [loading, accountId, network, updateInfo?.updatedAt, intl]);
 
   return (
     <Container
@@ -269,12 +323,7 @@ function AssetsList({
             )
       }
       ItemSeparatorComponent={Divider}
-      ListEmptyComponent={
-        loading
-          ? AssetsListSkeleton
-          : // eslint-disable-next-line react/no-unstable-nested-components
-            () => <EmptyListOfAccount network={network} accountId={accountId} />
-      }
+      ListEmptyComponent={() => empty}
       ListFooterComponent={footer}
       keyExtractor={(item: IAccountToken) => item.key}
       extraData={isVerticalLayout}

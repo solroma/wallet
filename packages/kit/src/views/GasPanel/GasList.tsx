@@ -14,8 +14,7 @@ import {
 import type { IGasInfo } from '@onekeyhq/engine/src/types/gas';
 import type { EIP1559Fee } from '@onekeyhq/engine/src/types/network';
 import type { IFeeInfo } from '@onekeyhq/engine/src/vaults/types';
-import { estimateTxSize } from '@onekeyhq/engine/src/vaults/utils/btcForkChain/provider/vsize';
-import { coinSelect } from '@onekeyhq/engine/src/vaults/utils/btcForkChain/utils';
+import { OnekeyNetwork } from '@onekeyhq/shared/src/config/networkIds';
 
 import backgroundApiProxy from '../../background/instance/backgroundApiProxy';
 import { useNetworkSimple } from '../../hooks';
@@ -24,7 +23,7 @@ import { FeeSpeedTime } from '../Send/components/FeeSpeedTime';
 import { FeeSpeedTip } from '../Send/components/FeeSpeedTip';
 import { SendEditFeeOverview } from '../Send/components/SendEditFeeOverview';
 
-import { btcMockInputs, btcMockOutputs } from './config';
+import { btcMockLimit } from './config';
 
 type Props = {
   selectedNetworkId: string;
@@ -64,33 +63,29 @@ function GasList(props: Props) {
 
   const network = useNetworkSimple(selectedNetworkId);
 
+  const isBtcForkChain = network?.settings.isBtcForkChain;
+
   const gasItems = useMemo(() => {
     if (!prices || !network) return [];
 
     let limit = String(network?.settings.minGasLimit ?? 21000);
-    limit = network?.settings.isBtcForkChain
-      ? estimateTxSize(btcMockInputs, btcMockOutputs).toString()
-      : limit;
+    limit = isBtcForkChain ? btcMockLimit : limit;
 
     const feeInfo: IFeeInfo = {
       prices,
       defaultPresetIndex: '1',
-      eip1559: isEIP1559Enabled,
+      eip1559: isEIP1559Enabled && !isBtcForkChain,
       limit,
       feeDecimals: network.feeDecimals,
       nativeDecimals: network.decimals,
-      isBtcForkChain: network.settings.isBtcForkChain,
-      feeList: network?.settings.isBtcForkChain
+      isBtcForkChain,
+      feeList: isBtcForkChain
         ? prices
-            .map(
-              (price) =>
-                coinSelect({
-                  inputsForCoinSelect: btcMockInputs,
-                  outputsForCoinSelect: btcMockOutputs,
-                  feeRate: new BigNumber(price as string)
-                    .shiftedBy(network.feeDecimals)
-                    .toFixed(),
-                }).fee,
+            .map((price) =>
+              new BigNumber(price as string)
+                .times(limit)
+                .shiftedBy(network.decimals)
+                .toNumber(),
             )
             .filter(Boolean)
         : [],
@@ -108,10 +103,13 @@ function GasList(props: Props) {
             <SendEditFeeOverview
               accountId=""
               networkId={selectedNetworkId}
-              price={getPrice(price, isEIP1559Enabled)}
+              price={getPrice(price, isEIP1559Enabled && !isBtcForkChain)}
               feeInfo={feeInfo}
               limit={limit}
               currencyProps={{ typography: 'Body1', textAlign: 'right' }}
+              formatOptions={{
+                fixed: selectedNetworkId === OnekeyNetwork.polygon ? 4 : 2,
+              }}
               onlyCurrency
             />
             <FeeSpeedTime
@@ -121,8 +119,8 @@ function GasList(props: Props) {
           </VStack>
           <FeeSpeedTip
             index={index}
-            isEIP1559={isEIP1559Enabled}
-            price={getPrice(price, isEIP1559Enabled)}
+            isEIP1559={isEIP1559Enabled && !isBtcForkChain}
+            price={getPrice(price, isEIP1559Enabled && !isBtcForkChain)}
             limit={limit}
             feeInfo={feeInfo}
           />
@@ -132,7 +130,14 @@ function GasList(props: Props) {
     }));
 
     return items;
-  }, [isEIP1559Enabled, network, prices, selectedNetworkId, waitingSeconds]);
+  }, [
+    isBtcForkChain,
+    isEIP1559Enabled,
+    network,
+    prices,
+    selectedNetworkId,
+    waitingSeconds,
+  ]);
 
   useEffect(() => {
     const fetchTxWaitTime = async () => {

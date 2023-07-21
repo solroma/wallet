@@ -7,6 +7,7 @@ import { isAllNetworks } from '@onekeyhq/engine/src/managers/network';
 import type { Network } from '@onekeyhq/engine/src/types/network';
 import type { Wallet } from '@onekeyhq/engine/src/types/wallet';
 import type { IVaultSettings } from '@onekeyhq/engine/src/vaults/types';
+import debugLogger from '@onekeyhq/shared/src/logger/debugLogger';
 
 import backgroundApiProxy from '../../../background/instance/backgroundApiProxy';
 import useAppNavigation from '../../../hooks/useAppNavigation';
@@ -74,7 +75,7 @@ export function useCreateAccountInWallet({
       showCreateAccountMenu = false;
       isAddressDerivationSupported = true;
     } else if (isAllNetworks(network.id)) {
-      isCreateAccountSupported = false;
+      isCreateAccountSupported = true;
       showCreateAccountMenu = false;
       isAddressDerivationSupported = true;
     } else {
@@ -128,17 +129,32 @@ export function useCreateAccountInWallet({
   }, [networkId, walletId]);
 
   const selectedTemplateRef = useRef<IDerivationOption | null>();
+  const quickCreateAllNetworksFakeAccount = useCallback(async () => {
+    const { serviceAllNetwork } = backgroundApiProxy;
+    if (!walletId) {
+      return;
+    }
+    try {
+      return await serviceAllNetwork.createAllNetworksFakeAccount({
+        walletId,
+      });
+    } catch (e) {
+      console.error(e);
+      debugLogger.common.error(`createAllNetworksFakeAccount error: `, e);
+      deviceUtils.showErrorToast(e);
+    }
+  }, [walletId]);
   const quickCreateAccount = useCallback(
     async (password: string) => {
       const { selectedNetworkId } = walletAndNetworkInfo ?? {};
       if (!walletId || !selectedNetworkId) return;
       const { serviceDerivationPath } = backgroundApiProxy;
-      const { quickCreateAccountInfo } =
-        await serviceDerivationPath.getNetworkDerivations(
-          walletId,
-          selectedNetworkId,
-        );
       try {
+        const { quickCreateAccountInfo } =
+          await serviceDerivationPath.getNetworkDerivations(
+            walletId,
+            selectedNetworkId,
+          );
         await serviceDerivationPath.createNewAccount(
           password,
           walletId,
@@ -234,6 +250,9 @@ export function useCreateAccountInWallet({
       );
     if (shouldQuickCreate) {
       selectedTemplateRef.current = null;
+      if (isAllNetworks(selectedNetworkId)) {
+        return quickCreateAllNetworksFakeAccount();
+      }
       return navigation.navigate(RootRoutes.Modal, {
         screen: ModalRoutes.CreateAccount,
         params: {
@@ -265,6 +284,7 @@ export function useCreateAccountInWallet({
       },
     });
   }, [
+    quickCreateAllNetworksFakeAccount,
     connectAndCreateExternalAccount,
     intl,
     isFromAccountSelector,

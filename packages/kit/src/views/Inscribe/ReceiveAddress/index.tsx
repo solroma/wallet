@@ -9,11 +9,14 @@ import { Box, Form, Modal, useForm } from '@onekeyhq/components';
 import backgroundApiProxy from '@onekeyhq/kit/src/background/instance/backgroundApiProxy';
 import type { InscribeModalRoutesParams } from '@onekeyhq/kit/src/routes/Root/Modal/Inscribe';
 import type { ModalScreenProps } from '@onekeyhq/kit/src/routes/types';
-import { OnekeyNetwork } from '@onekeyhq/shared/src/config/networkIds';
 
 import AddressInput from '../../../components/AddressInput';
+import { AddressLabel } from '../../../components/AddressLabel';
+import { useActiveSideAccount } from '../../../hooks';
 import { InscribeModalRoutes } from '../../../routes/routesEnum';
+import HeaderDescription from '../Components/HeaderDescription';
 import Steps from '../Components/Steps';
+import { OrderButton } from '../OrderList';
 
 import type { RouteProp } from '@react-navigation/core';
 
@@ -34,16 +37,39 @@ const ReceiveAddress: FC = () => {
   const navigation = useNavigation<NavigationProps['navigation']>();
 
   const { serviceInscribe } = backgroundApiProxy;
-  const { networkId, accountId, contents, size } = route?.params || {};
+  const {
+    networkId,
+    accountId,
+    contents,
+    size,
+    file,
+    address: defaultAddress,
+  } = route?.params || {};
+  const { network } = useActiveSideAccount({ accountId, networkId });
 
+  const addressFilter = useCallback(
+    async (address: string) => {
+      try {
+        return await serviceInscribe.checkValidTaprootAddress({
+          address,
+          networkId,
+          accountId,
+        });
+      } catch (error) {
+        return Promise.resolve(false);
+      }
+    },
+    [accountId, networkId, serviceInscribe],
+  );
   const {
     control,
     watch,
     formState: { isValid },
   } = useForm<FormValues>({
-    defaultValues: { address: '' },
+    defaultValues: { address: defaultAddress },
     mode: 'onChange',
   });
+
   const [validateMessage, setvalidateMessage] = useState({
     warningMessage: '',
     successMessage: '',
@@ -66,6 +92,8 @@ const ReceiveAddress: FC = () => {
           const isTaprootAddress =
             await serviceInscribe.checkValidTaprootAddress({
               address: value,
+              networkId,
+              accountId,
             });
           if (isTaprootAddress) {
             setvalidateMessage({
@@ -97,17 +125,18 @@ const ReceiveAddress: FC = () => {
         }
       }, 100);
     },
-    [intl, serviceInscribe],
+    [accountId, intl, networkId, serviceInscribe],
   );
 
   const submitDisabled =
-    address.length === 0 || !isValid || validateMessage.errorMessage.length > 0;
+    address?.length === 0 ||
+    !isValid ||
+    validateMessage.errorMessage.length > 0;
   return (
     <Modal
       header={intl.formatMessage({ id: 'title__inscribe' })}
-      headerDescription={`Bitcoin${
-        networkId === OnekeyNetwork.tbtc ? ' Testnet' : ''
-      }`}
+      headerDescription={<HeaderDescription network={network} />}
+      rightContent={<OrderButton />}
       height="640px"
       primaryActionTranslationId="action__next"
       hideSecondaryAction
@@ -118,6 +147,7 @@ const ReceiveAddress: FC = () => {
       primaryActionProps={{
         onPress: () => {
           navigation.navigate(InscribeModalRoutes.CreateOrder, {
+            file,
             networkId,
             accountId,
             receiveAddress: address,
@@ -131,7 +161,7 @@ const ReceiveAddress: FC = () => {
       }}
     >
       <Box w="full" h="full">
-        <Form>
+        <Form space="8px">
           <Steps numberOfSteps={3} currentStep={2} />
           <Form.Item
             control={control}
@@ -139,8 +169,6 @@ const ReceiveAddress: FC = () => {
             label={intl.formatMessage({
               id: 'form__address_to_receive_inscription',
             })}
-            warningMessage={validateMessage.warningMessage}
-            successMessage={validateMessage.successMessage}
             errorMessage={validateMessage.errorMessage}
             rules={{
               required: {
@@ -164,8 +192,17 @@ const ReceiveAddress: FC = () => {
               })}
               h={{ base: 120, md: 120 }}
               plugins={['contact', 'paste', 'scan']}
+              addressFilter={addressFilter}
             />
           </Form.Item>
+          {address && (
+            <AddressLabel
+              shouldCheckSecurity
+              networkId={networkId}
+              address={address}
+              labelStyle={{ mt: 1 }}
+            />
+          )}
         </Form>
       </Box>
     </Modal>

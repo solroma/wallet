@@ -9,7 +9,7 @@ import type { IVaultSettings } from '../../types';
 const settings: IVaultSettings = Object.freeze({
   feeInfoEditable: false,
   privateKeyExportEnabled: false,
-  tokenEnabled: true,
+  tokenEnabled: false,
   txCanBeReplaced: false,
 
   importedAccountEnabled: false,
@@ -34,12 +34,13 @@ const settings: IVaultSettings = Object.freeze({
   hiddenAddress: true,
   hiddenAccountInfoSwapOption: true,
   hiddenAccountInfoMoreOption: true,
-  hiddenFeeOnTxDetail: true,
   displayMemo: true,
   hideFromToFieldIfValueEmpty: true,
   displayFullAddress: true,
   rpcStatusDisabled: true,
   useSimpleTipForSpecialCheckEncodedTx: true,
+
+  allowZeroFee: true,
 
   txExtraInfo: [
     {

@@ -3,15 +3,17 @@
 import { sha256 } from '@noble/hashes/sha256';
 import { bytesToHex } from '@noble/hashes/utils';
 import BigNumber from 'bignumber.js';
+import { get } from 'lodash';
 
 import { getTimeDurationMs } from '@onekeyhq/kit/src/utils/helper';
 import debugLogger from '@onekeyhq/shared/src/logger/debugLogger';
 import { memoizee } from '@onekeyhq/shared/src/utils/cacheUtils';
 
 import {
-  InsufficientBalance,
+  ChannelInsufficientLiquidityError,
   InvalidLightningPaymentRequest,
   InvoiceAlreadPaid,
+  InvoiceExpiredError,
   NoRouteFoundError,
 } from '../../../errors';
 import { TransactionStatus } from '../../../types/provider';
@@ -68,14 +70,34 @@ export default class Vault extends VaultBase {
 
   settings = settings;
 
+  override async getOutputAccount(): Promise<Account> {
+    const dbAccount = await this.getDbAccount({ noCache: true });
+    return {
+      id: dbAccount.id,
+      name: dbAccount.name,
+      type: dbAccount.type,
+      path: dbAccount.path,
+      coinType: dbAccount.coinType,
+      tokens: [],
+      address: dbAccount.address,
+      template: dbAccount.template,
+      pubKey: get(dbAccount, 'pub', ''),
+      addresses: JSON.stringify(get(dbAccount, 'addresses', {})),
+    };
+  }
+
   async getClient() {
-    return this.getClientCache();
+    const network = await this.getNetwork();
+    return this.getClientCache(network.isTestnet);
   }
 
   // client: axios
-  private getClientCache = memoizee(() => new ClientLightning(), {
-    maxAge: getTimeDurationMs({ minute: 3 }),
-  });
+  private getClientCache = memoizee(
+    (isTestnet: boolean) => new ClientLightning(isTestnet),
+    {
+      maxAge: getTimeDurationMs({ minute: 3 }),
+    },
+  );
 
   async exchangeToken(password: string) {
     try {
@@ -85,6 +107,7 @@ export default class Vault extends VaultBase {
       const dbAccount = (await this.getDbAccount()) as DBVariantAccount;
       const address = dbAccount.addresses.normalizedAddress;
       const hashPubKey = bytesToHex(sha256(dbAccount.pub));
+      const network = await this.getNetwork();
       const { entropy } = (await this.engine.dbApi.getCredential(
         this.walletId,
         password ?? '',
@@ -106,6 +129,7 @@ export default class Vault extends VaultBase {
         path: dbAccount.addresses.realPath,
         password: password ?? '',
         entropy,
+        isTestnet: network.isTestnet,
       });
       return await client.refreshAccessToken({
         hashPubKey,
@@ -170,6 +194,7 @@ export default class Vault extends VaultBase {
       feeDecimals: network.feeDecimals,
       nativeSymbol: network.symbol,
       nativeDecimals: network.decimals,
+      waitingSeconds: [5],
       tx: null,
     };
   }
@@ -196,6 +221,19 @@ export default class Vault extends VaultBase {
     const description = invoice.tags.find(
       (tag) => tag.tagName === 'description',
     );
+
+    let fee = 0;
+    try {
+      fee = await client.estimateFee({
+        address: balanceAddress,
+        dest: invoice.payeeNodeKey ?? '',
+        amt: amount.toFixed(),
+      });
+    } catch (e) {
+      console.error('Fetch Fee error: ', e);
+      // ignore error, will check invoice on final step
+    }
+
     return {
       invoice: invoice.paymentRequest,
       paymentHash: paymentHash?.data as string,
@@ -203,7 +241,7 @@ export default class Vault extends VaultBase {
       expired: `${invoice.timeExpireDate ?? ''}`,
       created: `${Math.floor(Date.now() / 1000)}`,
       description: description?.data as string,
-      fee: 0,
+      fee,
     };
   }
 
@@ -235,7 +273,6 @@ export default class Vault extends VaultBase {
     encodedTx: IEncodedTxLightning,
     payload?: any,
   ): Promise<IDecodedTx> {
-    const network = await this.engine.getNetwork(this.networkId);
     const dbAccount = (await this.getDbAccount()) as DBVariantAccount;
     const hashAddress = await this.getHashAddress();
     const token = await this.engine.getNativeTokenInfo(this.networkId);
@@ -336,9 +373,10 @@ export default class Vault extends VaultBase {
           },
           totalFeeInNative: new BigNumber(fee).shiftedBy(-decimals).toFixed(),
         };
-        decodedTx.updatedAt = new Date(txInfo.expires_at).getTime();
+        decodedTx.updatedAt = new Date(txInfo.settled_at).getTime();
         decodedTx.createdAt =
-          historyTxToMerge?.decodedTx.createdAt ?? decodedTx.updatedAt;
+          historyTxToMerge?.decodedTx.createdAt ??
+          new Date(txInfo.settled_at).getTime();
         decodedTx.isFinal =
           decodedTx.status === IDecodedTxStatus.Confirmed ||
           decodedTx.status === IDecodedTxStatus.Failed;
@@ -408,7 +446,6 @@ export default class Vault extends VaultBase {
     debugLogger.engine.info('broadcastTransaction START:', {
       rawTx: signedTx.rawTx,
     });
-    console.log('===> options: ', options);
     let result;
     try {
       const client = await this.getClient();
@@ -478,6 +515,10 @@ export default class Vault extends VaultBase {
               reject(new InvoiceAlreadPaid());
             } else if (errorMessage === 'no_route') {
               reject(new NoRouteFoundError());
+            } else if (errorMessage === 'insufficient_balance') {
+              reject(new ChannelInsufficientLiquidityError());
+            } else if (errorMessage === 'invoice expired') {
+              reject(new InvoiceExpiredError());
             } else {
               reject(new Error(response.data?.message));
             }
@@ -493,7 +534,6 @@ export default class Vault extends VaultBase {
   override async getTransactionStatuses(
     txids: string[],
   ): Promise<(TransactionStatus | undefined)[]> {
-    console.log('===>>>txids: ', txids);
     const address = await this.getCurrentBalanceAddress();
     return Promise.all(
       txids.map(async (txid) => {
@@ -547,7 +587,7 @@ export default class Vault extends VaultBase {
     key?: string | undefined;
     params?: Record<string, any> | undefined;
   }> {
-    const { invoice: payreq, amount } = encodedTx;
+    const { invoice: payreq, amount, fee } = encodedTx;
     const invoice = await this._decodedInvoceCache(payreq);
     if (
       (invoice.millisatoshis && +invoice.millisatoshis <= 0) ||
@@ -566,7 +606,7 @@ export default class Vault extends VaultBase {
     const balanceAddress = await this.getCurrentBalanceAddress();
     const balance = await this.getBalances([{ address: balanceAddress }]);
     const balanceBN = new BigNumber(balance[0] || '0');
-    if (balanceBN.isLessThan(new BigNumber(amount))) {
+    if (balanceBN.isLessThan(new BigNumber(amount).plus(fee))) {
       return Promise.resolve({
         success: false,
         key: 'form__amount_invalid',
@@ -605,5 +645,12 @@ export default class Vault extends VaultBase {
     }
 
     return Promise.resolve({ success: true });
+  }
+
+  async fetchSpecialInvoice(paymentHash: string) {
+    const balanceAddress = await this.getCurrentBalanceAddress();
+    const client = await this.getClient();
+    const invoice = await client.specialInvoice(balanceAddress, paymentHash);
+    return invoice;
   }
 }

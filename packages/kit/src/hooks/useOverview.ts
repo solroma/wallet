@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
+import { createSelector } from '@reduxjs/toolkit';
 import B from 'bignumber.js';
 import { pick } from 'lodash';
 import natsort from 'natsort';
@@ -10,18 +11,23 @@ import { getBalanceKey } from '@onekeyhq/engine/src/managers/token';
 import type { Token } from '@onekeyhq/engine/src/types/token';
 import { TokenRiskLevel } from '@onekeyhq/engine/src/types/token';
 import KeleLogoPNG from '@onekeyhq/kit/assets/staking/kele_pool.png';
-import { OnekeyNetwork } from '@onekeyhq/shared/src/config/networkIds';
 import { IMPL_EVM } from '@onekeyhq/shared/src/engine/engineConsts';
 
 import backgroundApiProxy from '../background/instance/backgroundApiProxy';
-import { getTimeDurationMs } from '../utils/helper';
+import { ModalRoutes, RootRoutes } from '../routes/routesEnum';
 import { getPreBaseValue } from '../utils/priceUtils';
-import { EOverviewScanTaskType } from '../views/Overview/types';
+import {
+  EOverviewScanTaskType,
+  OverviewModalRoutes,
+} from '../views/Overview/types';
+import { StakingRoutes } from '../views/Staking/typing';
 
 import { useAllNetworksWalletAccounts } from './useAllNetwoks';
 import { useAppSelector } from './useAppSelector';
+import useNavigation from './useNavigation';
 import { useFrozenBalance, useSingleToken } from './useTokens';
 
+import type { IAppState } from '../store';
 import type { ITokenDetailInfo } from '../views/ManageTokens/types';
 import type {
   IAccountToken,
@@ -46,7 +52,9 @@ const filterAccountTokens = <T>({
   hideSmallBalance,
   hideRiskTokens,
   putMainTokenOnTop,
+  networkId,
 }: {
+  networkId: string;
   tokens: ICombinedAccountToken[];
   useFilter?: boolean;
   hideSmallBalance?: boolean;
@@ -72,6 +80,9 @@ const filterAccountTokens = <T>({
 
   const filteredTokens = valueTokens.filter((t) => {
     if (hideSmallBalance && new B(t.usdValue).isLessThan(1)) {
+      if (!isAllNetworks(networkId) && (t.isNative || !t.address)) {
+        return true;
+      }
       return false;
     }
     if (hideRiskTokens && t.riskLevel && t.riskLevel > TokenRiskLevel.WARN) {
@@ -91,6 +102,49 @@ const filterAccountTokens = <T>({
   }
   return filteredTokens as T;
 };
+
+const tasksSelector = ({
+  networkId,
+  accountId,
+}: {
+  networkId: string;
+  accountId: string;
+}) =>
+  createSelector([(s: IAppState) => s.overview.tasks], (tasks) => {
+    const data = Object.values(tasks || {});
+    return data.filter((t) => t.key === `${networkId}___${accountId}`);
+  });
+
+const updatedTimeSelector = ({
+  networkId,
+  accountId,
+}: {
+  networkId: string;
+  accountId: string;
+}) =>
+  createSelector(
+    (s: IAppState) => s.overview.updatedTimeMap,
+    (updatedTimeMap) =>
+      updatedTimeMap?.[`${networkId}___${accountId}`]?.updatedAt,
+  );
+
+export const useOverviewAccountUpdateInfo = ({
+  networkId,
+  accountId,
+}: {
+  networkId: string;
+  accountId: string;
+}) =>
+  useAppSelector(
+    useMemo(
+      () =>
+        createSelector(
+          (s: IAppState) => s.overview.updatedTimeMap,
+          (m) => m?.[`${networkId ?? ''}___${accountId ?? ''}`] ?? {},
+        ),
+      [accountId, networkId],
+    ),
+  );
 
 export const useAccountPortfolios = <
   T extends keyof OverviewAllNetworksPortfolioRes,
@@ -112,11 +166,10 @@ export const useAccountPortfolios = <
     updatedAt: undefined,
     loading: true,
   });
-  const updateInfo = useAppSelector(
-    (s) =>
-      s.overview.updatedTimeMap?.[`${networkId ?? ''}___${accountId ?? ''}`] ??
-      {},
-  );
+  const updateInfo = useOverviewAccountUpdateInfo({
+    networkId: networkId ?? '',
+    accountId: accountId ?? '',
+  });
 
   const { data: networkAccountsMap } = useAllNetworksWalletAccounts({
     accountId,
@@ -197,12 +250,94 @@ export function useAccountTokensOnChain(
   });
 
   return filterAccountTokens<IAccountTokenOnChain[]>({
+    networkId,
     tokens: valueTokens,
     useFilter,
     hideSmallBalance,
     hideRiskTokens,
     putMainTokenOnTop,
   });
+}
+
+export const useOverviewPendingTasks = ({
+  networkId,
+  accountId,
+}: {
+  networkId: string;
+  accountId: string;
+}) => {
+  const updatedAt = useAppSelector(
+    useMemo(
+      () => updatedTimeSelector({ networkId, accountId }),
+      [networkId, accountId],
+    ),
+  );
+
+  const tasks = useAppSelector(
+    useMemo(
+      () => tasksSelector({ networkId, accountId }),
+      [networkId, accountId],
+    ),
+  );
+
+  return {
+    tasks,
+    updatedAt,
+  };
+};
+
+export function useAccountTokenLoading(networkId: string, accountId: string) {
+  const pendingTasks = useOverviewPendingTasks({ networkId, accountId });
+  const accountTokens = useAppSelector((s) => s.tokens.accountTokens);
+
+  const { data, loading: allNetworksAccountsLoading } =
+    useAllNetworksWalletAccounts({
+      accountId,
+    });
+
+  return useMemo(() => {
+    if (isAllNetworks(networkId)) {
+      const { tasks, updatedAt } = pendingTasks;
+      if (allNetworksAccountsLoading) {
+        return true;
+      }
+      if (!Object.keys(data).length) {
+        return false;
+      }
+      return (
+        tasks?.filter((t) => t.scanType === EOverviewScanTaskType.token)
+          .length > 0 || typeof updatedAt === 'undefined'
+      );
+    }
+    return typeof accountTokens[networkId]?.[accountId] === 'undefined';
+  }, [
+    networkId,
+    accountId,
+    accountTokens,
+    pendingTasks,
+    data,
+    allNetworksAccountsLoading,
+  ]);
+}
+
+export function useNFTIsLoading({
+  networkId,
+  accountId,
+}: {
+  networkId: string;
+  accountId: string;
+}) {
+  const { tasks, updatedAt } = useOverviewPendingTasks({
+    networkId,
+    accountId,
+  });
+
+  return useMemo(
+    () =>
+      tasks?.filter((t) => t.scanType === EOverviewScanTaskType.nfts).length >
+        0 || typeof updatedAt === 'undefined',
+    [tasks, updatedAt],
+  );
 }
 
 export function useAccountTokens({
@@ -219,16 +354,24 @@ export function useAccountTokens({
   const { hideRiskTokens, hideSmallBalance, putMainTokenOnTop } =
     useAppSelector((s) => s.settings);
 
-  const { data: allNetworksTokens = [], loading } = useAccountPortfolios({
-    networkId,
-    accountId,
-    type: EOverviewScanTaskType.token,
-  });
+  const { data: allNetworksTokens = [], loading: allNetworksTokensLoading } =
+    useAccountPortfolios({
+      networkId,
+      accountId,
+      type: EOverviewScanTaskType.token,
+    });
 
   const accountTokensOnChain = useAccountTokensOnChain(
     networkId,
     accountId,
     false,
+  );
+
+  const accountTokensLoading = useAccountTokenLoading(networkId, accountId);
+
+  const loading = useMemo(
+    () => accountTokensLoading || allNetworksTokensLoading,
+    [accountTokensLoading, allNetworksTokensLoading],
   );
 
   const valueTokens: IAccountToken[] = useMemo(() => {
@@ -287,16 +430,10 @@ export function useAccountTokens({
     return accountTokens;
   }, [networkId, allNetworksTokens, limitSize, accountTokensOnChain]);
 
-  if (loading) {
-    return {
-      loading,
-      data: [],
-    };
-  }
-
   return {
-    loading: false,
+    loading,
     data: filterAccountTokens<IAccountToken[]>({
+      networkId,
       tokens: valueTokens,
       useFilter,
       hideRiskTokens,
@@ -385,7 +522,7 @@ export const useAccountValues = (props: {
   const { networkId, accountId } = props;
   const { includeNFTsInTotal } = useAppSelector((s) => s.settings);
 
-  const { data: defis } = useAccountPortfolios({
+  const { data: defis = [] } = useAccountPortfolios({
     networkId,
     accountId,
     type: EOverviewScanTaskType.defi,
@@ -516,6 +653,7 @@ export const useTokenPositionInfo = ({
   coingeckoId?: string;
 }) => {
   const intl = useIntl();
+  const navigation = useNavigation();
   const { data: defis } = useAccountPortfolios({
     accountId,
     networkId,
@@ -532,9 +670,27 @@ export const useTokenPositionInfo = ({
     accountId,
   });
 
-  // TODO: fetch minerOverview
-
   const minerOverview = useAppSelector((s) => s.staking.keleMinerOverviews);
+
+  useEffect(() => {
+    if (isAllNetworks(networkId)) {
+      return;
+    }
+    backgroundApiProxy.serviceStaking
+      .fetchMinerOverview({
+        networkId,
+        accountId,
+      })
+      .catch(() => {
+        // pass
+      });
+  }, [networkId, accountId]);
+
+  const getAccountFromAccountAddress = useCallback(
+    (nid: string, accountAddress: string) =>
+      allNetworksAccountsMap?.[nid]?.find((a) => a.address === accountAddress),
+    [allNetworksAccountsMap],
+  );
 
   const getStakingAmountInfo = useCallback(
     ({
@@ -545,41 +701,29 @@ export const useTokenPositionInfo = ({
       accountId: string;
     }) => {
       let total = new B(0);
-      if (!minerOverview) return;
-      if (coingeckoId !== 'ethereum' || tokenAddress) {
-        return;
+      if (
+        !minerOverview ||
+        coingeckoId !== 'ethereum' ||
+        tokenAddress ||
+        isAllNetworks(networkId)
+      ) {
+        return total;
       }
+      const current = minerOverview?.[aid]?.[nid];
+      total = total
+        .plus(current?.amount?.total_amount ?? 0)
+        .plus(current?.amount.withdrawable ?? 0);
 
-      if (isAllNetworks(nid)) {
-        for (const a of allNetworksAccountsMap[OnekeyNetwork.eth] ?? []) {
-          total = total.plus(
-            getStakingAmountInfo({
-              networkId: OnekeyNetwork.eth,
-              accountId: a.id,
-            })?.total ?? 0,
-          );
-        }
-      } else {
-        const current = minerOverview?.[aid]?.[nid];
-        total = total
-          .plus(current?.amount?.total_amount ?? 0)
-          .plus(current.amount.withdrawable ?? 0);
-      }
-
-      return {
-        total,
-        networkId: nid,
-      };
+      return total;
     },
-    [minerOverview, allNetworksAccountsMap, coingeckoId, tokenAddress],
+    [minerOverview, coingeckoId, tokenAddress, networkId],
   );
 
   const keleStakingInfo = useMemo(() => {
-    const { total = new B(0), networkId: nid } =
-      getStakingAmountInfo({
-        networkId,
-        accountId,
-      }) ?? {};
+    const total = getStakingAmountInfo({
+      networkId,
+      accountId,
+    });
     return {
       name: 'Kelepool',
       logoURI: KeleLogoPNG,
@@ -587,9 +731,43 @@ export const useTokenPositionInfo = ({
       sendAddress: undefined,
       type: intl.formatMessage({ id: 'form__staking' }),
       balance: total,
-      networkId: nid,
+      networkId,
     };
   }, [getStakingAmountInfo, intl, accountId, networkId]);
+
+  const onPresDefiProtocol = useCallback(
+    ({ protocolId, poolCode }: { protocolId: string; poolCode: string }) => {
+      if (!networkId || !accountId) {
+        return;
+      }
+      navigation.navigate(RootRoutes.Modal, {
+        screen: ModalRoutes.Overview,
+        params: {
+          screen: OverviewModalRoutes.OverviewProtocolDetail,
+          params: {
+            protocolId,
+            networkId,
+            accountId,
+            poolCode,
+          },
+        },
+      });
+    },
+    [navigation, accountId, networkId],
+  );
+
+  const onPressStaking = useCallback(() => {
+    navigation.navigate(RootRoutes.Modal, {
+      screen: ModalRoutes.Staking,
+      params: {
+        screen: StakingRoutes.StakedETHOnKele,
+        params: {
+          networkId,
+          accountId,
+        },
+      },
+    });
+  }, [navigation, networkId, accountId]);
 
   return useMemo(() => {
     let balance = new B(0);
@@ -601,15 +779,22 @@ export const useTokenPositionInfo = ({
           : t.address === tokenAddress && t.sendAddress === sendAddress
       ) {
         t.tokens?.forEach((item) => {
-          items.push({
-            name: t.name,
-            address: t.address,
-            symbol: t.symbol,
-            logoURI: t.logoURI ?? '',
-            type: 'Token',
-            balance: item.balance,
-            networkId: item.networkId,
-          });
+          const account = getAccountFromAccountAddress(
+            item.networkId,
+            item.accountAddress ?? '',
+          );
+          if (new B(item.balance).isGreaterThan(0)) {
+            items.push({
+              name: t.name,
+              address: t.address,
+              symbol: t.symbol,
+              logoURI: t.logoURI ?? '',
+              type: 'Token',
+              balance: item.balance,
+              networkId: item.networkId,
+              accountName: account?.name ?? '',
+            });
+          }
         });
         balance = balance.plus(t.balance);
       }
@@ -632,6 +817,11 @@ export const useTokenPositionInfo = ({
                 type: p[0],
                 balance: t.balanceParsed ?? '0',
                 networkId: d._id.networkId,
+                onPress: () =>
+                  onPresDefiProtocol({
+                    protocolId: d._id.protocolId,
+                    poolCode: item.poolCode,
+                  }),
               });
               balance = balance.plus(t.balanceParsed ?? 0);
             }
@@ -641,7 +831,7 @@ export const useTokenPositionInfo = ({
     });
 
     const { balance: stakingBalance, networkId: stakingNetworkId } =
-      keleStakingInfo ?? {};
+      keleStakingInfo;
 
     if (stakingBalance?.gt(0) && stakingNetworkId) {
       balance = balance.plus(keleStakingInfo.balance);
@@ -653,6 +843,7 @@ export const useTokenPositionInfo = ({
         type: intl.formatMessage({ id: 'form__staking' }),
         balance: stakingBalance.toFixed(),
         networkId: stakingNetworkId,
+        onPress: onPressStaking,
       });
     }
 
@@ -661,6 +852,9 @@ export const useTokenPositionInfo = ({
       items,
     };
   }, [
+    onPressStaking,
+    onPresDefiProtocol,
+    getAccountFromAccountAddress,
     sendAddress,
     intl,
     accountTokens,
@@ -676,10 +870,12 @@ export const useTokenDetailInfo = ({
   coingeckoId,
   networkId,
   tokenAddress,
+  defaultInfo = {},
 }: {
   coingeckoId?: string;
   networkId?: string;
   tokenAddress?: string;
+  defaultInfo?: Record<string, unknown>;
 }) => {
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<ITokenDetailInfo | undefined>();
@@ -710,10 +906,13 @@ export const useTokenDetailInfo = ({
 
     const ethereumNativeToken = tokens?.find(
       (n) =>
-        n.impl === IMPL_EVM && n.chainId === '1' && (n.isNative || !n.address),
+        n.impl === IMPL_EVM &&
+        (n.chainId === '1' || n.chainId === '5') &&
+        (n.isNative || !n.address),
     );
 
     return {
+      ...defaultInfo,
       ...pick(token, 'name', 'symbol', 'logoURI'),
       ...data,
       loading: loading || tokenLoading,
@@ -721,102 +920,5 @@ export const useTokenDetailInfo = ({
       defaultToken,
       ethereumNativeToken,
     };
-  }, [data, token, loading, tokenLoading]);
+  }, [data, token, loading, tokenLoading, defaultInfo]);
 };
-
-export const useOverviewPendingTasks = ({
-  networkId,
-  accountId,
-}: {
-  networkId: string;
-  accountId: string;
-}) => {
-  const intl = useIntl();
-  const updatedAt = useAppSelector(
-    (s) =>
-      s.overview.updatedTimeMap?.[`${networkId}___${accountId}`]?.updatedAt,
-  );
-
-  const tasks = useAppSelector((s) => {
-    const data = Object.values(s.overview.tasks || {});
-    return data.filter((t) => t.key === `${networkId}___${accountId}`);
-  });
-
-  const updateTips = useMemo(() => {
-    if (tasks?.length) {
-      return intl.formatMessage({
-        id: 'content__updating_assets',
-      });
-    }
-    const duration = Date.now() - updatedAt;
-    if (
-      duration <
-      getTimeDurationMs({
-        minute: 2,
-      })
-    ) {
-      return intl.formatMessage({
-        id: 'form__updated_just_now',
-      });
-    }
-    if (
-      duration <
-      getTimeDurationMs({
-        hour: 1,
-      })
-    ) {
-      return intl.formatMessage(
-        {
-          id: 'form__updated_str_ago',
-        },
-        {
-          0: `${Math.floor(duration / 1000 / 60)} m`,
-        },
-      );
-    }
-    if (
-      duration >
-      getTimeDurationMs({
-        hour: 1,
-      })
-    ) {
-      return intl.formatMessage(
-        {
-          id: 'form__updated_str_ago',
-        },
-        {
-          0: `${Math.floor(duration / 1000 / 60 / 60)} h`,
-        },
-      );
-    }
-  }, [tasks, updatedAt, intl]);
-
-  return {
-    tasks,
-    updatedAt,
-    updateTips,
-  };
-};
-
-export function useAccountTokenLoading(networkId: string, accountId: string) {
-  const pendingTasks = useOverviewPendingTasks({ networkId, accountId });
-  const accountTokens = useAppSelector((s) => s.tokens.accountTokens);
-
-  const { data } = useAllNetworksWalletAccounts({
-    accountId,
-  });
-
-  return useMemo(() => {
-    if (isAllNetworks(networkId)) {
-      const { tasks, updatedAt } = pendingTasks;
-      if (!Object.keys(data).length) {
-        return false;
-      }
-      return (
-        tasks?.filter((t) => t.scanType === EOverviewScanTaskType.token)
-          .length > 0 || typeof updatedAt === 'undefined'
-      );
-    }
-    return typeof accountTokens[networkId]?.[accountId] === 'undefined';
-  }, [networkId, accountId, accountTokens, pendingTasks, data]);
-}

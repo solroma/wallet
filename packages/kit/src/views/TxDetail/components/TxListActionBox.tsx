@@ -1,8 +1,11 @@
 import type { ComponentProps } from 'react';
 
 import { Box, HStack, Text, Token } from '@onekeyhq/components';
+import { isAllNetworks } from '@onekeyhq/engine/src/managers/network';
 import type { Network } from '@onekeyhq/engine/src/types/network';
+import { isLightningNetworkByImpl } from '@onekeyhq/shared/src/engine/engineConsts';
 
+import { useAppSelector } from '../../../hooks';
 import { TxActionElementIconLarge } from '../elements/TxActionElementIcon';
 import { TxActionElementTitleNormal } from '../elements/TxActionElementTitle';
 import { fallbackTextComponent } from '../utils/utilsTxDetail';
@@ -61,6 +64,7 @@ export function TxListActionBox(props: ITxListActionBoxProps) {
     symbol,
     network,
   } = props;
+  const { activeNetworkId } = useAppSelector((s) => s.general);
   const titleView = fallbackTextComponent(title, TxListActionBoxTitleText) ?? (
     <TxActionElementTitleNormal titleInfo={titleInfo} />
   );
@@ -77,6 +81,9 @@ export function TxListActionBox(props: ITxListActionBoxProps) {
   );
   const extraView = fallbackTextComponent(extra, TxListActionBoxExtraText);
   const hasExtraView = !!extraView;
+  const showSubtitleToken =
+    !isLightningNetworkByImpl(network?.impl ?? '') ||
+    subTitleView !== undefined;
   return (
     <Box>
       <HStack space={2}>
@@ -101,7 +108,7 @@ export function TxListActionBox(props: ITxListActionBoxProps) {
                 flex={hasExtraView ? undefined : 1}
                 alignItems="center"
               >
-                {network?.logoURI ? (
+                {isAllNetworks(activeNetworkId) && network?.logoURI ? (
                   <Token
                     token={{ logoURI: network?.logoURI }}
                     showInfo={false}

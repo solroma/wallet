@@ -6,6 +6,7 @@ import BigNumber from 'bignumber.js';
 import { useIntl } from 'react-intl';
 
 import {
+  BottomSheetModal,
   Box,
   Button,
   Center,
@@ -27,10 +28,7 @@ import { OnekeyNetwork } from '@onekeyhq/shared/src/config/networkIds';
 import backgroundApiProxy from '../../../background/instance/backgroundApiProxy';
 import { AutoSizeText } from '../../../components/AutoSizeText';
 import { FormatCurrency } from '../../../components/Format';
-import {
-  useActiveWalletAccount,
-  useTokenBalanceWithoutFrozen,
-} from '../../../hooks';
+import { useTokenBalanceWithoutFrozen } from '../../../hooks';
 import {
   useSimpleTokenPriceValue,
   useSingleToken,
@@ -40,8 +38,10 @@ import {
   addKeleTransaction,
   addTransaction,
 } from '../../../store/reducers/staking';
+import { showOverlay } from '../../../utils/overlayUtils';
 import { formatAmount } from '../../../utils/priceUtils';
 import { SendModalRoutes } from '../../Send/types';
+import { gt, minus } from '../../Swap/utils';
 import { StakingKeyboard } from '../components/StakingKeyboard';
 import { useStakingAprValue } from '../hooks';
 import { EthStakingSource, KeleStakingMode, StakingRoutes } from '../typing';
@@ -90,7 +90,7 @@ type KeleStakingModeProps = {
   mode: KeleStakingMode;
 };
 
-type TxData = {
+type StakingTransactionData = {
   data: string;
   to: string;
   value: string;
@@ -117,13 +117,75 @@ const KeleStakingModeComponent: FC<KeleStakingModeProps> = ({ mode }) => {
   );
 };
 
+const TypographyStrong = (text: string) => (
+  <Typography.Body1 color="text-default">{text}</Typography.Body1>
+);
+
+type StakingInsufficientBalanceBottomSheetModalProps = {
+  closeOverlay: () => void;
+  onConfirm?: () => void;
+  amount: string;
+  remain: string;
+};
+
+const StakingInsufficientBalanceBottomSheetModal: FC<
+  StakingInsufficientBalanceBottomSheetModalProps
+> = ({ closeOverlay, amount, remain, onConfirm }) => {
+  const intl = useIntl();
+  const onPress = useCallback(() => {
+    closeOverlay();
+    onConfirm?.();
+  }, [closeOverlay, onConfirm]);
+  return (
+    <BottomSheetModal
+      closeOverlay={closeOverlay}
+      title={intl.formatMessage({ id: 'title__staking_tips' })}
+    >
+      <Center>
+        <Typography.Heading
+          pt="6"
+          pb="2"
+          fontSize={60}
+          fontWeight={600}
+          lineHeight={70}
+        >
+          💸
+        </Typography.Heading>
+      </Center>
+      <Typography.DisplayLarge textAlign="center">
+        {intl.formatMessage({
+          id: 'modal__insufficient_balance_in_system_address',
+        })}
+      </Typography.DisplayLarge>
+      <Box my="6">
+        <Typography.Body1 color="text-subdued" textAlign="center">
+          {intl.formatMessage(
+            { id: 'modal__insufficient_balance_in_system_address_desc' },
+            {
+              '0': `${amount} ETH`,
+              '1': `${remain} ETH`,
+              a: TypographyStrong,
+              b: TypographyStrong,
+            },
+          )}
+        </Typography.Body1>
+      </Box>
+      <Center h="10" w="full">
+        <Button w="full" size="xl" type="primary" onPress={onPress}>
+          {intl.formatMessage({ id: 'action__i_got_it' })}
+        </Button>
+      </Center>
+    </BottomSheetModal>
+  );
+};
+
 export default function ETHStaking() {
   const intl = useIntl();
   const route = useRoute<RouteProps>();
+  const { accountId, networkId, source: defaultSource } = route.params;
   const navigation = useNavigation<NavigationProps['navigation']>();
-  const { account, accountId, networkId } = useActiveWalletAccount();
   const mainPrice = useSimpleTokenPriceValue({ networkId });
-  const [source, setSource] = useState(route.params.source);
+  const [source, setSource] = useState(defaultSource ?? EthStakingSource.Lido);
   const [mode, setMode] = useState(KeleStakingMode.fast);
   const [loading, setLoading] = useState(false);
 
@@ -208,7 +270,8 @@ export default function ETHStaking() {
       params: {
         screen: StakingRoutes.ETHPoolSelector,
         params: {
-          isTestnet: networkId === OnekeyNetwork.goerli,
+          networkId,
+          accountId,
           onSelector: (s) => {
             setSource(s);
             const parent = navigation.getParent();
@@ -221,7 +284,7 @@ export default function ETHStaking() {
         },
       },
     });
-  }, [navigation, networkId]);
+  }, [navigation, networkId, accountId]);
 
   const onChangeStakingMode = useCallback(() => {
     navigation.push(RootRoutes.Modal, {
@@ -230,7 +293,7 @@ export default function ETHStaking() {
         screen: StakingRoutes.KeleStakingModeSelector,
         params: {
           mode,
-          isTestnet: networkId === OnekeyNetwork.goerli,
+          networkId,
           onSelector: (s) => {
             setMode(s);
             const parent = navigation.getParent();
@@ -245,9 +308,114 @@ export default function ETHStaking() {
     });
   }, [navigation, networkId, mode]);
 
+  const doStaking = useCallback(
+    async ({
+      stakingTx,
+      onClose,
+    }: {
+      stakingTx: StakingTransactionData;
+      onClose?: () => void;
+    }) => {
+      if (!stakingTx) {
+        ToastManager.show(
+          { title: 'Failed to build encodedTx data' },
+          { type: 'error' },
+        );
+        return;
+      }
+      let encodedTx: IEncodedTxEvm | undefined;
+      const account = await backgroundApiProxy.engine.getAccount(
+        accountId,
+        networkId,
+      );
+      if (stakingTx) {
+        encodedTx = {
+          ...stakingTx,
+          from: account.address,
+        };
+      }
+      if (!encodedTx) {
+        ToastManager.show(
+          { title: 'Failed to build encodedTx data' },
+          { type: 'error' },
+        );
+        return;
+      }
+
+      if (tokenInfo) {
+        onClose?.();
+        navigation.navigate(RootRoutes.Modal, {
+          screen: ModalRoutes.Send,
+          params: {
+            screen: SendModalRoutes.SendConfirm,
+            params: {
+              networkId,
+              accountId,
+              payloadInfo: {
+                type: 'InternalStake',
+                stakeInfo: {
+                  tokenInfo,
+                  amount,
+                  accountAddress: account.address,
+                },
+              },
+              feeInfoEditable: true,
+              feeInfoUseFeeInTx: false,
+              encodedTx: { ...encodedTx, from: account?.address },
+              onSuccess: (tx, data) => {
+                if (source === EthStakingSource.Kele) {
+                  backgroundApiProxy.dispatch(
+                    addKeleTransaction({
+                      accountId: account.id,
+                      networkId,
+                      transaction: {
+                        hash: tx.txid,
+                        accountId: account.id,
+                        networkId,
+                        type: 'KeleStake',
+                        amount,
+                        nonce: data?.decodedTx?.nonce,
+                        addedTime: Date.now(),
+                      },
+                    }),
+                  );
+                } else {
+                  backgroundApiProxy.serviceStaking.addStEthToUserAccount({
+                    networkId,
+                    accountId,
+                  });
+                  backgroundApiProxy.dispatch(
+                    addTransaction({
+                      accountId: account.id,
+                      networkId,
+                      transaction: {
+                        hash: tx.txid,
+                        accountId: account.id,
+                        networkId,
+                        type: 'lidoStake',
+                        nonce: data?.decodedTx?.nonce,
+                        addedTime: Date.now(),
+                      },
+                    }),
+                  );
+                  // add stETH to user tokens list
+                }
+                ToastManager.show({
+                  title: intl.formatMessage({ id: 'msg__success' }),
+                });
+                navigation.goBack();
+              },
+            },
+          },
+        });
+      }
+    },
+    [tokenInfo, accountId, amount, intl, navigation, networkId, source],
+  );
+
   const onPrimaryActionPress = useCallback(
     async ({ onClose }: { onClose?: () => void }) => {
-      if (!account || !tokenInfo) {
+      if (!accountId || !tokenInfo) {
         return;
       }
 
@@ -255,19 +423,58 @@ export default function ETHStaking() {
         .shiftedBy(tokenInfo.decimals)
         .toFixed(0);
 
-      let encodedTx: IEncodedTxEvm | undefined;
-      let txdata: TxData | undefined;
+      let txdata: StakingTransactionData | undefined;
       try {
         setLoading(true);
         if (source === EthStakingSource.Kele) {
           if (mode === KeleStakingMode.fast) {
-            txdata =
-              await backgroundApiProxy.serviceStaking.buildTxForFastStakingETHtoKele(
+            const preparedata =
+              await backgroundApiProxy.serviceStaking.prepareBuildTxForFastStakingToKele(
                 {
                   value,
                   networkId,
                 },
               );
+            if (gt(amount, preparedata.fast_stake_balance)) {
+              const remain = minus(
+                amount,
+                preparedata.fast_stake_balance,
+              ).toString();
+              showOverlay((closeOverlay) => (
+                <StakingInsufficientBalanceBottomSheetModal
+                  amount={amount}
+                  remain={remain}
+                  closeOverlay={closeOverlay}
+                  onConfirm={async () => {
+                    const fundAddr = preparedata.fund_addr;
+                    await backgroundApiProxy.validator.validateAddress(
+                      networkId,
+                      fundAddr,
+                    );
+
+                    txdata = {
+                      to: fundAddr,
+                      value,
+                      data: '0x',
+                    };
+
+                    doStaking({ stakingTx: txdata, onClose });
+                  }}
+                />
+              ));
+              return;
+            }
+            const fundAddr = preparedata.fund_addr;
+            await backgroundApiProxy.validator.validateAddress(
+              networkId,
+              fundAddr,
+            );
+
+            txdata = {
+              to: fundAddr,
+              value,
+              data: '0x',
+            };
           } else {
             txdata =
               await backgroundApiProxy.serviceStaking.buildTxForStakingETHtoKele(
@@ -290,96 +497,9 @@ export default function ETHStaking() {
       } finally {
         setLoading(false);
       }
-      if (txdata) {
-        encodedTx = {
-          ...txdata,
-          from: account.address,
-        };
-      }
-      if (!encodedTx) {
-        ToastManager.show(
-          { title: 'Failed to build encodedTx data' },
-          { type: 'error' },
-        );
-        return;
-      }
-      onClose?.();
-      navigation.navigate(RootRoutes.Modal, {
-        screen: ModalRoutes.Send,
-        params: {
-          screen: SendModalRoutes.SendConfirm,
-          params: {
-            networkId,
-            accountId,
-            payloadInfo: {
-              type: 'InternalStake',
-              stakeInfo: {
-                tokenInfo,
-                amount,
-                accountAddress: account.address,
-              },
-            },
-            feeInfoEditable: true,
-            feeInfoUseFeeInTx: false,
-            encodedTx: { ...encodedTx, from: account?.address },
-            onSuccess: (tx, data) => {
-              if (source === EthStakingSource.Kele) {
-                backgroundApiProxy.dispatch(
-                  addKeleTransaction({
-                    accountId: account.id,
-                    networkId,
-                    transaction: {
-                      hash: tx.txid,
-                      accountId: account.id,
-                      networkId,
-                      type: 'KeleStake',
-                      amount,
-                      nonce: data?.decodedTx?.nonce,
-                      addedTime: Date.now(),
-                    },
-                  }),
-                );
-              } else {
-                backgroundApiProxy.serviceStaking.addStEthToUserAccount({
-                  networkId,
-                  accountId,
-                });
-                backgroundApiProxy.dispatch(
-                  addTransaction({
-                    accountId: account.id,
-                    networkId,
-                    transaction: {
-                      hash: tx.txid,
-                      accountId: account.id,
-                      networkId,
-                      type: 'lidoStake',
-                      nonce: data?.decodedTx?.nonce,
-                      addedTime: Date.now(),
-                    },
-                  }),
-                );
-                // add stETH to user tokens list
-              }
-              ToastManager.show({
-                title: intl.formatMessage({ id: 'msg__success' }),
-              });
-              navigation.goBack();
-            },
-          },
-        },
-      });
+      doStaking({ stakingTx: txdata, onClose });
     },
-    [
-      source,
-      account,
-      tokenInfo,
-      networkId,
-      accountId,
-      amount,
-      navigation,
-      intl,
-      mode,
-    ],
+    [source, tokenInfo, networkId, accountId, amount, mode, doStaking],
   );
 
   return (

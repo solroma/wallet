@@ -5,7 +5,6 @@ import { useRoute } from '@react-navigation/core';
 import natsort from 'natsort';
 import { useIntl } from 'react-intl';
 import { StyleSheet } from 'react-native';
-import semver from 'semver';
 
 import {
   Box,
@@ -26,6 +25,7 @@ import type {
   PublicBackupData,
 } from '@onekeyhq/shared/src/services/ServiceCloudBackup/ServiceCloudBackup.types';
 import type { Avatar } from '@onekeyhq/shared/src/utils/emojiUtils';
+import { gtIgnore } from '@onekeyhq/shared/src/utils/semverUtils';
 
 import backgroundApiProxy from '../../../../background/instance/backgroundApiProxy';
 import { useNavigation } from '../../../../hooks';
@@ -333,7 +333,7 @@ const BackupDetails: FC<{ onboarding: boolean }> = ({ onboarding = false }) => {
       return true;
     }
     // data version >= local version
-    if (version && semver.gt(version, localVersion)) {
+    if (version && gtIgnore(version, localVersion, 'patch')) {
       return false;
     }
     return true;

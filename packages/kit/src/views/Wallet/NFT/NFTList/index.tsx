@@ -18,6 +18,7 @@ import { Tabs } from '@onekeyhq/components/src/CollapsibleTabView';
 import { DebugRenderTracker } from '@onekeyhq/components/src/DebugRenderTracker';
 import type { FlatListProps } from '@onekeyhq/components/src/FlatList';
 import { isAccountCompatibleWithNetwork } from '@onekeyhq/engine/src/managers/account';
+import { isAllNetworks } from '@onekeyhq/engine/src/managers/network';
 import { isCollectibleSupportedChainId } from '@onekeyhq/engine/src/managers/nft';
 import type { NFTAssetMeta } from '@onekeyhq/engine/src/types/nft';
 import {
@@ -29,7 +30,7 @@ import debugLogger from '@onekeyhq/shared/src/logger/debugLogger';
 import platformEnv from '@onekeyhq/shared/src/platformEnv';
 
 import backgroundApiProxy from '../../../../background/instance/backgroundApiProxy';
-import { useAccountPortfolios } from '../../../../hooks';
+import { useAccountPortfolios, useNFTIsLoading } from '../../../../hooks';
 import { EOverviewScanTaskType } from '../../../Overview/types';
 import { WalletHomeTabEnum } from '../../type';
 import { navigateToNFTCollection, navigateToNFTDetail } from '../utils';
@@ -223,6 +224,11 @@ function NFTListContainer() {
 
   const [listData, updateListData] = useState<NFTAssetMeta[]>([]);
 
+  const nftIsLoading = useNFTIsLoading({
+    accountId,
+    networkId,
+  });
+
   const { updatedAt } = useAccountPortfolios({
     networkId,
     accountId,
@@ -242,7 +248,7 @@ function NFTListContainer() {
   }, [updatedAt, networkId, accountId]);
 
   const fetchData = useCallback(async () => {
-    if (accountId && networkId && isNFTSupport) {
+    if (accountId && networkId && isNFTSupport && !isAllNetworks(networkId)) {
       const result = await serviceNFT.fetchNFT({
         accountId,
         networkId,
@@ -317,7 +323,7 @@ function NFTListContainer() {
         onSelect={handleSelect}
         fetchData={mutate}
         isNFTSupport={isNFTSupport}
-        isLoading={isLoading}
+        isLoading={isLoading || nftIsLoading}
       />
     </NFTListContentProvider>
   );

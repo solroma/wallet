@@ -52,6 +52,7 @@ import type { ICoinSelectAlgorithm } from './utils/btcForkChain/utils';
 export type IVaultSubNetworkSettings = {
   isIntegerGasPrice?: boolean;
   minGasPrice?: string;
+  allowZeroFee?: boolean;
 };
 
 export type TxExtraInfo = {
@@ -83,6 +84,7 @@ export type IVaultSettings = {
   enabledInDevModeOnly?: boolean;
 
   minTransferAmount?: string;
+  allowZeroFee?: boolean;
   dust?: string;
 
   isUTXOModel: boolean;
@@ -132,7 +134,6 @@ export type IVaultSettings = {
   hiddenAddress?: boolean;
   hiddenAccountInfoSwapOption?: boolean;
   hiddenAccountInfoMoreOption?: boolean;
-  hiddenFeeOnTxDetail?: boolean;
   displayMemo?: boolean;
   hideFromToFieldIfValueEmpty?: boolean;
   displayFullAddress?: boolean;
@@ -661,4 +662,17 @@ export type IClientEndpointStatus = {
   responseTime: number;
   latestBlock: number;
   rpcBatchSupported?: boolean;
+};
+
+export type IBalanceDetails = {
+  errorMessageKey?: LocaleIds;
+
+  total: string;
+  available: string;
+  unavailable: string;
+
+  unavailableOfLocalFrozen?: string;
+  unavailableOfUnconfirmed?: string;
+  unavailableOfInscription?: string; // BTC Inscription value
+  unavailableOfUnchecked?: string; // BTC not verified value by ordinals
 };

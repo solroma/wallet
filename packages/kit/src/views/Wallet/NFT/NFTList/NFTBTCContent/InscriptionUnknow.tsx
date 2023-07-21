@@ -3,9 +3,10 @@ import { Box, Text } from '@onekeyhq/components';
 import type { InscriptionContentProps } from '../type';
 
 function InscriptionUnknow({ size, asset, ...props }: InscriptionContentProps) {
+  const innerSize = typeof size === 'number' ? `${size}px` : (size as string);
   return (
     <Box
-      size={size}
+      size={innerSize}
       flexDirection="column"
       overflow="hidden"
       justifyContent="center"
@@ -15,11 +16,12 @@ function InscriptionUnknow({ size, asset, ...props }: InscriptionContentProps) {
     >
       <Text
         textAlign="center"
-        width={size}
-        typography="Body1Strong"
+        width={innerSize}
+        typography="Body1Mono"
         numberOfLines={0}
+        color="text-subdued"
       >
-        {asset.content_type}
+        {asset.content_type.toUpperCase()}
       </Text>
     </Box>
   );

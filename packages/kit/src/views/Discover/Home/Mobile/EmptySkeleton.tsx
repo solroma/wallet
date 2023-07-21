@@ -1,13 +1,11 @@
 import type { ComponentType, FC, ReactElement } from 'react';
 
-import { Box, CustomSkeleton, FlatList } from '@onekeyhq/components';
-import platformEnv from '@onekeyhq/shared/src/platformEnv';
+import { Box, CustomSkeleton, FlatList, HStack } from '@onekeyhq/components';
 
 type EmptySkeletonContentProps = {
-  ListHeaderComponent: ComponentType<any> | ReactElement | null | undefined;
+  ListHeaderComponent?: ComponentType<any> | ReactElement | null | undefined;
 };
 
-const ItemSeparatorComponent3 = () => <Box h="3" />;
 const ItemSeparatorComponent4 = () => <Box h="4" />;
 
 export const EmptySkeletonContent: FC<EmptySkeletonContentProps> = ({
@@ -44,24 +42,16 @@ export const EmptySkeletonContent: FC<EmptySkeletonContentProps> = ({
   />
 );
 
+const ListHeaderComponent = () => (
+  <HStack px="4" my="4" space={3}>
+    {[1, 2, 3, 4].map((item) => (
+      <Box key={item} h="7" w="12" borderRadius={12} overflow="hidden">
+        <CustomSkeleton />
+      </Box>
+    ))}
+  </HStack>
+);
+
 export const EmptySkeleton = () => (
-  <EmptySkeletonContent
-    ListHeaderComponent={
-      <FlatList
-        horizontal
-        showsHorizontalScrollIndicator={platformEnv.isDesktop}
-        contentContainerStyle={{
-          paddingHorizontal: 16,
-          marginBottom: 16,
-        }}
-        data={[1, 2, 3, 4]}
-        ItemSeparatorComponent={ItemSeparatorComponent3}
-        renderItem={() => (
-          <Box h="7" w="12" borderRadius={12} overflow="hidden">
-            <CustomSkeleton />
-          </Box>
-        )}
-      />
-    }
-  />
+  <EmptySkeletonContent ListHeaderComponent={ListHeaderComponent} />
 );

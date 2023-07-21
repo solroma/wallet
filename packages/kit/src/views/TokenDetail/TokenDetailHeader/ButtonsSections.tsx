@@ -19,9 +19,10 @@ import { isAllNetworks } from '@onekeyhq/engine/src/managers/network';
 import type { Account } from '@onekeyhq/engine/src/types/account';
 import type { Network } from '@onekeyhq/engine/src/types/network';
 import type { Token as TokenType } from '@onekeyhq/engine/src/types/token';
+import { isLightningNetworkByImpl } from '@onekeyhq/shared/src/engine/engineConsts';
 
 import backgroundApiProxy from '../../../background/instance/backgroundApiProxy';
-import { useNavigation, useWallet } from '../../../hooks';
+import { useNavigation, useNetwork, useWallet } from '../../../hooks';
 import {
   FiatPayModalRoutes,
   MainRoutes,
@@ -33,10 +34,8 @@ import {
 import { useAllNetworksSelectNetworkAccount } from '../../ManageNetworks/hooks';
 import BaseMenu from '../../Overlay/BaseMenu';
 import { SendModalRoutes } from '../../Send/enums';
-import {
-  ETHRelatedPoolShowControl,
-  EthTopAprShowControl,
-} from '../../Staking/components/StakingEthOptions';
+import { EthereumTopYields } from '../../Staking/Widgets/EthereumTopYields';
+import { LidoStTokenYields } from '../../Staking/Widgets/LidoStTokenYields';
 import { TokenDetailContext } from '../context';
 
 import type { MessageDescriptor } from 'react-intl';
@@ -68,7 +67,7 @@ const ButtonItem = ({
   const isVertical = useIsVerticalLayout();
   const content = useMemo(() => {
     let ele = (
-      <Box mx={isVertical ? 0 : 3}>
+      <Box mx={isVertical ? 0 : 3} alignItems="center">
         {typeof onPress === 'function' ? (
           <TouchableWithoutFeedback>
             <IconButton
@@ -78,6 +77,8 @@ const ButtonItem = ({
               type="basic"
               isDisabled={isDisabled}
               onPress={onPress}
+              w={isVertical ? '42px' : '34px'}
+              h={isVertical ? '42px' : '34px'}
             />
           </TouchableWithoutFeedback>
         ) : (
@@ -89,6 +90,8 @@ const ButtonItem = ({
             borderRadius="999px"
             borderColor="border-default"
             bg="action-secondary-default"
+            w={isVertical ? '42px' : '34px'}
+            h={isVertical ? '42px' : '34px'}
           >
             <Icon name={icon} size={isVertical ? 24 : 20} />
           </Box>
@@ -124,9 +127,9 @@ export const ButtonsSection: FC = () => {
     accountId = '',
     networkId = '',
     sendAddress,
-    symbol,
-    logoURI,
   } = context?.routeParams ?? {};
+
+  const { symbol, logoURI } = context?.detailInfo ?? {};
 
   const { items } = context?.positionInfo ?? {};
 
@@ -135,6 +138,8 @@ export const ButtonsSection: FC = () => {
   const { wallet } = useWallet({
     walletId,
   });
+
+  const { network: currentNetwork } = useNetwork({ networkId });
 
   const filter = useCallback(
     ({ network }: { network?: Network | null }) =>
@@ -173,6 +178,19 @@ export const ButtonsSection: FC = () => {
   const onReceive = useCallback(
     ({ network, account }: ISingleChainInfo) => {
       if (!wallet) {
+        return;
+      }
+      if (isLightningNetworkByImpl(network.impl)) {
+        navigation.navigate(RootRoutes.Modal, {
+          screen: ModalRoutes.Receive,
+          params: {
+            screen: ReceiveTokenModalRoutes.CreateInvoice,
+            params: {
+              networkId: network.id,
+              accountId: account.id,
+            },
+          },
+        });
         return;
       }
       navigation.navigate(RootRoutes.Modal, {
@@ -270,6 +288,16 @@ export const ButtonsSection: FC = () => {
     [selectNetworkAccount, tokens, sendAddress],
   );
 
+  const showSwapOption = useMemo(
+    () => !currentNetwork?.settings.hiddenAccountInfoSwapOption,
+    [currentNetwork],
+  );
+
+  const showMoreOption = useMemo(
+    () => !currentNetwork?.settings.hiddenAccountInfoMoreOption,
+    [currentNetwork],
+  );
+
   const { buttons, options } = useMemo(() => {
     const list: IButtonItem[] = [
       {
@@ -286,17 +314,19 @@ export const ButtonsSection: FC = () => {
         id: 'title__swap',
         onPress: onSwap,
         icon: 'ArrowsRightLeftSolid',
-        visible: () => isVerticalLayout,
+        visible: () => isVerticalLayout && showSwapOption,
       },
       {
         id: 'action__buy',
         onPress: onBuy,
         icon: 'PlusMini',
+        visible: () => showMoreOption,
       },
       {
         id: 'action__sell',
         onPress: onSell,
         icon: 'BanknotesMini',
+        visible: () => showMoreOption,
       },
     ]
       .map((t) => ({ ...t, isDisabled: loading }))
@@ -320,6 +350,8 @@ export const ButtonsSection: FC = () => {
     onSwap,
     onReceive,
     onSend,
+    showSwapOption,
+    showMoreOption,
   ]);
 
   return (
@@ -353,25 +385,27 @@ export const ButtonsSection: FC = () => {
               isDisabled={loading}
             />
           ))}
-          <BaseMenu ml="26px" options={options}>
-            <Pressable>
-              <ButtonItem
-                icon="EllipsisVerticalOutline"
-                text={intl.formatMessage({
-                  id: 'action__more',
-                })}
-                isDisabled={loading}
-              />
-            </Pressable>
-          </BaseMenu>
+          {showMoreOption && (
+            <BaseMenu ml="26px" options={options}>
+              <Pressable>
+                <ButtonItem
+                  icon="EllipsisVerticalOutline"
+                  text={intl.formatMessage({
+                    id: 'action__more',
+                  })}
+                  isDisabled={loading}
+                />
+              </Pressable>
+            </BaseMenu>
+          )}
         </HStack>
       </HStack>
-      {ethereumNativeToken && !isAllNetworks(networkId) && (
+      {ethereumNativeToken && !isAllNetworks(networkId) ? (
         <Box>
-          <EthTopAprShowControl token={ethereumNativeToken} />
-          <ETHRelatedPoolShowControl token={ethereumNativeToken} />
+          <EthereumTopYields token={ethereumNativeToken} />
+          <LidoStTokenYields token={ethereumNativeToken} />
         </Box>
-      )}
+      ) : null}
     </Box>
   );
 };

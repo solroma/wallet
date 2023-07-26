@@ -432,22 +432,28 @@ class ServiceNetwork extends ServiceBase {
 
   @backgroundMethod()
   async migrateServerNetworks(networks: IServerNetwork[], isTestnet: boolean) {
-    debugLogger.common.error('migrateServerNetworks', {
-      networks,
-      isTestnet,
-    });
+    debugLogger.common.error(
+      'migrateServerNetworks',
+      JSON.stringify({
+        networks,
+        isTestnet,
+      }),
+    );
     if (!networks?.length) {
       return;
     }
     await simpleDb.serverNetworks.updateNetworks(networks, isTestnet);
     await this.initNetworks();
 
-    debugLogger.common.error('migrateServerNetworks done', {
-      networks,
-      isTestnet,
-      data: await simpleDb.serverNetworks.getData(),
-      newNetworks: await this.backgroundApi.engine.listFiats(),
-    });
+    debugLogger.common.error(
+      'migrateServerNetworks done',
+      JSON.stringify({
+        networks,
+        isTestnet,
+        data: await simpleDb.serverNetworks.getData(),
+        newNetworks: await this.backgroundApi.engine.listFiats(),
+      }),
+    );
   }
 
   async checkDisabledPresetNetworks() {

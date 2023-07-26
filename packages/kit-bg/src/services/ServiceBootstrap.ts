@@ -120,6 +120,12 @@ export default class ServiceBootstrap extends ServiceBase {
     const updateNetworkTimestamp = await simpleDb.serverNetworks.getTimestamp({
       isTestnet,
     });
+    debugLogger.common.error('updateNetworkTimestamp', {
+      isTestnet,
+      updateNetworkTimestamp,
+      data: await simpleDb.serverNetworks.getData(),
+      version: process.env.VERSION ?? '',
+    });
     const path = `/config/app`;
     const { swapConfig, remoteSettings, vsCurrencies, networks } =
       await fetchData<{

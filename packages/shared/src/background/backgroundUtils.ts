@@ -405,6 +405,9 @@ export async function fetchData<T>(
   try {
     const postData = isPostBody ? query : undefined;
     const requestConfig = { url: apiUrl, method, data: postData };
+    debugLogger.common.error('fetchData', {
+      requestConfig,
+    });
     const { data } = await axios.request<T>(requestConfig);
     return data;
   } catch (e) {

@@ -431,11 +431,11 @@ class ServiceNetwork extends ServiceBase {
   }
 
   @backgroundMethod()
-  async migrateServerNetworks(networks: IServerNetwork[]) {
+  async migrateServerNetworks(networks: IServerNetwork[], isTestnet: boolean) {
     if (!networks?.length) {
       return;
     }
-    await simpleDb.serverNetworks.updateNetworks(networks);
+    await simpleDb.serverNetworks.updateNetworks(networks, isTestnet);
     await this.initNetworks();
   }
 

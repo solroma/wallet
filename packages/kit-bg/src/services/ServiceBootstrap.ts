@@ -112,7 +112,14 @@ export default class ServiceBootstrap extends ServiceBase {
   }
 
   async fetchAppConfig() {
-    const updateNetworkTimestamp = await simpleDb.serverNetworks.getTimestamp();
+    const { appSelector } = this.backgroundApi;
+    const isTestnet =
+      appSelector(
+        (s) => s?.settings?.devMode?.enableTestFiatEndpoint ?? false,
+      ) ?? false;
+    const updateNetworkTimestamp = await simpleDb.serverNetworks.getTimestamp({
+      isTestnet,
+    });
     const path = `/config/app`;
     const { swapConfig, remoteSettings, vsCurrencies, networks } =
       await fetchData<{
@@ -144,8 +151,8 @@ export default class ServiceBootstrap extends ServiceBase {
       servicePrice.updateFiatMoneyMap(vsCurrencies);
     }
 
-    if (networks) {
-      serviceNetwork.migrateServerNetworks(networks).then(() => {
+    if (networks?.length) {
+      serviceNetwork.migrateServerNetworks(networks, isTestnet).then(() => {
         this.switchDefaultRpcToOnekeyRpcNode();
       });
     }

@@ -447,12 +447,16 @@ class ServiceNetwork extends ServiceBase {
 
     debugLogger.common.error(
       'migrateServerNetworks done',
-      JSON.stringify({
-        networks,
-        isTestnet,
-        data: await simpleDb.serverNetworks.getData(),
-        newNetworks: await this.backgroundApi.engine.listFiats(),
-      }),
+      JSON.stringify(
+        {
+          networks,
+          isTestnet,
+          data: await simpleDb.serverNetworks.getData(),
+          newNetworks: await this.backgroundApi.engine.listNetworks(),
+        },
+        null,
+        2,
+      ),
     );
   }
 

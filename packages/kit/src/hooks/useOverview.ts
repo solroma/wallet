@@ -171,10 +171,16 @@ export const useAccountPortfolios = <
     updatedAt: undefined,
     loading: true,
   });
-  const updateInfo = useOverviewAccountUpdateInfo({
-    networkId: networkId ?? '',
-    accountId: accountId ?? '',
-  });
+  const updateInfoUpdatedAt = useAppSelector(
+    useMemo(
+      () =>
+        updatedTimeSelector({
+          networkId: networkId ?? '',
+          accountId: accountId ?? '',
+        }),
+      [accountId, networkId],
+    ),
+  );
 
   const { data: networkAccountsMap } = useAllNetworksWalletAccounts({
     accountId,
@@ -185,7 +191,7 @@ export const useAccountPortfolios = <
       setState({
         loading: false,
         data: [],
-        updatedAt: updateInfo?.updatedAt,
+        updatedAt: updateInfoUpdatedAt,
       });
       return;
     }
@@ -196,9 +202,9 @@ export const useAccountPortfolios = <
     setState({
       loading: false,
       data: res?.[type] || [],
-      updatedAt: updateInfo?.updatedAt,
+      updatedAt: updateInfoUpdatedAt,
     });
-  }, [accountId, networkId, type, networkAccountsMap, updateInfo?.updatedAt]);
+  }, [accountId, networkId, type, networkAccountsMap, updateInfoUpdatedAt]);
 
   useEffect(() => {
     fetchData();

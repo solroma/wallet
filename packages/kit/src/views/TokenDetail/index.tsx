@@ -7,6 +7,7 @@ import { useIntl } from 'react-intl';
 import {
   Box,
   HStack,
+  Spinner,
   Token as TokenIcon,
   Typography,
   useIsVerticalLayout,
@@ -69,15 +70,6 @@ const TokenDetail: FC<TokenDetailViewProps> = () => {
     defaultInfo,
   });
 
-  const positionInfo = useTokenPositionInfo({
-    coingeckoId,
-    networkId,
-    tokenAddress,
-    accountId,
-    sendAddress,
-    walletId,
-  });
-
   const isLightningNetwork = useMemo(
     () => isLightningNetworkByNetworkId(networkId),
     [networkId],
@@ -131,9 +123,8 @@ const TokenDetail: FC<TokenDetailViewProps> = () => {
     () => ({
       routeParams: route.params,
       detailInfo,
-      positionInfo,
     }),
-    [route.params, detailInfo, positionInfo],
+    [route.params, detailInfo],
   );
 
   return (

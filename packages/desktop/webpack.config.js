@@ -25,9 +25,11 @@ module.exports = async function (env, argv) {
     env,
     enableAnalyzerHtmlReport: true,
   });
-  if (process.env.NODE_ENV === 'production') {
-    config.devtool = false;
-  }
+  // if (process.env.NODE_ENV === 'production') {
+  //   config.devtool = false;
+  // }
   devUtils.writePreviewWebpackConfigJson(config, 'webpack.config.preview.json');
+  if (!config.optimization) config.optimization = {};
+  config.optimization.minimizer = [];
   return config;
 };

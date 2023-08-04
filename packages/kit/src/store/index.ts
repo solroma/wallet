@@ -202,25 +202,25 @@ export function appSelector<T>(selector: (state: IAppState) => T): T {
 }
 export type IAppSelector = typeof appSelector;
 
-if (platformEnv.isDev) {
-  // @ts-ignore
-  global.$$isString = isString;
-  global.$$appStore = store;
-  global.$$appDispatch = appDispatch;
-  global.$$appSelector = appSelector;
-  // @ts-ignore
-  global.$$testReplaceWholeState = () => {
-    const s = cloneDeep({ ...global.$$appStore.getState() });
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-    s.counter.value = parseFloat(Date.now().toString().slice(5));
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-    global.$$appDispatch({
-      type: REPLACE_WHOLE_STATE,
-      payload: s,
-      $isDispatchFromBackground: true,
-    });
-  };
-}
+// if (platformEnv.isDev) {
+// @ts-ignore
+global.$$isString = isString;
+global.$$appStore = store;
+global.$$appDispatch = appDispatch;
+global.$$appSelector = appSelector;
+// @ts-ignore
+global.$$testReplaceWholeState = () => {
+  const s = cloneDeep({ ...global.$$appStore.getState() });
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+  s.counter.value = parseFloat(Date.now().toString().slice(5));
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+  global.$$appDispatch({
+    type: REPLACE_WHOLE_STATE,
+    payload: s,
+    $isDispatchFromBackground: true,
+  });
+};
+// }
 
 export type IStore = typeof store;
 export type IPersistor = typeof persistorStore;

@@ -247,6 +247,7 @@ export enum LoggerNames {
   overview = 'overview',
   native = 'native',
   staking = 'staking',
+  allNetworks = 'allNetworks',
 }
 
 export type LoggerEntity = {
@@ -304,6 +305,7 @@ const debugLogger: Record<
   [LoggerNames.overview]: Cache.createLogger(LoggerNames.overview),
   [LoggerNames.native]: Cache.createLogger(LoggerNames.native),
   [LoggerNames.staking]: Cache.createLogger(LoggerNames.staking),
+  [LoggerNames.allNetworks]: Cache.createLogger(LoggerNames.allNetworks),
 };
 
 if (platformEnv.isDev) {

@@ -45,14 +45,28 @@ import debugLogger from '@onekeyhq/shared/src/logger/debugLogger';
 
 import ServiceBase from './ServiceBase';
 
+const log = (name: string, ...args: any[]) => {
+  let error: unknown;
+  let rest: any;
+  try {
+    rest = JSON.stringify(args, null, 2);
+  } catch (e) {
+    error = e;
+    rest = args;
+  }
+  debugLogger.allNetworks.info(name, error, rest);
+};
+
 @backgroundClass()
 export default class ServiceAllNetwork extends ServiceBase {
   @bindThis()
   registerEvents() {
     appEventBus.on(AppEventBusNames.NetworkChanged, () => {
+      log('NetworkChanged');
       this.refreshCurrentAllNetworksAccountMap();
     });
     appEventBus.on(AppEventBusNames.AccountChanged, () => {
+      log('AccountChanged');
       this.refreshCurrentAllNetworksAccountMap();
     });
     this.refreshCurrentAllNetworksAccountMap();
@@ -83,10 +97,12 @@ export default class ServiceAllNetwork extends ServiceBase {
     // -1 means no account
     let maxAccountIndex = -1;
 
+    log('getAllNetworkAccountIndex', { walletId });
     const accountDerivation = await engine.dbApi.getAccountDerivationByWalletId(
       { walletId },
     );
 
+    log('getAllNetworkAccountIndex', accountDerivation);
     const isValidUtxoAccount = (account: Account) =>
       account.type === AccountType.UTXO &&
       !![
@@ -119,6 +135,7 @@ export default class ServiceAllNetwork extends ServiceBase {
         }
       }
     }
+    log('getAllNetworkAccountIndex done', maxAccountIndex);
 
     return maxAccountIndex;
   }
@@ -185,6 +202,7 @@ export default class ServiceAllNetwork extends ServiceBase {
       this.backgroundApi;
     const networkAccountsMap: Record<string, Account[]> = {};
     if (!isWalletCompatibleAllNetworks(walletId)) {
+      log(`isWalletCompatibleAllNetworks false`);
       return {};
     }
     let index: number | undefined;
@@ -198,11 +216,13 @@ export default class ServiceAllNetwork extends ServiceBase {
     }
 
     if (typeof index !== 'number' || Number.isNaN(index)) {
+      log(`index invalid false`);
       return {};
     }
 
     const wallet = await engine.getWallet(walletId);
     if (!wallet) {
+      log(`wallet invalid false`);
       return {};
     }
     const activeAccountId = accountId ?? `${walletId}--${index}`;
@@ -216,6 +236,10 @@ export default class ServiceAllNetwork extends ServiceBase {
         ![OnekeyNetwork.fevm, OnekeyNetwork.cfxespace].includes(n.id),
     );
 
+    log(`setAccountIsUpdating`, {
+      accountId: activeAccountId,
+      data: true,
+    });
     dispatch(
       setAccountIsUpdating({
         accountId: activeAccountId,
@@ -246,6 +270,8 @@ export default class ServiceAllNetwork extends ServiceBase {
 
     const dispatchKey = `${FAKE_ALL_NETWORK.id}___${activeAccountId}`;
 
+    log(`networkAccountsMap done`, dispatchKey, networkAccountsMap);
+
     const actions: any[] = [
       clearOverviewPendingTasks(),
       setAllNetworksAccountsMap({
@@ -269,6 +295,8 @@ export default class ServiceAllNetwork extends ServiceBase {
           defi: [],
         },
       });
+      log(`clear simpledb data`);
+
       actions.push(
         setOverviewPortfolioUpdatedAt({
           key: dispatchKey,
@@ -278,10 +306,10 @@ export default class ServiceAllNetwork extends ServiceBase {
         }),
       );
     }
-
     dispatch(...actions);
 
     if (refreshCurrentAccount) {
+      log(`refreshCurrentAccount`);
       await serviceOverview.refreshCurrentAccount();
     }
 
@@ -303,12 +331,22 @@ export default class ServiceAllNetwork extends ServiceBase {
         activeAccountId: accountId,
         activeNetworkId,
       } = appSelector((s) => s.general);
+      log('refreshCurrentAllNetworksAccountMap', {
+        activeNetworkId,
+        walletId,
+        accountId,
+      });
       if (!walletId || !accountId) {
         return;
       }
       if (!isAllNetworks(activeNetworkId)) {
         return;
       }
+      log('start generateAllNetworksWalletAccounts', {
+        activeNetworkId,
+        walletId,
+        accountId,
+      });
       const res = await this.generateAllNetworksWalletAccounts({
         walletId,
         accountId,
@@ -324,6 +362,7 @@ export default class ServiceAllNetwork extends ServiceBase {
 
   @backgroundMethod()
   refreshCurrentAllNetworksAccountMap() {
+    log('start refreshCurrentAllNetworksAccountMap');
     return this._refreshCurrentAllNetworksAccountMapWithDebounce();
   }
 

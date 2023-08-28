@@ -375,10 +375,6 @@ export default class Vault extends VaultBase {
         const historyTxToMerge = options.localHistory?.find(
           (item) => item.decodedTx.txid === txid,
         );
-        if (historyTxToMerge && historyTxToMerge.decodedTx.isFinal) {
-          // No need to update.
-          return null;
-        }
 
         const amount = new BigNumber(txInfo.amount)
           .shiftedBy(-decimals)
@@ -419,7 +415,7 @@ export default class Vault extends VaultBase {
           accountId: this.accountId,
           extraInfo: {
             preimage: txInfo.payment_preimage,
-            memo: txInfo.description,
+            memo: txInfo.description || txInfo.description_hash,
           },
           totalFeeInNative: new BigNumber(fee).shiftedBy(-decimals).toFixed(),
         };

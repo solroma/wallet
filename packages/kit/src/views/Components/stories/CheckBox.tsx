@@ -5,8 +5,10 @@ import {
   Center,
   CheckBox,
   Divider,
+  HStack,
   ScrollView,
 } from '@onekeyhq/components';
+import { CheckBoxItem } from '@onekeyhq/components/src/CheckBox/CheckBoxItem';
 
 const CheckboxWithChildren = () => {
   const [checked, setChecked] = useState(false);
@@ -14,6 +16,7 @@ const CheckboxWithChildren = () => {
     <CheckBox
       onChange={(isSelected) => setChecked(isSelected)}
       isChecked={checked}
+      isIndeterminate
       title="title"
     >
       children text
@@ -26,8 +29,10 @@ const Checkbox0 = () => {
   return (
     <CheckBox
       onChange={(isSelected) => setChecked(isSelected)}
+      // defaultIsChecked
       isChecked={checked}
       title="title"
+      isIndeterminate
     />
   );
 };
@@ -154,9 +159,34 @@ const CheckboxGroup1 = () => {
   );
 };
 
+const CheckBoxItems = () => {
+  const [checked, setChecked] = useState(false);
+  return (
+    <HStack space={20}>
+      <CheckBoxItem isChecked={checked} onChange={setChecked} />
+      <CheckBoxItem isDisabled isChecked={checked} onChange={setChecked} />
+      <CheckBoxItem
+        defaultIsChecked
+        isChecked={checked}
+        onChange={setChecked}
+      />
+      <CheckBoxItem
+        isDisabled
+        defaultIsChecked
+        isChecked={checked}
+        onChange={setChecked}
+      />
+    </HStack>
+  );
+};
+
 const CheckBoxGallery = () => (
   <Center flex="1" bg="background-hovered">
     <ScrollView width="100%" pr={50} pl={50}>
+      <Divider my="2" />
+      <CheckBoxItems />
+      <Divider my="2" />
+      <Divider my="2" />
       <CheckboxWithChildren />
       <Divider my="2" />
       <Checkbox0 />

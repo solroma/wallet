@@ -1,17 +1,20 @@
 import type { ComponentProps, FC } from 'react';
 import { useMemo } from 'react';
 
-import { Checkbox as BaseCheckBox } from 'native-base';
+import { Checkbox as NBCheckBox } from 'native-base';
 
 import Box from '../Box';
 import Pressable from '../Pressable';
 import Typography from '../Typography';
 
 import { getCheckBoxIcon } from './CheckBoxIcon';
+import { CheckBoxItem } from './CheckBoxItem';
 
 import type { IBoxProps } from 'native-base';
 
 export type CheckBoxProps = {
+  nativeBaseMode?: boolean;
+
   name?: string;
   value?: string;
   /**
@@ -47,7 +50,7 @@ export type CheckBoxProps = {
    */
   isIndeterminate?: boolean;
   containerStyle?: ComponentProps<typeof Box>;
-  checkBoxProps?: Partial<ComponentProps<typeof BaseCheckBox>>;
+  checkBoxProps?: Partial<ComponentProps<typeof NBCheckBox>>;
 } & ComponentProps<typeof Box>;
 
 const defaultProps = {
@@ -71,6 +74,7 @@ const CheckBox: FC<CheckBoxProps> = ({
   containerStyle,
   checkBoxProps,
   isIndeterminate,
+  nativeBaseMode = true,
   ...props
 }) => {
   let titleColor = 'text-default';
@@ -101,82 +105,93 @@ const CheckBox: FC<CheckBoxProps> = ({
         display="flex"
         {...containerStyle}
       >
-        <BaseCheckBox
-          value={value}
-          name={name}
-          onChange={onChangeCallback}
-          icon={getCheckBoxIcon({
-            disable: Boolean(isDisabled),
-            defaultIsChecked: Boolean(defaultIsChecked),
-            indeterminate: Boolean(isIndeterminate),
-          })}
-          defaultIsChecked={defaultIsChecked}
-          isChecked={isChecked}
-          focusable={focusable}
-          isDisabled={isDisabled}
-          accessibilityLabel={title}
-          borderRadius="md"
-          borderColor="border-default"
-          bg="surface-default"
-          _icon={{
-            color: isDisabled ? 'icon-default' : 'icon-on-primary',
-          }}
-          _text={{
-            color: 'text-default',
-            fontWeight: '500',
-            selectable: false,
-            fontSize: 16,
-            lineHeight: 24,
-          }}
-          _hover={{
-            value,
-            _interactionBox: {
+        {nativeBaseMode ? (
+          <NBCheckBox
+            value={value}
+            name={name}
+            onChange={onChangeCallback}
+            icon={getCheckBoxIcon({
+              disable: Boolean(isDisabled),
+              defaultIsChecked: Boolean(defaultIsChecked),
+              indeterminate: Boolean(isIndeterminate),
+            })}
+            defaultIsChecked={defaultIsChecked}
+            isChecked={isChecked}
+            focusable={focusable}
+            isDisabled={isDisabled}
+            accessibilityLabel={title}
+            borderRadius="md"
+            borderColor="border-default"
+            bg="surface-default"
+            _icon={{
+              color: isDisabled ? 'icon-default' : 'icon-on-primary',
+            }}
+            _text={{
+              color: 'text-default',
+              fontWeight: '500',
+              selectable: false,
+              fontSize: 16,
+              lineHeight: 24,
+            }}
+            _hover={{
               value,
-              bg: 'surface-hovered',
-            },
-          }}
-          _focus={{
-            value,
-            _interactionBox: {
-              value,
-              bg: 'action-primary-focus',
-            },
-          }}
-          // @ts-expect-error
-          _focusVisible={{
-            _interactionBox: {
-              bg: 'action-primary-focus',
-            },
-          }}
-          _checked={{
-            value,
-            bg: 'action-primary-default',
-            borderColor: 'action-primary-default',
-            _hover: {
-              borderColor: 'action-primary-hovered',
-              bg: 'action-primary-hovered',
-              _disabled: {
-                borderColor: 'checkbox-border-disabled',
-                bg: 'action-primary-disabled',
+              _interactionBox: {
+                value,
+                bg: 'surface-hovered',
               },
-            },
-          }}
-          _disabled={{
-            value,
-            opacity: 1,
-            bg: isChecked ? 'interactive-disabled' : 'action-primary-disabled',
-            borderColor: isChecked
-              ? 'interactive-disabled'
-              : 'checkbox-border-disabled',
-          }}
-          _pressed={{
-            value,
-            bg: 'action-primary-pressed',
-          }}
-          {...checkBoxProps}
-        >
-          {children}
-        </BaseCheckBox>
+            }}
+            _focus={{
+              value,
+              _interactionBox: {
+                value,
+                bg: 'action-primary-focus',
+              },
+            }}
+            // @ts-expect-error
+            _focusVisible={{
+              _interactionBox: {
+                bg: 'action-primary-focus',
+              },
+            }}
+            _checked={{
+              value,
+              bg: 'action-primary-default',
+              borderColor: 'action-primary-default',
+              _hover: {
+                borderColor: 'action-primary-hovered',
+                bg: 'action-primary-hovered',
+                _disabled: {
+                  borderColor: 'checkbox-border-disabled',
+                  bg: 'action-primary-disabled',
+                },
+              },
+            }}
+            _disabled={{
+              value,
+              opacity: 1,
+              bg: isChecked
+                ? 'interactive-disabled'
+                : 'action-primary-disabled',
+              borderColor: isChecked
+                ? 'interactive-disabled'
+                : 'checkbox-border-disabled',
+            }}
+            _pressed={{
+              value,
+              bg: 'action-primary-pressed',
+            }}
+            {...checkBoxProps}
+          >
+            {children}
+          </NBCheckBox>
+        ) : (
+          <CheckBoxItem
+            isChecked={isChecked}
+            onChange={onChangeCallback}
+            isIndeterminate={isIndeterminate}
+            defaultIsChecked={defaultIsChecked}
+          />
+        )}
       </Box>
       {!children && (
         <Pressable

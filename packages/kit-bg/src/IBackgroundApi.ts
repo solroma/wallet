@@ -42,7 +42,6 @@ import type ServiceOverview from './services/ServiceOverview';
 import type ServicePassword from './services/ServicePassword';
 import type ServicePrice from './services/ServicePrice';
 import type ServicePromise from './services/ServicePromise';
-import type ServiceRevoke from './services/ServiceRevoke';
 import type ServiceSetting from './services/ServiceSetting';
 import type ServiceSocket from './services/ServiceSocket';
 import type ServiceStaking from './services/ServiceStaking';
@@ -108,7 +107,6 @@ export interface IBackgroundApi extends IBackgroundApiBridge {
   serviceNotification: ServiceNotification;
   serviceSocket: ServiceSocket;
   serviceBootstrap: ServiceBootstrap;
-  serviceRevoke: ServiceRevoke;
   serviceNameResolver: ServiceNameResolver;
   serviceMarket: ServiceMarket;
   serviceSetting: ServiceSetting;

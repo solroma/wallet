@@ -33,7 +33,7 @@ const ErrorView: FC<ErrorViewProps> = ({ errorCode, onRefresh }) => {
 
   return (
     <Stack w="full" h="full" bg="background-default">
-      {/* TODO: use Empty component */}
+      {/* TODO: REPLACE_COMPONENT Empty */}
       <Stack mb={3}>
         <Text>{intl.formatMessage({ id: messages.title })}</Text>
         <Text>{intl.formatMessage({ id: messages.subTitle })}</Text>

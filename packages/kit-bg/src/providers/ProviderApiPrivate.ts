@@ -4,10 +4,10 @@
 /* eslint-disable camelcase */
 import { IInjectedProviderNames } from '@onekeyfe/cross-inpage-provider-types';
 
-import walletConnectUtils from '@onekeyhq/kit/src/components/WalletConnect/utils/walletConnectUtils';
+// import walletConnectUtils from '@onekeyhq/kit/src/components/WalletConnect/utils/walletConnectUtils';
 import extUtils from '@onekeyhq/kit/src/utils/extUtils';
 import { getTimeDurationMs, timeout } from '@onekeyhq/kit/src/utils/helper';
-import { scanFromURLAsync } from '@onekeyhq/kit/src/views/ScanQrcode/scanFromURLAsync';
+// import { scanFromURLAsync } from '@onekeyhq/kit/src/views/ScanQrcode/scanFromURLAsync';
 import {
   backgroundClass,
   providerApiMethod,
@@ -87,39 +87,39 @@ class ProviderApiPrivate extends ProviderApiBase {
   }
 
   // ----------------------------------------------
-  @providerApiMethod()
-  async wallet_scanQrcode(
-    request: IJsonRpcRequest,
-    { base64 }: { base64: string },
-  ): Promise<{ result: string; base64?: string; error?: string }> {
-    try {
-      const result = await timeout(
-        scanFromURLAsync(base64),
-        3000,
-        'wallet_scanQrcode timeout',
-      );
-      return { result: result || '', base64 };
-    } catch (error) {
-      console.error(error);
-      return { result: '', base64, error: (error as Error)?.message };
-    }
-  }
+  // @providerApiMethod()
+  // async wallet_scanQrcode(
+  //   request: IJsonRpcRequest,
+  //   { base64 }: { base64: string },
+  // ): Promise<{ result: string; base64?: string; error?: string }> {
+  //   try {
+  //     const result = await timeout(
+  //       scanFromURLAsync(base64),
+  //       3000,
+  //       'wallet_scanQrcode timeout',
+  //     );
+  //     return { result: result || '', base64 };
+  //   } catch (error) {
+  //     console.error(error);
+  //     return { result: '', base64, error: (error as Error)?.message };
+  //   }
+  // }
 
-  @providerApiMethod()
-  async wallet_connectToWalletConnect(
-    request: IJsonRpcRequest,
-    { uri }: { uri: string },
-  ): Promise<any> {
-    if (uri) {
-      if (platformEnv.isExtension) {
-        // extension can not show Modal UI directly from background
-        this.backgroundApi.walletConnect.connect({ uri });
-      } else {
-        walletConnectUtils.openConnectToDappModal({ uri });
-      }
-    }
-    return Promise.resolve(`uri=${uri}`);
-  }
+  // @providerApiMethod()
+  // async wallet_connectToWalletConnect(
+  //   request: IJsonRpcRequest,
+  //   { uri }: { uri: string },
+  // ): Promise<any> {
+    // if (uri) {
+    //   if (platformEnv.isExtension) {
+    //     // extension can not show Modal UI directly from background
+    //     this.backgroundApi.walletConnect.connect({ uri });
+    //   } else {
+    //     walletConnectUtils.openConnectToDappModal({ uri });
+    //   }
+    // }
+    // return Promise.resolve(`uri=${uri}`);
+  // }
 
   /*
     window.$onekey.$private.request({

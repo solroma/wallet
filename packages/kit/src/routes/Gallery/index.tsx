@@ -8,6 +8,7 @@ import IconButtonGallery from '@onekeyhq/kit/src/views/Components/stories/IconBu
 import SelectGallery from '@onekeyhq/kit/src/views/Components/stories/Select';
 import ToastGallery from '@onekeyhq/kit/src/views/Components/stories/Toast';
 import TypographyGallery from '@onekeyhq/kit/src/views/Components/stories/Typography';
+import WebviewGallery from '@onekeyhq/kit/src/views/Components/stories/WebView';
 
 import AlertGallery from '../../views/Components/stories/Alert';
 import DialogGallery from '../../views/Components/stories/Dialog';
@@ -29,6 +30,7 @@ export enum GalleryRoutes {
   ComponentDivider = 'component/divider',
   ComponentToast = 'component/toast',
   ComponentTheme = 'component/theme',
+  ComponentWebview = 'component/webview',
 }
 
 export const stackScreenList = [
@@ -52,6 +54,7 @@ export const stackScreenList = [
   { name: GalleryRoutes.ComponentAlert, component: AlertGallery },
   { name: GalleryRoutes.ComponentDivider, component: DividerGallery },
   { name: GalleryRoutes.ComponentTheme, component: ThemeGallery },
+  { name: GalleryRoutes.ComponentWebview, component: WebviewGallery },
 ];
 
 const DevStack = createNativeStackNavigator();

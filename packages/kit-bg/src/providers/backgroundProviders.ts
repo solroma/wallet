@@ -64,10 +64,10 @@ function createBackgroundProviders({
     [IInjectedProviderNames.polkadot]: new ProviderApiPolkadot({
       backgroundApi,
     }),
-    [IInjectedProviderNames.webln]: new ProviderApiWebln({ backgroundApi }),
-    [IInjectedProviderNames.btc]: new ProviderApiBtc({
-      backgroundApi,
-    }),
+    // [IInjectedProviderNames.webln]: new ProviderApiWebln({ backgroundApi }),
+    // [IInjectedProviderNames.btc]: new ProviderApiBtc({
+    //   backgroundApi,
+    // }),
     // near
     // sollet
   };

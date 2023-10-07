@@ -1,5 +1,9 @@
 import { isNil } from 'lodash';
 
+function openUrl(url: string) {
+  window.open(url, '_blank');
+}
+
 async function getTabById(tabId: number): Promise<chrome.tabs.Tab> {
   return new Promise((resolve) => {
     chrome.tabs.get(tabId, resolve);
@@ -39,5 +43,6 @@ async function openUrlInTab(
 }
 
 export default {
+  openUrl,
   openUrlInTab,
 };

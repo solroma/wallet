@@ -7,7 +7,7 @@ export const NFTChainMap: Record<string, string> = {
   [OnekeyNetwork.bsc]: 'bsc',
   [OnekeyNetwork.polygon]: 'polygon',
   [OnekeyNetwork.arbitrum]: 'arbitrum',
-  [OnekeyNetwork.sol]: 'sol',
+  // [OnekeyNetwork.sol]: 'sol',
   [OnekeyNetwork.avalanche]: 'avalanche',
   [OnekeyNetwork.btc]: 'btc',
   [OnekeyNetwork.tbtc]: 'tbtc',

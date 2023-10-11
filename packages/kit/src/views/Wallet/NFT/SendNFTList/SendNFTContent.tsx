@@ -1,11 +1,11 @@
 import type { Dispatch, ReactNode, SetStateAction } from 'react';
 import { createContext, useContext, useEffect, useMemo, useState } from 'react';
 
-import type { NFTAsset } from '@onekeyhq/engine/src/types/nft';
+import type { IEVMNFTItemType } from '../NFTList/type';
 
-export type SelectAsset = NFTAsset & {
-  selected: boolean;
-  selectAmount: string;
+export type SelectAsset = IEVMNFTItemType['content'] & {
+  selected?: boolean;
+  selectAmount?: string;
 };
 export type ISendNFTContentData = {
   multiSelect?: boolean;

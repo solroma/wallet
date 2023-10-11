@@ -9,7 +9,6 @@ import {
   getContentWithAsset,
   getHttpImageWithAsset,
 } from '@onekeyhq/engine/src/managers/nft';
-import type { NFTAsset } from '@onekeyhq/engine/src/types/nft';
 import platformEnv from '@onekeyhq/shared/src/platformEnv';
 
 import NFTAudio from '../../../../../components/NFTAudio';
@@ -19,8 +18,10 @@ import NFTVideo from '../../../../../components/NFTVideo';
 import NFTListImage from '../../NFTList/NFTListImage';
 import useUniqueToken, { ComponentType } from '../useUniqueToken';
 
+import type { IEVMNFTItemType } from '../../NFTList/type';
+
 export type Props = {
-  asset: NFTAsset;
+  asset: IEVMNFTItemType['content'];
   size?: number;
 };
 
@@ -35,20 +36,11 @@ const CollectibleContent: FC<Props> = ({ asset, size }) => {
       : screenWidth - 32
     : 288;
 
-  if (asset.nftscanUri && asset.nftscanUri.length > 0) {
-    <NFTListImage
-      url={asset.nftscanUri}
-      asset={asset}
-      thumbnail={false}
-      size={size || imageWidth}
-      skeleton
-      borderRadius="12px"
-      resizeMode="cover"
-      shadow="depth.5"
-    />;
-  }
-  const { componentType } = useUniqueToken(asset);
-  const uri = getContentWithAsset(asset);
+  const uri = getContentWithAsset({
+    contentUri: asset.metadata?.animation_url || asset.metadata?.image,
+  });
+
+  const { componentType } = useUniqueToken(uri);
 
   if (uri) {
     if (componentType === undefined) {
@@ -60,12 +52,8 @@ const CollectibleContent: FC<Props> = ({ asset, size }) => {
       return (
         <NFTListImage
           url={uri}
-          asset={asset}
-          thumbnail={false}
           size={size || imageWidth}
-          skeleton
           borderRadius="12px"
-          resizeMode="cover"
           shadow="depth.5"
         />
       );
@@ -81,13 +69,7 @@ const CollectibleContent: FC<Props> = ({ asset, size }) => {
       return <NFTAudio url={uri} size={size || imageWidth} poster={imageUrl} />;
     }
   }
-  return (
-    <MemoFallbackElement
-      contentType={asset.contentType}
-      logoUrl={asset.collection.logoUrl}
-      size={size || imageWidth}
-    />
-  );
+  return <MemoFallbackElement logoUrl={uri} size={size || imageWidth} />;
 };
 
 export default CollectibleContent;

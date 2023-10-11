@@ -1,11 +1,11 @@
-import type { Collection, INFTAsset } from '@onekeyhq/engine/src/types/nft';
-
 import { getAppNavigation } from '../../../hooks/useAppNavigation';
 import {
   CollectiblesModalRoutes,
   ModalRoutes,
   RootRoutes,
 } from '../../../routes/routesEnum';
+
+import type { IEVMNFTCollectionType, INFTListItem } from './NFTList/type';
 
 export function convertToMoneyFormat(number: string) {
   const absValue = Math.abs(Number(number));
@@ -31,7 +31,7 @@ function navigateToNFTCollection({
 }: {
   accountId: string;
   networkId: string;
-  collection: Collection;
+  collection: IEVMNFTCollectionType['content'];
 }) {
   const navigation = getAppNavigation();
   if (!accountId || !networkId) return;
@@ -52,10 +52,12 @@ function navigateToNFTDetail({
   accountId,
   networkId,
   asset,
+  collection,
 }: {
   accountId: string;
   networkId: string;
-  asset: INFTAsset;
+  asset: INFTListItem;
+  collection?: IEVMNFTCollectionType['content'];
 }) {
   const navigation = getAppNavigation();
   if (!accountId || !networkId) return;
@@ -65,6 +67,7 @@ function navigateToNFTDetail({
       screen: CollectiblesModalRoutes.NFTDetailModal,
       params: {
         asset,
+        collection,
         accountId,
         networkId,
         isOwner: true,

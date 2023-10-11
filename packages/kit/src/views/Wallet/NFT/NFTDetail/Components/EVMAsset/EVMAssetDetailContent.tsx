@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 
 import { useNavigation } from '@react-navigation/core';
 import BigNumber from 'bignumber.js';
@@ -10,11 +10,8 @@ import {
   Button,
   CustomSkeleton,
   HStack,
-  Icon,
   IconButton,
-  Pressable,
   ScrollView,
-  Skeleton,
   Text,
   ToastManager,
   Typography,
@@ -25,10 +22,7 @@ import useModalClose from '@onekeyhq/components/src/Modal/Container/useModalClos
 import { copyToClipboard } from '@onekeyhq/components/src/utils/ClipboardUtils';
 import { getWalletIdFromAccountId } from '@onekeyhq/engine/src/managers/account';
 import { getContentWithAsset } from '@onekeyhq/engine/src/managers/nft';
-import type { Collection, NFTAsset } from '@onekeyhq/engine/src/types/nft';
-import { NFTAssetType } from '@onekeyhq/engine/src/types/nft';
 import { WALLET_TYPE_WATCHING } from '@onekeyhq/engine/src/types/wallet';
-import { generateUploadNFTParams } from '@onekeyhq/kit/src/utils/hardware/nftUtils';
 import NFTDetailMenu from '@onekeyhq/kit/src/views/Overlay/NFTDetailMenu';
 import debugLogger from '@onekeyhq/shared/src/logger/debugLogger';
 import platformEnv from '@onekeyhq/shared/src/platformEnv';
@@ -37,32 +31,38 @@ import backgroundApiProxy from '../../../../../../background/instance/background
 import { useNetwork, useWallet } from '../../../../../../hooks';
 import { ModalRoutes, RootRoutes } from '../../../../../../routes/routesEnum';
 import { deviceUtils } from '../../../../../../utils/hardware';
+import { generateUploadNFTParams } from '../../../../../../utils/hardware/nftUtils';
 import CollectionLogo from '../../../../../NFTMarket/CollectionLogo';
-import { useCollectionDetail } from '../../../../../NFTMarket/Home/hook';
 import { SendModalRoutes } from '../../../../../Send/enums';
 import { showAmountInputDialog } from '../../../AmountInputDialog';
+import { ENFTCollectionType } from '../../../NFTList/type';
 import { DetailItem } from '../DetailItem';
 import { useDeviceMenu } from '../hooks/useDeviceMenu';
 
 import type { CollectiblesRoutesParams } from '../../../../../../routes/Root/Modal/Collectibles';
 import type { ModalScreenProps } from '../../../../../../routes/types';
+import type {
+  IEVMNFTCollectionType,
+  IEVMNFTItemType,
+} from '../../../NFTList/type';
 import type { DeviceUploadResourceParams } from '@onekeyfe/hd-core';
 
 type NavigationProps = ModalScreenProps<CollectiblesRoutesParams>;
 
 function EVMAssetDetailContent({
-  asset: outerAsset,
+  asset,
   isOwner,
   networkId,
   accountId,
+  collection,
 }: {
-  asset: NFTAsset;
+  asset: IEVMNFTItemType['content'];
   isOwner: boolean;
   networkId: string;
   accountId?: string;
+  collection: IEVMNFTCollectionType['content'];
 }) {
   const intl = useIntl();
-  const { serviceNFT, serviceHardware } = backgroundApiProxy;
   const navigation = useNavigation<NavigationProps['navigation']>();
 
   const walletId = useMemo(() => {
@@ -74,126 +74,29 @@ function EVMAssetDetailContent({
 
   const { wallet } = useWallet({ walletId });
   const modalClose = useModalClose();
-  const goToCollectionDetail = useCollectionDetail();
   const isVertical = useIsVerticalLayout();
-  const [asset, updateAsset] = useState(outerAsset);
   const isDisabled = useMemo(() => {
     if (wallet?.type === WALLET_TYPE_WATCHING || !accountId) {
       return true;
     }
     if (
-      asset.ercType === 'erc721' &&
-      asset.owner !== outerAsset.accountAddress
+      asset.collectionType === ENFTCollectionType.ERC721 &&
+      asset.holderAddress !== asset.accountAddress
     ) {
       return true;
     }
     return false;
-  }, [
-    accountId,
-    asset.ercType,
-    asset.owner,
-    outerAsset.accountAddress,
-    wallet?.type,
-  ]);
+  }, [accountId, asset, wallet?.type]);
 
   const { network } = useNetwork({ networkId });
 
   const [menuLoading, setMenuLoading] = useState(false);
-  const { device, showMenu } = useDeviceMenu({ wallet, asset });
-
   const hardwareCancelFlagRef = useRef(false);
-
-  useEffect(() => {
-    (async () => {
-      if (networkId) {
-        const data = (await serviceNFT.fetchAsset({
-          chain: networkId,
-          contractAddress: outerAsset.contractAddress,
-          tokenId: outerAsset.tokenId as string,
-          showAttribute: true,
-        })) as NFTAsset;
-        if (data) {
-          updateAsset(data);
-        }
-      }
-    })();
-    return () => {
-      hardwareCancelFlagRef.current = true;
-    };
-  }, [outerAsset.contractAddress, outerAsset.tokenId, networkId, serviceNFT]);
-
-  const isEVM = asset.type === NFTAssetType.EVM;
-  const [collection, updateCollection] = useState<Collection>();
-  useEffect(() => {
-    (async () => {
-      if (networkId && isEVM) {
-        const data = await serviceNFT.getCollection({
-          chain: networkId,
-          contractAddress: outerAsset.contractAddress as string,
-        });
-        if (data) {
-          updateCollection(data);
-        }
-      }
-    })();
-  }, [outerAsset.contractAddress, networkId, serviceNFT, isEVM]);
-
-  const onCollectToTouch = useCallback(async () => {
-    let uri;
-    if (asset.nftscanUri && asset.nftscanUri.length > 0) {
-      uri = asset.nftscanUri;
-    } else {
-      uri = getContentWithAsset(asset);
-    }
-
-    if (!uri) return;
-
-    setMenuLoading(true);
-    let uploadResParams: DeviceUploadResourceParams | undefined;
-    try {
-      uploadResParams = await generateUploadNFTParams(uri, {
-        header:
-          asset.name && asset.name.length > 0
-            ? asset.name
-            : `#${asset.tokenId as string}`,
-        subheader: asset.description ?? '',
-        network: network?.name ?? '',
-        owner: asset.owner,
-      });
-      debugLogger.hardwareSDK.info('should upload: ', uploadResParams);
-    } catch (e) {
-      debugLogger.hardwareSDK.info('image operate error: ', e);
-      ToastManager.show(
-        {
-          title: intl.formatMessage({ id: 'msg__image_download_failed' }),
-        },
-        {
-          type: 'error',
-        },
-      );
-      setMenuLoading(false);
-      return;
-    }
-    if (uploadResParams && !hardwareCancelFlagRef.current) {
-      try {
-        await serviceHardware.uploadResource(
-          device?.mac ?? '',
-          uploadResParams,
-        );
-        ToastManager.show({
-          title: intl.formatMessage({ id: 'msg__change_saved' }),
-        });
-      } catch (e) {
-        deviceUtils.showErrorToast(e);
-      } finally {
-        setMenuLoading(false);
-      }
-    }
-  }, [asset, device, intl, serviceHardware, network]);
+  const { device, showMenu } = useDeviceMenu({ wallet, asset });
 
   const sendNFTWithAmount = useCallback(
     async (amount: string) => {
-      const { accountAddress } = outerAsset ?? {};
+      const { accountAddress } = asset ?? {};
       if (!networkId || !accountAddress) {
         return;
       }
@@ -216,29 +119,24 @@ function EVMAssetDetailContent({
             from: '',
             to: '',
             amount,
-            token: asset.contractAddress,
-            nftTokenId: asset.tokenId,
-            nftType: asset.ercType,
+            token: asset.collectionId,
+            nftTokenId: asset.itemId,
+            nftType:
+              asset.collectionType === ENFTCollectionType.ERC721
+                ? 'erc721'
+                : 'erc1155',
             closeModal: modalClose,
           },
         },
       });
     },
-    [
-      asset.contractAddress,
-      asset.ercType,
-      asset.tokenId,
-      modalClose,
-      navigation,
-      networkId,
-      outerAsset,
-    ],
+    [asset, modalClose, navigation, networkId],
   );
 
-  const sendAction = () => {
-    if (outerAsset.amount && new BigNumber(outerAsset.amount).gt(1)) {
+  const sendAction = useCallback(() => {
+    if (asset.amount && new BigNumber(asset.amount).gt(1)) {
       showAmountInputDialog({
-        total: outerAsset.amount,
+        total: asset.amount,
         onConfirm: (amount) => {
           sendNFTWithAmount(amount);
         },
@@ -246,7 +144,58 @@ function EVMAssetDetailContent({
       return;
     }
     sendNFTWithAmount('1');
-  };
+  }, [asset, sendNFTWithAmount]);
+
+  const onCollectToTouch = useCallback(async () => {
+    let uri;
+    if (asset.metadata?.image) {
+      uri = asset.metadata?.image;
+    } else {
+      uri = getContentWithAsset({ contentUri: asset.metadata?.image });
+    }
+
+    if (!uri) return;
+
+    setMenuLoading(true);
+    let uploadResParams: DeviceUploadResourceParams | undefined;
+    try {
+      uploadResParams = await generateUploadNFTParams(uri, {
+        header:
+          asset.name && asset.name.length > 0 ? asset.name : `#${asset.itemId}`,
+        subheader: asset.metadata?.description ?? '',
+        network: network?.name ?? '',
+        owner: asset.holderAddress,
+      });
+      debugLogger.hardwareSDK.info('should upload: ', uploadResParams);
+    } catch (e) {
+      debugLogger.hardwareSDK.info('image operate error: ', e);
+      ToastManager.show(
+        {
+          title: intl.formatMessage({ id: 'msg__image_download_failed' }),
+        },
+        {
+          type: 'error',
+        },
+      );
+      setMenuLoading(false);
+      return;
+    }
+    if (uploadResParams && !hardwareCancelFlagRef.current) {
+      try {
+        await backgroundApiProxy.serviceHardware.uploadResource(
+          device?.mac ?? '',
+          uploadResParams,
+        );
+        ToastManager.show({
+          title: intl.formatMessage({ id: 'msg__change_saved' }),
+        });
+      } catch (e) {
+        deviceUtils.showErrorToast(e);
+      } finally {
+        setMenuLoading(false);
+      }
+    }
+  }, [asset, device, intl, network]);
 
   return (
     <VStack space="24px" mb="50px">
@@ -261,7 +210,7 @@ function EVMAssetDetailContent({
           >
             {asset.name && asset.name.length > 0
               ? asset.name
-              : `#${asset.tokenId as string}`}
+              : `#${asset.itemId}`}
           </Text>
           {showMenu && (
             <NFTDetailMenu onCollectToTouch={onCollectToTouch}>
@@ -281,90 +230,33 @@ function EVMAssetDetailContent({
             </NFTDetailMenu>
           )}
         </HStack>
-        <HStack space="8px" mt="4px">
-          <Text typography="Body1" color="text-subdued">
-            {intl.formatMessage({ id: 'content__last_sale' })}
-          </Text>
-          <Text typography="Body1Strong" color="text-subdued">
-            {(asset.latestTradePrice &&
-              asset.latestTradeSymbol &&
-              `${asset.latestTradePrice} ${asset.latestTradeSymbol}`) ||
-              'N/A'}
-          </Text>
-        </HStack>
       </Box>
 
       {/* Collection */}
-      {isEVM && !!network && (
-        <Pressable
-          onPress={() => {
-            goToCollectionDetail({
-              networkId: network.id,
-              contractAddress: collection?.contractAddress as string,
-              collection,
-              title: collection?.name,
-            });
-          }}
+      {!!network && collection && (
+        <HStack
+          px="16px"
+          py="12px"
+          rounded="12px"
+          space="12px"
+          borderWidth={StyleSheet.hairlineWidth}
+          alignItems="center"
+          borderColor="border-default"
+          bgColor="action-secondary-default"
         >
-          {({ isHovered, isPressed }) => (
-            <HStack
-              px="16px"
-              py="12px"
-              rounded="12px"
-              space="12px"
-              borderWidth={StyleSheet.hairlineWidth}
-              alignItems="center"
-              borderColor="border-default"
-              bgColor={
-                // eslint-disable-next-line no-nested-ternary
-                isPressed
-                  ? 'action-secondary-pressed'
-                  : isHovered
-                  ? 'action-secondary-hovered'
-                  : 'action-secondary-default'
-              }
-            >
-              {collection ? (
-                <CollectionLogo
-                  src={collection.logoUrl}
-                  width="40px"
-                  height="40px"
-                />
-              ) : (
-                <CustomSkeleton
-                  width="40px"
-                  height="40px"
-                  borderRadius="12px"
-                />
-              )}
-              <Box flex={1}>
-                <Text typography="Body1Strong">
-                  {asset.collection.contractName}
-                </Text>
-                <Box mt="4px">
-                  {collection ? (
-                    <Text typography="Body2" color="text-subdued">
-                      {`${
-                        collection?.itemsTotal ?? '-'
-                      } Items • ${intl.formatMessage({
-                        id: 'content__floor',
-                      })} ${
-                        collection.floorPrice
-                          ? `${collection.floorPrice} ${
-                              collection.priceSymbol as string
-                            }`
-                          : '-'
-                      }`}
-                    </Text>
-                  ) : (
-                    <Skeleton shape="Body2" />
-                  )}
-                </Box>
-              </Box>
-              <Icon name="ChevronRightMini" color="icon-subdued" />
-            </HStack>
+          {collection ? (
+            <CollectionLogo
+              src={collection.logoURI}
+              width="40px"
+              height="40px"
+            />
+          ) : (
+            <CustomSkeleton width="40px" height="40px" borderRadius="12px" />
           )}
-        </Pressable>
+          <Box flex={1}>
+            <Text typography="Body1Strong">{collection.name}</Text>
+          </Box>
+        </HStack>
       )}
 
       {isOwner && (
@@ -386,14 +278,14 @@ function EVMAssetDetailContent({
       )}
 
       {/* Description */}
-      {!!asset.description && (
+      {!!asset.metadata?.description && (
         <Typography.Body2 color="text-subdued">
-          {asset.description}
+          {asset.metadata?.description}
         </Typography.Body2>
       )}
 
       {/* traits */}
-      {isEVM && !!asset.assetAttributes?.length && (
+      {!!asset.metadata?.attributes?.length && (
         <VStack space="16px">
           <Typography.Heading>
             {intl.formatMessage({ id: 'content__attributes' })}
@@ -406,9 +298,9 @@ function EVMAssetDetailContent({
               mx="-16px"
               pl="16px"
             >
-              {asset.assetAttributes.map((trait, index) => (
+              {asset?.metadata?.attributes.map((trait, index) => (
                 <Box
-                  key={`${trait.attribute_name}-${index}`}
+                  key={`${trait.trait_type}-${index}`}
                   px="12px"
                   py="8px"
                   mr="8px"
@@ -422,23 +314,21 @@ function EVMAssetDetailContent({
                       numberOfLines={1}
                       color="text-subdued"
                     >
-                      {trait.attribute_name}
+                      {trait.trait_type}
                     </Typography.Caption>
-                    <Typography.Caption color="text-success">
-                      {trait.percentage}
-                    </Typography.Caption>
+                    {/* <Typography.Caption color="text-success"> */}
+                    {/*   {trait.percentage} */}
+                    {/* </Typography.Caption> */}
                   </HStack>
-                  <Typography.Body2Strong>
-                    {trait.attribute_value}
-                  </Typography.Body2Strong>
+                  <Typography.Body2Strong>{trait.value}</Typography.Body2Strong>
                 </Box>
               ))}
             </ScrollView>
           ) : (
             <Box flexDirection="row" flexWrap="wrap" mb="-8px" mr="-8px">
-              {asset.assetAttributes.map((trait, index) => (
+              {asset.metadata?.attributes?.map((trait, index) => (
                 <Box
-                  key={`${trait.attribute_name}-${index}`}
+                  key={`${trait.trait_type}-${index}`}
                   px="12px"
                   py="8px"
                   mr="8px"
@@ -452,15 +342,13 @@ function EVMAssetDetailContent({
                       numberOfLines={1}
                       color="text-subdued"
                     >
-                      {trait.attribute_name}
+                      {trait.trait_type}
                     </Typography.Caption>
-                    <Typography.Caption color="text-success">
-                      {trait.percentage}
-                    </Typography.Caption>
+                    {/* <Typography.Caption color="text-success"> */}
+                    {/*   {trait.percentage} */}
+                    {/* </Typography.Caption> */}
                   </HStack>
-                  <Typography.Body2Strong>
-                    {trait.attribute_value}
-                  </Typography.Body2Strong>
+                  <Typography.Body2Strong>{trait.value}</Typography.Body2Strong>
                 </Box>
               ))}
             </Box>
@@ -474,38 +362,42 @@ function EVMAssetDetailContent({
           {intl.formatMessage({ id: 'content__details' })}
         </Typography.Heading>
         <VStack space="16px">
-          {!!asset.contractAddress && (
+          {!!asset.collectionId && (
             <DetailItem
               title={intl.formatMessage({
                 id: 'transaction__contract_address',
               })}
-              value={asset.contractAddress}
+              value={asset.collectionId}
               icon="Square2StackMini"
               onPress={() => {
-                copyToClipboard(asset.contractAddress ?? '');
+                copyToClipboard(asset.collectionId ?? '');
                 ToastManager.show({
                   title: intl.formatMessage({ id: 'msg__copied' }),
                 });
               }}
             />
           )}
-          {!!asset.tokenId && (
+          {!!asset.itemId && (
             <DetailItem
               title="NFT ID"
-              value={asset.tokenId}
+              value={asset.itemId}
               icon="Square2StackMini"
               onPress={() => {
-                copyToClipboard(asset.tokenId ?? '');
+                copyToClipboard(asset.itemId ?? '');
                 ToastManager.show({
                   title: intl.formatMessage({ id: 'msg__copied' }),
                 });
               }}
             />
           )}
-          {!!asset.ercType && (
+          {!!asset.collectionType && (
             <DetailItem
               title={intl.formatMessage({ id: 'content__nft_standard' })}
-              value={asset.ercType}
+              value={
+                asset.collectionType === ENFTCollectionType.ERC721
+                  ? 'erc721'
+                  : 'erc1155'
+              }
             />
           )}
           {!!network && (

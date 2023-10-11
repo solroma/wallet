@@ -18,7 +18,12 @@ import { useNetwork } from '../../../../hooks';
 import { NFTNetworkIcon } from './NetworkIcon';
 import NFTBTCContent from './NFTBTCContent';
 
-import type { ListDataType, ListItemComponentType, ListItemType } from './type';
+import type {
+  IOrdinalsItemType,
+  ListDataType,
+  ListItemComponentType,
+  ListItemType,
+} from './type';
 
 export function keyExtractor(item: ListItemType<ListDataType>): string {
   const data = item.data as NFTBTCAssetModel;
@@ -29,7 +34,7 @@ function NFTBTCAssetCard({
   onSelect,
   data: asset,
   ...rest
-}: ListItemComponentType<NFTBTCAssetModel>) {
+}: ListItemComponentType<IOrdinalsItemType['content']>) {
   const isSmallScreen = useIsVerticalLayout();
   const { screenWidth } = useUserDevice();
   const { network } = useNetwork({ networkId: asset.networkId });
@@ -73,11 +78,7 @@ function NFTBTCAssetCard({
         borderWidth={themeVariant === 'light' ? 1 : undefined}
         width={cardWidth}
         _hover={{ bg: 'surface-hovered' }}
-        onPress={() => {
-          if (onSelect) {
-            onSelect(asset);
-          }
-        }}
+        onPress={onSelect}
       >
         <Box position="relative">
           <NFTBTCContent size={cardWidth - 2 * padding} asset={asset} />

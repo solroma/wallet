@@ -3,6 +3,7 @@ import { groupBy } from 'lodash';
 import simpleDb from '@onekeyhq/engine/src/dbs/simple/simpleDb';
 import { getFiatEndpoint } from '@onekeyhq/engine/src/endpoint';
 import { OneKeyInternalError } from '@onekeyhq/engine/src/errors';
+import { isAllNetworks } from '@onekeyhq/engine/src/managers/network';
 import * as nft from '@onekeyhq/engine/src/managers/nft';
 import { NFTDataType, getNFTListKey } from '@onekeyhq/engine/src/managers/nft';
 import type { Account } from '@onekeyhq/engine/src/types/account';
@@ -25,10 +26,16 @@ import {
   setNFTSymbolPrice,
 } from '@onekeyhq/kit/src/store/reducers/nft';
 import { EOverviewScanTaskType } from '@onekeyhq/kit/src/views/Overview/types';
+import type {
+  IEVMNFTItemType,
+  IOverviewAccountNFTCollectionsResponse,
+  IPaginationResponse,
+} from '@onekeyhq/kit/src/views/Wallet/NFT/NFTList/type';
 import {
   backgroundClass,
   backgroundMethod,
 } from '@onekeyhq/shared/src/background/backgroundDecorators';
+import { fetchData } from '@onekeyhq/shared/src/background/backgroundUtils';
 import { OnekeyNetwork } from '@onekeyhq/shared/src/config/networkIds';
 
 import ServiceBase from './ServiceBase';
@@ -477,6 +484,109 @@ class ServiceNFT extends ServiceBase {
         });
       }
     }
+  }
+
+  @backgroundMethod()
+  async fetchAccountNFTCollections({
+    networkId,
+    accountId,
+    page,
+    pageSize,
+  }: {
+    networkId: string;
+    accountId: string;
+    page: number;
+    pageSize: number;
+  }): Promise<IOverviewAccountNFTCollectionsResponse> {
+    const { appSelector } = this.backgroundApi;
+    const account = await this.backgroundApi.engine.getAccount(
+      accountId,
+      networkId,
+    );
+    const accounts = [];
+
+    if (isAllNetworks(networkId)) {
+      const networkAccountsMap = appSelector(
+        (s) => s.overview.allNetworksAccountsMap?.[accountId ?? ''] ?? {},
+      );
+      for (const [nid, accountList] of Object.entries(networkAccountsMap)) {
+        accounts.push(
+          ...accountList.map((item) => ({
+            networkId: nid,
+            address: item.address,
+          })),
+        );
+      }
+    } else {
+      accounts.push({
+        networkId,
+        address: account.address,
+      });
+    }
+
+    const fallback = {
+      pagination: {
+        current: 1,
+        pageSize: 100,
+        hasNext: false,
+      },
+      data: [],
+    };
+
+    const res = await fetchData<IOverviewAccountNFTCollectionsResponse>(
+      '/overview/account/nft/list',
+      {
+        page,
+        pageSize,
+        accounts,
+      },
+      fallback,
+      'POST',
+    );
+
+    return res;
+  }
+
+  @backgroundMethod()
+  async fetchAccountNFTCollectionItems({
+    networkId,
+    address,
+    page,
+    pageSize,
+    collectionId,
+  }: {
+    networkId: string;
+    address: string;
+    page: number;
+    pageSize: number;
+    collectionId?: string;
+  }): Promise<
+    IPaginationResponse<{
+      data: IEVMNFTItemType[];
+    }>
+  > {
+    const fallback = {
+      pagination: {
+        current: 1,
+        pageSize: 100,
+        hasNext: false,
+      },
+      data: [],
+    };
+
+    const res = await fetchData(
+      '/overview/account/nft/items',
+      {
+        page,
+        pageSize,
+        networkId,
+        address,
+        collectionId,
+      },
+      fallback,
+    );
+
+    return res;
   }
 }
 

@@ -5,12 +5,13 @@ import BigNumber from 'bignumber.js';
 import { MotiView } from 'moti';
 
 import { Badge, Box, Pressable, Text } from '@onekeyhq/components';
-import { IMPL_EVM, IMPL_SOL } from '@onekeyhq/shared/src/engine/engineConsts';
+import { IMPL_EVM } from '@onekeyhq/shared/src/engine/engineConsts';
 
 import { SelectedIndicator } from '../../../../components/SelectedIndicator';
 import { useActiveSideAccount } from '../../../../hooks';
 import { showAmountInputDialog } from '../AmountInputDialog';
 import NFTListImage from '../NFTList/NFTListImage';
+import { ENFTCollectionType } from '../NFTList/type';
 
 import { useSendNFTContent } from './SendNFTContent';
 
@@ -41,15 +42,15 @@ const SelectNFTCard: FC<Props> = ({
     if (
       asset?.amount &&
       Number(asset?.amount) > 1 &&
-      asset.ercType === 'erc1155'
+      asset.collectionType === ENFTCollectionType.ERC1155
     ) {
       const total = new BigNumber(asset.amount).gt(9999)
         ? '9999+'
         : asset.amount;
-      const selectAmount = new BigNumber(asset.selectAmount).gt(9999)
+      const selectAmount = new BigNumber(asset.selectAmount ?? 0).gt(9999)
         ? '9999+'
         : asset.selectAmount;
-      const title = `${selectAmount}/${total}`;
+      const title = `${selectAmount ?? 0}/${total}`;
       return (
         <Badge
           position="absolute"
@@ -62,7 +63,7 @@ const SelectNFTCard: FC<Props> = ({
       );
     }
     return null;
-  }, [asset.amount, asset.ercType, asset.selectAmount]);
+  }, [asset.amount, asset.collectionType, asset.selectAmount]);
 
   const onSelectAmount = useCallback(
     (selected: boolean, selectAmount: string) => {
@@ -71,18 +72,18 @@ const SelectNFTCard: FC<Props> = ({
         const newList = listData.map((item) => {
           if (
             networkImpl === IMPL_EVM &&
-            item.contractAddress === asset.contractAddress &&
-            item.tokenId === asset.tokenId
+            item.collectionId === asset.collectionId &&
+            item.itemId === asset.itemId
           ) {
             return { ...item, selected, selectAmount };
           }
-          if (
-            networkImpl === IMPL_SOL &&
-            item.tokenAddress &&
-            item.tokenAddress === asset.tokenAddress
-          ) {
-            return { ...item, selected, selectAmount };
-          }
+          // if (
+          //   networkImpl === IMPL_SOL &&
+          //   item.tokenAddress &&
+          //   item.tokenAddress === asset.tokenAddress
+          // ) {
+          //   return { ...item, selected, selectAmount };
+          // }
           return item;
         });
         return {
@@ -127,7 +128,7 @@ const SelectNFTCard: FC<Props> = ({
             >
               <Box>
                 <NFTListImage
-                  asset={asset}
+                  url={asset.metadata?.image}
                   borderRadius="12px"
                   size={cardWidth}
                 />
@@ -135,12 +136,12 @@ const SelectNFTCard: FC<Props> = ({
               </Box>
             </MotiView>
             <Text typography="Body2Strong" numberOfLines={2} mt="8px">
-              {asset.name ?? asset.collection.contractName ?? ''}
+              {asset.metadata?.item_name ?? `# ${asset.itemId}`}
             </Text>
             <Box position="absolute" right="6px" top="6px">
               <SelectedIndicator
                 multiSelect={multiSelect}
-                selected={asset.selected}
+                selected={asset.selected ?? false}
                 width={20}
               />
             </Box>

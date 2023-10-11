@@ -1,4 +1,3 @@
-import type { NFTBTCAssetModel } from '@onekeyhq/engine/src/types/nft';
 import { OnekeyNetwork } from '@onekeyhq/shared/src/config/networkIds';
 import platformEnv from '@onekeyhq/shared/src/platformEnv';
 
@@ -13,7 +12,7 @@ import {
 } from './InscriptionText';
 import InscriptionUnknow from './InscriptionUnknow';
 
-import type { InscriptionContentProps } from '../type';
+import type { IOrdinalsItemType, InscriptionContentProps } from '../type';
 
 export enum InscriptionContentType {
   Text = 'text/plain;charset=utf-8',
@@ -62,7 +61,7 @@ function ComponentWithContentType({
 }
 
 export function getBTCListComponent(props: {
-  data: NFTBTCAssetModel;
+  data: IOrdinalsItemType['content'];
   sizeType: SizeType;
 }): {
   Component: (props: InscriptionContentProps) => JSX.Element | null;

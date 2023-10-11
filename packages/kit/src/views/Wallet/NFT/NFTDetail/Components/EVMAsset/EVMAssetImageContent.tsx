@@ -9,24 +9,18 @@ import {
   useIsVerticalLayout,
   useTheme,
 } from '@onekeyhq/components';
-import type { NFTAsset } from '@onekeyhq/engine/src/types/nft';
 import platformEnv from '@onekeyhq/shared/src/platformEnv';
 
+import { ENFTCollectionType } from '../../../NFTList/type';
 import { convertToMoneyFormat } from '../../../utils';
 import CollectibleContent from '../CollectibleContent';
 
-function isImage(contentType?: string | null) {
-  if (
-    contentType === 'image/jpeg' ||
-    contentType === 'image/jpg' ||
-    contentType === 'image/png'
-  ) {
-    return true;
-  }
-  return false;
-}
+import type { IEVMNFTItemType } from '../../../NFTList/type';
 
-function EVMAssetImageContent(params: { asset: NFTAsset; isOwner: boolean }) {
+function EVMAssetImageContent(params: {
+  asset: IEVMNFTItemType['content'];
+  isOwner: boolean;
+}) {
   const { asset, isOwner } = params;
   const { themeVariant } = useTheme();
   const isVertical = useIsVerticalLayout();
@@ -35,7 +29,7 @@ function EVMAssetImageContent(params: { asset: NFTAsset; isOwner: boolean }) {
       asset?.amount &&
       isOwner &&
       Number(asset?.amount) > 1 &&
-      asset.ercType === 'erc1155'
+      asset.collectionType === ENFTCollectionType.ERC1155
     ) {
       return (
         <Badge
@@ -49,17 +43,14 @@ function EVMAssetImageContent(params: { asset: NFTAsset; isOwner: boolean }) {
       );
     }
     return null;
-  }, [asset.amount, asset.ercType, isOwner]);
-  let hasBlurViewBG = isImage(asset.contentType);
-  if (asset.nftscanUri && asset.nftscanUri?.length > 0) {
-    hasBlurViewBG = true;
-  }
-  hasBlurViewBG = !!(asset.nftscanUri && asset.nftscanUri?.length > 0);
+  }, [asset.amount, asset.collectionType, isOwner]);
+  const hasBlurViewBG = asset?.metadata?.image;
   return (
     <>
       {/* eslint-disable-next-line no-nested-ternary */}
       {(isVertical && platformEnv.isExtension) || platformEnv.isNativeIOSPad ? (
         <Box overflow="hidden" mt="-16px" mr="-16px" ml="-16px">
+          {' '}
           {hasBlurViewBG && (
             <Center position="absolute" top={0} right={0} bottom={0} left={0}>
               <CollectibleContent

@@ -61,13 +61,14 @@ type UniqueTokenResult = {
   url?: string;
 };
 
-export default function useUniqueToken(asset: NFTAsset): UniqueTokenResult {
-  const url = asset.image.source;
-  const [componentType, setComponentType] = useState<ComponentType | undefined>(
-    getComponentTypeWithAsset(asset),
-  );
+export default function useUniqueToken(url?: string): UniqueTokenResult {
+  const [componentType, setComponentType] = useState<
+    ComponentType | undefined
+  >();
   const checkContentType = useCallback(async () => {
-    const uploadSource = getContentWithAsset(asset);
+    const uploadSource = getContentWithAsset({
+      contentUri: url,
+    });
     if (uploadSource) {
       const contentType = await axios
         .head(uploadSource, { timeout: 10000 })
@@ -81,13 +82,11 @@ export default function useUniqueToken(asset: NFTAsset): UniqueTokenResult {
         );
       }
     }
-  }, [asset]);
+  }, [url]);
 
   useEffect(() => {
-    if (componentType === undefined) {
-      checkContentType();
-    }
-  }, [checkContentType, componentType]);
+    checkContentType();
+  }, [checkContentType]);
 
   return useMemo(
     () => ({

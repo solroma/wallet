@@ -12,7 +12,7 @@ import {
 } from '@onekeyhq/components';
 import NavigationButton from '@onekeyhq/components/src/Modal/Container/Header/NavigationButton';
 import { isAllNetworks } from '@onekeyhq/engine/src/managers/network';
-import type { INFTAsset } from '@onekeyhq/engine/src/types/nft';
+import { migrateNFTItemFields } from '@onekeyhq/engine/src/managers/nft';
 import type { CollectiblesRoutesParams } from '@onekeyhq/kit/src/routes/Root/Modal/Collectibles';
 import platformEnv from '@onekeyhq/shared/src/platformEnv';
 
@@ -21,16 +21,19 @@ import backgroundApiProxy from '../../../../background/instance/backgroundApiPro
 import { getNFTDetailComponents } from './getNFTDetailComponents';
 
 import type { CollectiblesModalRoutes } from '../../../../routes/routesEnum';
+import type { IEVMNFTCollectionType, INFTListItem } from '../NFTList/type';
 import type { RouteProp } from '@react-navigation/core';
 
 function ModalContent({
   isOwner,
   asset,
+  collection,
   accountId,
   networkId,
   onRecycleUtxo,
 }: {
-  asset: INFTAsset;
+  asset: INFTListItem;
+  collection?: IEVMNFTCollectionType['content'];
   networkId: string;
   accountId?: string;
   isOwner: boolean;
@@ -42,10 +45,15 @@ function ModalContent({
   if (isVertical || platformEnv.isNativeIOSPad) {
     return (
       <ScrollView p="16px">
-        <ImageContent asset={asset} isOwner={isOwner} networkId={networkId} />
+        <ImageContent
+          asset={asset.content}
+          isOwner={isOwner}
+          networkId={networkId}
+        />
         <Box mt="24px" mb={bottom}>
           <DetailContent
-            asset={asset}
+            asset={asset.content}
+            collection={collection}
             isOwner={isOwner}
             networkId={networkId}
             accountId={accountId}
@@ -57,10 +65,15 @@ function ModalContent({
   }
   return (
     <Box flexDirection="row">
-      <ImageContent asset={asset} isOwner={isOwner} networkId={networkId} />
+      <ImageContent
+        asset={asset.content}
+        isOwner={isOwner}
+        networkId={networkId}
+      />
       <ScrollView h="640px" p="24px">
         <DetailContent
-          asset={asset}
+          asset={asset.content}
+          collection={collection}
           isOwner={isOwner}
           networkId={networkId}
           accountId={accountId}
@@ -85,12 +98,15 @@ const NFTDetailModal: FC = () => {
     >();
 
   const {
-    asset,
+    asset: assetOrigin,
+    collection,
     isOwner,
     accountId: originAccountId,
     networkId,
     onRecycleUtxo,
   } = route.params;
+
+  const asset = migrateNFTItemFields(assetOrigin);
 
   useEffect(() => {
     if (!isAllNetworks(networkId)) {
@@ -99,8 +115,8 @@ const NFTDetailModal: FC = () => {
     }
     backgroundApiProxy.serviceAccount
       .getAccountByAddress({
-        address: asset.accountAddress ?? '',
-        networkId: asset.networkId,
+        address: asset.content.accountAddress ?? '',
+        networkId: asset.content.networkId,
       })
       .then((account) => {
         if (account) {
@@ -129,10 +145,10 @@ const NFTDetailModal: FC = () => {
         }}
       />
       <ModalContent
-        // ref={hardwareCancelFlagRef}
         asset={asset}
+        collection={collection}
         isOwner={isOwner}
-        networkId={asset.networkId ?? networkId}
+        networkId={asset.content.networkId}
         accountId={accountId}
         onRecycleUtxo={onRecycleUtxo}
       />

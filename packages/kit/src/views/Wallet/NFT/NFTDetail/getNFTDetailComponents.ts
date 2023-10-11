@@ -1,15 +1,15 @@
-import type { INFTAsset } from '@onekeyhq/engine/src/types/nft';
-import { NFTAssetType } from '@onekeyhq/engine/src/types/nft';
+import { ENFTDisplayType } from '../NFTList/type';
 
 import { BTCAssetDetailContent } from './Components/BTCAsset/BTCAssetDetailContent';
 import { BTCAssetImageContent } from './Components/BTCAsset/BTCAssetImageContent';
 import { EVMAssetDetailContent } from './Components/EVMAsset/EVMAssetDetailContent';
 import { EVMAssetImageContent } from './Components/EVMAsset/EVMAssetImageContent';
-import { SOLAssetDetailContent } from './Components/SOLAsset/SOLAssetDetailContent';
-import { SOLAssetImageContent } from './Components/SOLAsset/SOLAssetImageContent';
+
+import type { IEVMNFTCollectionType, INFTListItem } from '../NFTList/type';
 
 type Props = {
-  asset: INFTAsset;
+  asset: INFTListItem['content'];
+  collection?: IEVMNFTCollectionType['content'];
   isOwner: boolean;
   networkId: string;
   accountId?: string;
@@ -26,20 +26,20 @@ type NFTDetailCompinents = {
 function getNFTDetailComponents({
   asset,
 }: {
-  asset: INFTAsset;
+  asset: INFTListItem;
 }): NFTDetailCompinents {
   switch (asset.type) {
-    case NFTAssetType.EVM:
+    case ENFTDisplayType.EVM_ITEM:
       return {
         ImageContent: EVMAssetImageContent as ComponentReturnProps,
-        DetailContent: EVMAssetDetailContent as ComponentReturnProps,
+        DetailContent: EVMAssetDetailContent as unknown as ComponentReturnProps,
       };
-    case NFTAssetType.SOL:
-      return {
-        ImageContent: SOLAssetImageContent as ComponentReturnProps,
-        DetailContent: SOLAssetDetailContent as ComponentReturnProps,
-      };
-    case NFTAssetType.BTC:
+    // case NFTAssetType.SOL:
+    //   return {
+    //     ImageContent: SOLAssetImageContent as ComponentReturnProps,
+    //     DetailContent: SOLAssetDetailContent as ComponentReturnProps,
+    //   };
+    case ENFTDisplayType.ORDINALS_ITEM:
       return {
         ImageContent: BTCAssetImageContent as ComponentReturnProps,
         DetailContent: BTCAssetDetailContent as ComponentReturnProps,

@@ -1,9 +1,7 @@
 import type { FC } from 'react';
-import { memo, useCallback, useEffect, useMemo, useState } from 'react';
+import { memo, useCallback, useMemo, useState } from 'react';
 
-import { isEqual } from 'lodash';
 import { useIntl } from 'react-intl';
-import useSWR from 'swr';
 
 import {
   Box,
@@ -12,49 +10,27 @@ import {
   IconButton,
   VStack,
   useIsVerticalLayout,
-  useUserDevice,
 } from '@onekeyhq/components';
 import { Tabs } from '@onekeyhq/components/src/CollapsibleTabView';
 import { DebugRenderTracker } from '@onekeyhq/components/src/DebugRenderTracker';
 import type { FlatListProps } from '@onekeyhq/components/src/FlatList';
-import { isAccountCompatibleWithNetwork } from '@onekeyhq/engine/src/managers/account';
-import { isAllNetworks } from '@onekeyhq/engine/src/managers/network';
 import { isCollectibleSupportedChainId } from '@onekeyhq/engine/src/managers/nft';
-import type { NFTBTCAssetModel } from '@onekeyhq/engine/src/types/nft';
-import { NFTAssetType } from '@onekeyhq/engine/src/types/nft';
-import type { CoinControlItem } from '@onekeyhq/engine/src/types/utxoAccounts';
-import {
-  useActiveWalletAccount,
-  useAppSelector,
-  useNFTIsLoading,
-} from '@onekeyhq/kit/src/hooks';
-import { MAX_PAGE_CONTAINER_WIDTH } from '@onekeyhq/shared/src/config/appConfig';
-import { isBTCNetwork } from '@onekeyhq/shared/src/engine/engineConsts';
-import { AppUIEventBusNames } from '@onekeyhq/shared/src/eventBus/appUIEventBus';
+import { useActiveWalletAccount } from '@onekeyhq/kit/src/hooks';
 import platformEnv from '@onekeyhq/shared/src/platformEnv';
 
 import backgroundApiProxy from '../../../../background/instance/backgroundApiProxy';
 import { useShouldHideInscriptions } from '../../../../hooks/crossHooks/useShouldHideInscriptions';
-import { useIsFocusedAllInOne } from '../../../../hooks/useIsFocusedAllInOne';
-import { useOnUIEventBus } from '../../../../hooks/useOnUIEventBus';
 import { usePromiseResult } from '../../../../hooks/usePromiseResult';
-import { TabRoutes } from '../../../../routes/routesEnum';
-import { appSelector } from '../../../../store';
 import { setHideInscriptions } from '../../../../store/reducers/settings';
-import { WalletHomeTabEnum } from '../../type';
 import { navigateToNFTCollection, navigateToNFTDetail } from '../utils';
 
-import { getNFTListComponent, getNFTListMeta } from './getNFTListMeta';
+import { useNFTListNumColumns, useRecycleUtxos } from './hooks';
 import NFTListHeader from './NFTListHeader';
-import {
-  atomHomeOverviewNFTList,
-  atomHomeOverviewNFTListLoading,
-  useAtomNFTList,
-  withProviderNFTList,
-} from './overviewNFTContext';
-import { NFTCardType } from './type';
+import { NFTListItemComp } from './NFTListItemComp';
+import { withProviderNFTList } from './overviewNFTContext';
+import { ENFTDisplayType } from './type';
 
-import type { ListDataType, ListItemType } from './type';
+import type { INFTListItem } from './type';
 
 export type IAccountNFTListDataFromSimpleDBOptions = {
   networkId: string;
@@ -63,18 +39,21 @@ export type IAccountNFTListDataFromSimpleDBOptions = {
 
 type IEmptyProps = IAccountNFTListDataFromSimpleDBOptions & {
   fetchData: () => Promise<unknown>;
+  isLoading: boolean;
 };
 
-const EmptyView: FC<IEmptyProps> = ({ networkId, accountId, fetchData }) => {
+const EmptyView: FC<IEmptyProps> = ({
+  networkId,
+  accountId,
+  fetchData,
+  isLoading,
+}) => {
   const intl = useIntl();
   const isNFTSupport = isCollectibleSupportedChainId(networkId);
-  const nftIsLoading = useNFTIsLoading({ networkId, accountId });
   const shouldHideInscriptions = useShouldHideInscriptions({
     accountId,
     networkId,
   });
-
-  const [isLoading] = useAtomNFTList(atomHomeOverviewNFTListLoading);
 
   if (!isNFTSupport) {
     return (
@@ -127,175 +106,98 @@ const EmptyView: FC<IEmptyProps> = ({ networkId, accountId, fetchData }) => {
       })}
       actionTitle={intl.formatMessage({ id: 'action__refresh' })}
       handleAction={fetchData}
-      isLoading={isLoading || nftIsLoading}
+      isLoading={isLoading}
     />
   );
 };
 const MemoEmpty = memo(EmptyView);
 
-export function HandleRefreshNFTData({
-  accountId,
-  networkId,
-  fetchData,
-}: IEmptyProps) {
-  const isUnlock = useAppSelector((s) => s.status.isUnlock);
-  const isNFTSupport = isCollectibleSupportedChainId(networkId);
-  const shouldHideInscriptions = useShouldHideInscriptions({
-    accountId,
+const pageSize = 100;
+
+const NFTListContainer: FC = () => {
+  const intl = useIntl();
+  const isVertical = useIsVerticalLayout();
+  const { numColumns } = useNFTListNumColumns();
+  const [page, setPage] = useState(1);
+  const { accountId, networkId } = useActiveWalletAccount();
+  const { recycleUtxos } = useRecycleUtxos({
     networkId,
-  });
-  const [, setNFTIsLoading] = useAtomNFTList(atomHomeOverviewNFTListLoading);
-  const { isFocused, homeTabFocused, rootTabFocused } = useIsFocusedAllInOne({
-    focusDelay: 1000,
-    rootTabName: TabRoutes.Home,
-    homeTabName: WalletHomeTabEnum.Tokens,
-  });
-
-  const shouldDoRefresh = useMemo((): boolean => {
-    if (!isUnlock) {
-      return false;
-    }
-    if (!accountId || !networkId || !isNFTSupport) {
-      return false;
-    }
-    if (!isAccountCompatibleWithNetwork(accountId, networkId)) {
-      return false;
-    }
-    if (!isFocused || !rootTabFocused || !homeTabFocused) {
-      return false;
-    }
-    if (shouldHideInscriptions) {
-      return false;
-    }
-    return true;
-  }, [
-    isUnlock,
     accountId,
-    networkId,
-    isNFTSupport,
-    isFocused,
-    rootTabFocused,
-    homeTabFocused,
-    shouldHideInscriptions,
-  ]);
-
-  const swrKey = 'fetchNFTList';
-  const { mutate, isValidating: isLoading } = useSWR(swrKey, fetchData, {
-    refreshInterval: 30 * 1000,
-    revalidateOnMount: false,
-    revalidateOnFocus: false,
-    shouldRetryOnError: false,
-    isPaused() {
-      return !shouldDoRefresh;
-    },
   });
 
-  useEffect(() => {
-    if (shouldDoRefresh) {
-      mutate();
-    }
-  }, [mutate, shouldDoRefresh]);
-
-  useEffect(() => {
-    setNFTIsLoading(isLoading);
-  }, [isLoading, setNFTIsLoading]);
-
-  return null;
-}
-
-function useAccountNFTListDataFromSimpleDB({
-  networkId,
-  accountId,
-}: IAccountNFTListDataFromSimpleDBOptions) {
-  const refresherTs = useAppSelector((s) => s.refresher.refreshAccountNFTTs);
-
-  const result = usePromiseResult(
-    () => {
-      if (refresherTs) {
-        //
-      }
-      const r = backgroundApiProxy.serviceOverview.buildAccountNFTList({
+  const { result, isLoading, run } = usePromiseResult(
+    () =>
+      backgroundApiProxy.serviceNFT.fetchAccountNFTCollections({
         networkId,
         accountId,
-      });
-      return r;
-    },
-    [accountId, networkId, refresherTs],
+        page,
+        pageSize,
+      }),
+    [networkId, accountId, page],
     {
       debounced: 600,
       watchLoading: true,
     },
   );
 
-  return result;
-}
-
-const HandleRebuildNFTListData = (
-  options: IAccountNFTListDataFromSimpleDBOptions,
-) => {
-  const result = useAccountNFTListDataFromSimpleDB(options);
-  const [nftList, setNFTList] = useAtomNFTList(atomHomeOverviewNFTList);
-
-  useEffect(() => {
-    const data = result.result;
-    if (!data) {
-      return;
-    }
-    if (data.nftKeys) {
-      if (!isEqual(nftList.nftKeys, data.nftKeys)) {
-        setNFTList(data);
-      }
-    } else {
-      setNFTList(data);
-    }
-  }, [nftList.nftKeys, result.result, setNFTList]);
-
-  return null;
-};
-
-const pageSize = 20;
-const NFTListContainer: FC = () => {
-  const intl = useIntl();
-  const isVertical = useIsVerticalLayout();
-  const [page, setPage] = useState(1);
-
-  const isSmallScreen = useIsVerticalLayout();
-  const { screenWidth } = useUserDevice();
-  const MARGIN = isSmallScreen ? 16 : 20;
-  const pageWidth = isSmallScreen
-    ? screenWidth
-    : Math.min(MAX_PAGE_CONTAINER_WIDTH, screenWidth - 224);
-  const numColumns = isSmallScreen ? 2 : Math.floor(pageWidth / (177 + MARGIN));
-
-  const { accountId, networkId, account } = useActiveWalletAccount();
-
-  const [recycleUtxos, setRecycleUtxos] = useState<CoinControlItem[]>([]);
-
-  const [nfts] = useAtomNFTList(atomHomeOverviewNFTList);
-
   const shouldHideInscriptions = useShouldHideInscriptions({
     accountId,
     networkId,
   });
 
+  const { collections, hasMore } = useMemo(() => {
+    if (!result) {
+      return {
+        collections: [],
+        hasMore: false,
+      };
+    }
+    const list = result.data.filter((d) => {
+      if (d.type !== ENFTDisplayType.ORDINALS_ITEM) {
+        return true;
+      }
+      if (shouldHideInscriptions) {
+        return false;
+      }
+      if (
+        !recycleUtxos.find((utxo) => {
+          const [txId, vout] = utxo.key.split('_');
+          const [assetTxId, assetVout] = d.content.output.split(':');
+          return assetTxId === txId && assetVout === vout;
+        })
+      ) {
+        return true;
+      }
+      return false;
+    });
+    return {
+      collections: list,
+      hasMore: result.pagination.hasNext && list.length > 0,
+    };
+  }, [result, recycleUtxos, shouldHideInscriptions]);
+
   const onSelect = useCallback(
-    (data: ListDataType, type: NFTCardType) => {
+    (item: INFTListItem) => {
+      const { type, content } = item;
+      console.log('onSelect', type, content, item);
       if (!accountId || !networkId) return;
       switch (type) {
-        case NFTCardType.EVMCollection:
-        case NFTCardType.SOLCollection:
+        case ENFTDisplayType.EVM_COLLECTION:
           navigateToNFTCollection({
             networkId,
             accountId,
-            collection: data as any,
+            collection: content,
           });
           break;
-        case NFTCardType.EVMAsset:
-        case NFTCardType.SOLAsset:
-          navigateToNFTDetail({ networkId, accountId, asset: data as any });
-          break;
-        case NFTCardType.BTCAsset:
-          navigateToNFTDetail({ networkId, accountId, asset: data as any });
+        case ENFTDisplayType.ORDINALS_ITEM:
+          navigateToNFTDetail({
+            networkId,
+            accountId,
+            asset: {
+              type: ENFTDisplayType.ORDINALS_ITEM,
+              content,
+            },
+          });
           break;
         default:
           break;
@@ -304,126 +206,15 @@ const NFTListContainer: FC = () => {
     [accountId, networkId],
   );
 
-  const fetchData = useCallback(async () => {
-    const isNFTSupport = isCollectibleSupportedChainId(networkId);
-    if (accountId && networkId && isNFTSupport && !isAllNetworks(networkId)) {
-      const result = await backgroundApiProxy.serviceNFT.fetchNFT({
-        accountId,
-        networkId,
-      });
-      return result;
-    }
-  }, [accountId, networkId]);
-
-  const collections = useMemo(() => {
-    let array: ListItemType<ListDataType>[] = [];
-
-    if (shouldHideInscriptions) return array;
-
-    nfts.nfts.forEach(({ type, data }) => {
-      data.forEach((item) => {
-        const items = getNFTListMeta({
-          data: item,
-          type,
-        });
-        if (type === NFTAssetType.BTC) {
-          const asset = items[0].data as NFTBTCAssetModel;
-
-          if (
-            !recycleUtxos.find((utxo) => {
-              const [txId, vout] = utxo.key.split('_');
-              const [assetTxId, assetVout] = asset.output.split(':');
-              return assetTxId === txId && assetVout === vout;
-            })
-          ) {
-            array = array.concat(items as any[]);
-          }
-        } else {
-          array = array.concat(items as any[]);
-        }
-      });
-    });
-    return array;
-  }, [nfts.nfts, recycleUtxos, shouldHideInscriptions]);
-
-  const hasMore = useMemo(
-    () => page * pageSize < collections.length,
-    [page, collections.length],
-  );
-
-  const fetchCoinControlList = useCallback(async () => {
-    let archivedUtxos: CoinControlItem[] = [];
-    if (networkId) {
-      if (isAllNetworks(networkId)) {
-        const networkAccountsMap =
-          appSelector((s) => s.overview.allNetworksAccountsMap)?.[accountId] ||
-          {};
-
-        for (const [nid, accounts] of Object.entries(
-          networkAccountsMap ?? {},
-        )) {
-          const xpubs: string[] = [];
-
-          if (isBTCNetwork(nid)) {
-            xpubs.push(...accounts.map((item) => item.xpub).filter(Boolean));
-
-            archivedUtxos = archivedUtxos.concat(
-              await backgroundApiProxy.serviceUtxos.getArchivedUtxos(
-                nid,
-                xpubs,
-              ),
-            );
-          }
-        }
-      } else if (account?.xpub) {
-        archivedUtxos = await backgroundApiProxy.serviceUtxos.getArchivedUtxos(
-          networkId,
-          [account.xpub],
-        );
-      }
-      setRecycleUtxos(archivedUtxos.filter((utxo) => utxo.recycle));
-    }
-  }, [account?.xpub, accountId, networkId]);
-
-  useOnUIEventBus(
-    AppUIEventBusNames.InscriptionRecycleChanged,
-    fetchCoinControlList,
-  );
-
-  useEffect(() => {
-    if (shouldHideInscriptions) return;
-    fetchCoinControlList();
-  }, [fetchCoinControlList, shouldHideInscriptions]);
-
   const renderItem = useCallback<
-    NonNullable<FlatListProps<ListItemType<ListDataType>>['renderItem']>
+    NonNullable<FlatListProps<INFTListItem>['renderItem']>
   >(
-    ({ item, index }) => {
-      const { type, ...props } = item;
-      if (!type) {
-        return null;
-      }
-      if (index > page * pageSize - 1) {
-        return null;
-      }
-      const { Component, cardType } = getNFTListComponent({
-        type,
-      });
-      return (
-        <DebugRenderTracker>
-          <Component
-            {...props}
-            onSelect={(data) => {
-              if (onSelect) {
-                onSelect(data, cardType);
-              }
-            }}
-            mr="16px"
-          />
-        </DebugRenderTracker>
-      );
-    },
-    [onSelect, page],
+    ({ item }) => (
+      <DebugRenderTracker>
+        <NFTListItemComp {...item} onSelect={() => onSelect(item)} />
+      </DebugRenderTracker>
+    ),
+    [onSelect],
   );
 
   const handleLoadMore = useCallback(() => {
@@ -431,9 +222,6 @@ const NFTListContainer: FC = () => {
   }, []);
 
   const loadMore = useMemo(() => {
-    if (!collections?.length) {
-      return null;
-    }
     const button = hasMore ? (
       <HStack justifyContent="center">
         <IconButton
@@ -451,63 +239,52 @@ const NFTListContainer: FC = () => {
         <Box h="24px" w="full" />
       </VStack>
     );
-  }, [intl, isVertical, handleLoadMore, hasMore, collections?.length]);
+  }, [intl, isVertical, handleLoadMore, hasMore]);
 
   const keyExtractor = useCallback(
-    (item: ListItemType<ListDataType>, index: number) =>
-      getNFTListComponent({
-        type: item.type,
-      }).keyExtractor(item, index),
+    ({ type, content }: INFTListItem, index: number) => {
+      switch (type) {
+        case ENFTDisplayType.EVM_COLLECTION:
+          return `${content.collectionId}_${content.collectionType}`;
+        case ENFTDisplayType.EVM_ITEM:
+          return `${content.collectionId}_${content.collectionType}_${content.itemId}`;
+        case ENFTDisplayType.ORDINALS_ITEM:
+          return `${content.inscription_id}_${content.inscription_number}_${content.type}`;
+        default:
+          return `${index}`;
+      }
+    },
     [],
   );
 
-  const style = useMemo(
-    () => ({
-      paddingLeft: 16,
-      paddingBottom: collections.length ? 16 : 0,
-      marginTop: 24,
-    }),
-    [collections.length],
-  );
-
-  const empty = useMemo(
-    () => (
-      <MemoEmpty
-        accountId={accountId}
-        networkId={networkId}
-        fetchData={fetchData}
-      />
-    ),
-    [accountId, networkId, fetchData],
-  );
-
-  const header = useMemo(() => <NFTListHeader />, []);
-
   return (
-    <>
-      <HandleRebuildNFTListData accountId={accountId} networkId={networkId} />
-      <HandleRefreshNFTData
-        accountId={accountId}
-        networkId={networkId}
-        fetchData={fetchData}
-      />
-      <Tabs.FlatList
-        contentContainerStyle={style}
-        key={
-          platformEnv.isNative && !platformEnv.isNativeIOSPad
-            ? undefined
-            : `NFTList${numColumns}`
-        }
-        data={collections}
-        renderItem={renderItem}
-        ListFooterComponent={loadMore}
-        showsVerticalScrollIndicator={false}
-        ListEmptyComponent={empty}
-        numColumns={numColumns}
-        ListHeaderComponent={header}
-        keyExtractor={keyExtractor}
-      />
-    </>
+    <Tabs.FlatList
+      contentContainerStyle={{
+        paddingLeft: 16,
+        paddingBottom: collections.length ? 16 : 0,
+        marginTop: 24,
+      }}
+      key={
+        platformEnv.isNative && !platformEnv.isNativeIOSPad
+          ? undefined
+          : `NFTList${numColumns}`
+      }
+      data={collections}
+      renderItem={renderItem}
+      ListFooterComponent={loadMore}
+      showsVerticalScrollIndicator={false}
+      ListEmptyComponent={
+        <MemoEmpty
+          accountId={accountId}
+          networkId={networkId}
+          fetchData={run}
+          isLoading={isLoading ?? false}
+        />
+      }
+      numColumns={numColumns}
+      ListHeaderComponent={<NFTListHeader />}
+      keyExtractor={keyExtractor}
+    />
   );
 };
 

@@ -13,9 +13,17 @@ import type {
   NFTServiceResp,
   NFTTransaction,
 } from '@onekeyhq/engine/src/types/nft';
-import { NFTChainMap } from '@onekeyhq/engine/src/types/nft';
+import { NFTAssetType, NFTChainMap } from '@onekeyhq/engine/src/types/nft';
 import backgroundApiProxy from '@onekeyhq/kit/src/background/instance/backgroundApiProxy';
 import { EOverviewScanTaskType } from '@onekeyhq/kit/src/views/Overview/types';
+import type {
+  IEVMNFTItemType,
+  INFTListItem,
+} from '@onekeyhq/kit/src/views/Wallet/NFT/NFTList/type';
+import {
+  ENFTCollectionType,
+  ENFTDisplayType,
+} from '@onekeyhq/kit/src/views/Wallet/NFT/NFTList/type';
 import { OnekeyNetwork } from '@onekeyhq/shared/src/config/networkIds';
 import { isBTCNetwork } from '@onekeyhq/shared/src/engine/engineConsts';
 
@@ -67,26 +75,24 @@ export function isSVGContract(contractAddress?: string) {
   return SVGContracts.includes(contractAddress ?? '');
 }
 
-export function getHttpImageWithAsset(asset: NFTAsset) {
-  const { imageUri, nftscanUri } = asset;
-  if (nftscanUri) {
-    return nftscanUri;
+export function getHttpImageWithAsset(asset: IEVMNFTItemType['content']) {
+  const url = asset?.metadata?.image;
+  if (!url) {
+    return url;
   }
-  if (imageUri) {
-    if (
-      imageUri.toLowerCase().startsWith('qm') ||
-      imageUri.toLowerCase().startsWith('ba')
-    ) {
-      return `https://cloudflare-ipfs.com/ipfs/${imageUri}`;
-    }
-    if (imageUri.startsWith('ar://')) {
-      return `https://arweave.net/${imageUri.replace('ar://', '')}`;
-    }
-    return imageUri;
+  if (
+    url.toLowerCase().startsWith('qm') ||
+    url.toLowerCase().startsWith('ba')
+  ) {
+    return `https://cloudflare-ipfs.com/ipfs/${url}`;
   }
+  if (url.startsWith('ar://')) {
+    return `https://arweave.net/${url.replace('ar://', '')}`;
+  }
+  return url;
 }
 
-export function getContentWithAsset(asset: NFTAsset) {
+export function getContentWithAsset(asset: { contentUri?: string }) {
   const { contentUri } = asset;
   if (contentUri) {
     if (
@@ -422,3 +428,49 @@ export function parseTextProps(content: string) {
     console.log('parse InscriptionText error = ', error);
   }
 }
+
+export const migrateNFTItemFields = (
+  assetOrigin: INFTListItem | NFTAsset,
+): INFTListItem => {
+  if (Object.values(ENFTDisplayType).includes(assetOrigin.type)) {
+    return assetOrigin as INFTListItem;
+  }
+  if (assetOrigin.type === NFTAssetType.BTC) {
+    return {
+      type: ENFTDisplayType.ORDINALS_ITEM,
+      content: assetOrigin,
+    } as unknown as INFTListItem;
+  }
+  const c = assetOrigin as NFTAsset;
+  return {
+    type: ENFTDisplayType.EVM_ITEM,
+    content: {
+      networkId: c.networkId,
+      accountAddress: c.accountAddress,
+      collectionId: c.contractAddress,
+      amount: c.amount,
+      holderAddress: c.owner,
+      itemId: c.tokenId,
+
+      metadata: {
+        item_name: c.name,
+        description: c.description,
+        item_url: c.tokenUri,
+        image: c.imageUri,
+        animation_url: c.contentUri,
+        external_url: c.contentUri,
+        attributes:
+          c.assetAttributes?.map((a) => ({
+            trait_type: a.attribute_name,
+            value: a.attribute_value,
+          })) ?? [],
+      },
+      name: c.name,
+      symbol: c.contractName,
+      collectionType:
+        c.ercType === 'erc721'
+          ? ENFTCollectionType.ERC721
+          : ENFTCollectionType.ERC1155,
+    },
+  } as unknown as INFTListItem;
+};

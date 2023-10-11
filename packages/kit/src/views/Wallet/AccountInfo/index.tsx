@@ -9,7 +9,6 @@ import {
   Box,
   HStack,
   Icon,
-  IconButton,
   Pressable,
   Skeleton,
   Text,
@@ -31,8 +30,6 @@ import {
   ModalRoutes,
   RootRoutes,
 } from '@onekeyhq/kit/src/routes/routesEnum';
-import { isBTCNetwork } from '@onekeyhq/shared/src/engine/engineConsts';
-import { isWatchingAccount } from '@onekeyhq/shared/src/engine/engineUtils';
 
 import backgroundApiProxy from '../../../background/instance/backgroundApiProxy';
 import { useAccountIsUpdating, useOverviewPendingTasks } from '../../../hooks';
@@ -42,7 +39,6 @@ import { useCopyAddress } from '../../../hooks/useCopyAddress';
 import useOpenBlockBrowser from '../../../hooks/useOpenBlockBrowser';
 import { getTimeDurationMs } from '../../../utils/helper';
 import { calculateGains } from '../../../utils/priceUtils';
-import { showAccountValueSettings } from '../../Overlay/AccountValueSettings';
 
 import AccountOption from './AccountOption';
 
@@ -350,8 +346,6 @@ const SummedValueComp = memo(
         s.overview.overviewStats?.[networkId]?.[accountId]?.summary?.totalValue,
     );
 
-    const isWatching = isWatchingAccount({ accountId });
-
     return (
       <Box flexDirection="row" alignItems="center" mt={1} w="full">
         {typeof totalValue === 'undefined' ? (
@@ -365,15 +359,16 @@ const SummedValueComp = memo(
                 convertValue={totalValue}
               />
             </Typography.Display2XLarge>
-            {isWatching && isBTCNetwork(networkId) ? null : (
-              <IconButton
-                name="ChevronDownMini"
-                onPress={showAccountValueSettings}
-                type="plain"
-                circle
-                ml={1}
-              />
-            )}
+            {/* TODO: add this back when nft market info is ready */}
+            {/* {isWatching && isBTCNetwork(networkId) ? null : ( */}
+            {/*   <IconButton */}
+            {/*     name="ChevronDownMini" */}
+            {/*     onPress={showAccountValueSettings} */}
+            {/*     type="plain" */}
+            {/*     circle */}
+            {/*     ml={1} */}
+            {/*   /> */}
+            {/* )} */}
           </HStack>
         )}
       </Box>

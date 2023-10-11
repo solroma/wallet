@@ -1,5 +1,8 @@
 import { useIsVerticalLayout } from '@onekeyhq/components';
-import type { Collection, INFTAsset } from '@onekeyhq/engine/src/types/nft';
+import type {
+  NFTAsset,
+  NFTBTCAssetModel,
+} from '@onekeyhq/engine/src/types/nft';
 
 import CollectionModalView from '../../../views/Wallet/NFT/CollectionModal';
 import NFTDetailView from '../../../views/Wallet/NFT/NFTDetail';
@@ -8,14 +11,20 @@ import { CollectiblesModalRoutes } from '../../routesEnum';
 import { buildModalStackNavigatorOptions } from './buildModalStackNavigatorOptions';
 import createStackNavigator from './createStackNavigator';
 
+import type {
+  IEVMNFTCollectionType,
+  INFTListItem,
+} from '../../../views/Wallet/NFT/NFTList/type';
+
 export type CollectiblesRoutesParams = {
   [CollectiblesModalRoutes.CollectionModal]: {
-    collectible: Collection;
+    collectible: IEVMNFTCollectionType['content'];
     networkId: string;
     accountId: string;
   };
   [CollectiblesModalRoutes.NFTDetailModal]: {
-    asset: INFTAsset;
+    asset: INFTListItem | NFTAsset | NFTBTCAssetModel;
+    collection?: IEVMNFTCollectionType['content'];
     isOwner: boolean;
     networkId: string;
     accountId?: string;

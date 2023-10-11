@@ -15,13 +15,17 @@ import RecyclerListView, {
   DataProvider,
   LayoutProvider,
 } from '@onekeyhq/components/src/RecyclerListView';
-import type { Collection, NFTAsset } from '@onekeyhq/engine/src/types/nft';
+
+import backgroundApiProxy from '../../../background/instance/backgroundApiProxy';
+import { usePromiseResult } from '../../../hooks/usePromiseResult';
 
 import NFTListAssetCard from './NFTList/NFTListAssetCard';
+import { ENFTDisplayType } from './NFTList/type';
 import { navigateToNFTDetail } from './utils';
 
 import type { CollectiblesRoutesParams } from '../../../routes/Root/Modal/Collectibles';
 import type { CollectiblesModalRoutes } from '../../../routes/routesEnum';
+import type { IEVMNFTCollectionType, IEVMNFTItemType } from './NFTList/type';
 import type { RouteProp } from '@react-navigation/native';
 
 const ViewTypes = {
@@ -34,37 +38,35 @@ const ViewTypes = {
 
 type ListDataType = {
   viewType: number;
-  data?: string | NFTAsset | null;
+  data?: string | IEVMNFTItemType['content'] | null;
 }[];
 
-function generateListArray(originData: Collection): ListDataType {
+function generateListArray(
+  originData: IEVMNFTCollectionType['content'],
+  items: IEVMNFTItemType[],
+): ListDataType {
   let result: ListDataType = [];
-  if (originData?.logoUrl && originData?.logoUrl.length > 0) {
+  if (originData?.logoURI) {
     result.push({
       viewType: ViewTypes.LOGO,
-      data: originData.logoUrl,
+      data: originData.logoURI,
     });
   }
 
   result.push({
     viewType: ViewTypes.NAME,
-    data: originData.contractName,
+    data: originData.name,
   });
   result = result.concat(
-    originData.assets.map((item) => ({
+    items.map((item) => ({
       viewType: ViewTypes.NFTCard,
-      data: item,
+      data: item.content,
     })),
   );
-  // }
   return result;
 }
 
-type CollectionModalProps = {
-  onSelectAsset: (asset: NFTAsset) => void;
-};
-
-const CollectionModal: FC<CollectionModalProps> = () => {
+const CollectionModal: FC = () => {
   const isSmallScreen = useIsVerticalLayout();
 
   const { screenWidth } = useUserDevice();
@@ -91,13 +93,36 @@ const CollectionModal: FC<CollectionModalProps> = () => {
 
   // Open Asset detail modal
   const handleSelectAsset = useCallback(
-    (asset: NFTAsset) => {
-      navigateToNFTDetail({ networkId, accountId, asset });
+    (asset: IEVMNFTItemType['content']) => {
+      navigateToNFTDetail({
+        networkId,
+        accountId,
+        collection: collectible,
+        asset: {
+          type: ENFTDisplayType.EVM_ITEM,
+          content: asset,
+        },
+      });
     },
-    [accountId, networkId],
+    [accountId, networkId, collectible],
   );
 
-  const listData = generateListArray(collectible);
+  const { result: items } = usePromiseResult(
+    () =>
+      backgroundApiProxy.serviceNFT.fetchAccountNFTCollectionItems({
+        networkId: collectible.networkId,
+        address: collectible.accountAddress,
+        collectionId: collectible.collectionId,
+        page: 1,
+        pageSize: 100,
+      }),
+    [collectible],
+    {
+      watchLoading: true,
+    },
+  );
+
+  const listData = generateListArray(collectible, items?.data ?? []);
   const dataProvider = new DataProvider((r1, r2) => r1 !== r2).cloneWithRows(
     listData,
   );
@@ -114,11 +139,11 @@ const CollectionModal: FC<CollectionModalProps> = () => {
           switch (type) {
             case ViewTypes.LOGO:
               dim.width = pageWidth - padding * 2;
-              dim.height = collectible.logoUrl ? 56 + 8 : 0;
+              dim.height = collectible.logoURI ? 56 + 8 : 0;
               break;
             case ViewTypes.NAME:
               dim.width = pageWidth - padding * 2;
-              dim.height = collectible.contractName ? 52 : 0;
+              dim.height = collectible.name ? 52 : 0;
               break;
             case ViewTypes.DESC:
               dim.width = pageWidth - 2 * padding;
@@ -134,8 +159,17 @@ const CollectionModal: FC<CollectionModalProps> = () => {
           }
         },
       ),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [descH, pageWidth],
+    [
+      cardHeight,
+      cardWidth,
+      collectible.description,
+      collectible.logoURI,
+      collectible.name,
+      descH,
+      listData,
+      margin,
+      pageWidth,
+    ],
   );
 
   const rowRenderer = useCallback(
@@ -180,9 +214,9 @@ const CollectionModal: FC<CollectionModalProps> = () => {
           return (
             <NFTListAssetCard
               isAsset
-              data={data as NFTAsset}
+              data={data}
               key={index}
-              onSelect={handleSelectAsset}
+              onSelect={() => handleSelectAsset(data)}
             />
           );
         default:

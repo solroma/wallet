@@ -1,4 +1,5 @@
 // safe import
+import type { IOrdinalsItemType } from '@onekeyhq/kit/src/views/Wallet/NFT/NFTList/type';
 import { OnekeyNetwork } from '@onekeyhq/shared/src/config/networkIds';
 
 export const NFTChainMap: Record<string, string> = {
@@ -124,30 +125,9 @@ export interface NFTAsset extends NFTAssetBase {
   };
 }
 
-export interface NFTBTCAssetModel extends NFTAssetBase {
-  networkId?: string;
-  accountAddress?: string;
-  inscription_id: string;
-  inscription_number: number;
-  tx_hash: string;
-  content: string | null;
-  content_length: number;
-  content_type: string;
-  timestamp: string;
-  output: string;
-  owner: string;
-  output_value_sat: number;
-  genesis_transaction_hash: string;
-  location: string;
-  contentUrl: string;
-  // block_number: number;
-  // minter: string;
-  // mint_value: number;
-  // mint_value_sat: number;
-  // mint_offset: number;
-  // output_value: number;
-  // own_timestamp: string;
-}
+export type NFTBTCAssetModel = IOrdinalsItemType['content'] & {
+  listed?: boolean;
+};
 
 export type NFTTransaction = {
   hash: string;

@@ -1,8 +1,5 @@
 import { useIsVerticalLayout } from '@onekeyhq/components';
-import type {
-  NFTAsset,
-  NFTBTCAssetModel,
-} from '@onekeyhq/engine/src/types/nft';
+import type { NFTAsset } from '@onekeyhq/engine/src/types/nft';
 
 import CollectionModalView from '../../../views/Wallet/NFT/CollectionModal';
 import NFTDetailView from '../../../views/Wallet/NFT/NFTDetail';
@@ -23,7 +20,7 @@ export type CollectiblesRoutesParams = {
     accountId: string;
   };
   [CollectiblesModalRoutes.NFTDetailModal]: {
-    asset: INFTListItem | NFTAsset | NFTBTCAssetModel;
+    asset: INFTListItem | NFTAsset;
     collection?: IEVMNFTCollectionType['content'];
     isOwner: boolean;
     networkId: string;

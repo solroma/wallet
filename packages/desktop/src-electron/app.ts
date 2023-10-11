@@ -179,7 +179,7 @@ function handleDeepLinkUrl(
 
 function clearWebData() {
   session.defaultSession.clearStorageData({
-    storages: ['cookies', 'appcache'],
+    storages: ['cookies'],
   });
 }
 
@@ -203,12 +203,13 @@ function createMainWindow() {
     webPreferences: {
       spellcheck: false,
       webviewTag: true,
-      webSecurity: true,
+      webSecurity: !isDev,
       nativeWindowOpen: true,
       allowRunningInsecureContent: isDev,
       // webview injected js needs isolation=false, because property can not be exposeInMainWorld() when isolation enabled.
       contextIsolation: false,
       preload: path.join(__dirname, 'preload.js'),
+      sandbox: false,
     },
     icon: path.join(staticPath, 'images/icons/512x512.png'),
     ...savedWinBounds,
@@ -400,9 +401,7 @@ function createMainWindow() {
   // Prevents clicking on links to open new Windows
   app.on('web-contents-created', (event, contents) => {
     if (contents.getType() === 'webview') {
-      contents.on('new-window', (newWindowEvent: Event) => {
-        newWindowEvent.preventDefault();
-      });
+      contents.setWindowOpenHandler(() => ({ action: 'deny' }));
     }
   });
 
@@ -488,6 +487,7 @@ function createMainWindow() {
     );
   }
 
+  // @ts-expect-error
   browserWindow.on('close', (event: Event) => {
     // hide() instead of close() on MAC
     if (isMac) {
@@ -617,6 +617,7 @@ app.on('will-finish-launching', () => {
   // app.off('open-url', handleDeepLinkUrl);
   // ** Protocol handler for osx
   // deeplink: Handle the protocol. In this case, we choose to show an Error Box.
+  // @ts-expect-error
   app.on('open-url', handleDeepLinkUrl);
 });
 

@@ -1,16 +1,63 @@
 diff --git a/node_modules/@react-navigation/bottom-tabs/lib/module/views/BottomTabView.js b/node_modules/@react-navigation/bottom-tabs/lib/module/views/BottomTabView.js
-index 2b0dc1c..710697b 100644
+index 2b0dc1c..3a3aa3a 100644
 --- a/node_modules/@react-navigation/bottom-tabs/lib/module/views/BottomTabView.js
 +++ b/node_modules/@react-navigation/bottom-tabs/lib/module/views/BottomTabView.js
-@@ -17,7 +17,6 @@ export default function BottomTabView(props) {
+@@ -1,7 +1,27 @@
++import * as React from 'react';
++import { Platform, StyleSheet, View } from 'react-native';
++import { Freeze as ReactFreeze } from 'react-freeze';
++
++const RenderSceneComponent = React.memo(({ index, descriptor, freeze }) => {
++  if (!descriptor) {
++    return null;
++  }
++  const freezeOnBlur = descriptor.options.freezeOnBlur ?? false;
++  const element = React.useMemo(()=> descriptor.render(),[descriptor])
++
++  if (freezeOnBlur){
++    return (
++      <ReactFreeze freeze={freeze}>{element}</ReactFreeze>
++    )
++  }
++
++  return element;
++}, (prevProps, nextProps) => {
++  return prevProps.descriptor === nextProps.descriptor && prevProps.index === nextProps.index && prevProps.freeze === nextProps.freeze;
++});
++
+ function _extends() { _extends = Object.assign ? Object.assign.bind() : function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; }; return _extends.apply(this, arguments); }
+ import { getHeaderTitle, Header, SafeAreaProviderCompat, Screen } from '@react-navigation/elements';
+-import * as React from 'react';
+-import { Platform, StyleSheet } from 'react-native';
+ import { SafeAreaInsetsContext } from 'react-native-safe-area-context';
+ import BottomTabBarHeightCallbackContext from '../utils/BottomTabBarHeightCallbackContext';
+ import BottomTabBarHeightContext from '../utils/BottomTabBarHeightContext';
+@@ -17,7 +37,14 @@ export default function BottomTabView(props) {
      detachInactiveScreens = Platform.OS === 'web' || Platform.OS === 'android' || Platform.OS === 'ios',
      sceneContainerStyle
    } = props;
--  const focusedRouteKey = state.routes[state.index].key;
++  const previousFocusedRouteKeyRef = React.useRef([state.index,-1]);
+   const focusedRouteKey = state.routes[state.index].key;
++
++  if (previousFocusedRouteKeyRef.current[0] !== state.index){
++    previousFocusedRouteKeyRef.current[1] = previousFocusedRouteKeyRef.current[0];
++    previousFocusedRouteKeyRef.current[0] = state.index;
++  }
++
    const [loaded, setLoaded] = React.useState([focusedRouteKey]);
    if (!loaded.includes(focusedRouteKey)) {
      setLoaded([...loaded, focusedRouteKey]);
-@@ -53,7 +52,14 @@ export default function BottomTabView(props) {
+@@ -50,10 +77,24 @@ export default function BottomTabView(props) {
+       }
+     }));
+   };
++  const renderScene = ({ descriptor, index, freeze }) => {
++    return <RenderSceneComponent
++      index={index}
++      descriptor={descriptor}
++      freeze={freeze}
++    />
++  }
    const {
      routes
    } = state;
@@ -26,7 +73,16 @@ index 2b0dc1c..710697b 100644
      enabled: detachInactiveScreens,
      hasTwoStates: true,
      style: styles.container
-@@ -120,6 +126,12 @@ const styles = StyleSheet.create({
+@@ -111,7 +152,7 @@ export default function BottomTabView(props) {
+         options: descriptor.options
+       }),
+       style: sceneContainerStyle
+-    }, descriptor.render())));
++    }, renderScene({ descriptor: descriptor, index: index, freeze: previousFocusedRouteKeyRef.current[0] !== index && previousFocusedRouteKeyRef.current[1] !== index }))));
+   })), /*#__PURE__*/React.createElement(BottomTabBarHeightCallbackContext.Provider, {
+     value: setTabBarHeight
+   }, renderTabBar()));
+@@ -120,6 +161,12 @@ const styles = StyleSheet.create({
    container: {
      flex: 1,
      overflow: 'hidden'

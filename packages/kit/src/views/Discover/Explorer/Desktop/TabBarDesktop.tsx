@@ -50,6 +50,10 @@ const Tab: FC<
       borderRightColor="border-default"
       borderRightWidth="0.5px"
       onLayout={onLayout}
+      style={{
+        // @ts-expect-error
+        '-webkit-app-region': 'no-drag',
+      }}
     />
   ) : (
     <Pressable
@@ -65,6 +69,10 @@ const Tab: FC<
       justifyContent="space-between"
       alignItems="center"
       onLayout={onLayout}
+      style={{
+        // @ts-expect-error
+        WebkitAppRegion: 'no-drag',
+      }}
     >
       <Image
         style={{ width: 16, height: 16, marginRight: 8 }}
@@ -106,6 +114,10 @@ const AddTabButton = () => (
       type="plain"
       leftIconName="PlusMini"
       onPress={webTabsActions.addBlankWebTab}
+      style={{
+        // @ts-expect-error
+        '-webkit-app-region': 'no-drag',
+      }}
     />
   </ShortcutsTooltip>
 );

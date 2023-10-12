@@ -25,12 +25,12 @@ const ExplorerDesktop: FC = () => {
   return (
     <Box flex="1" zIndex={3}>
       {showExplorerBar && (
-        <DesktopDragZoneBox>
-          <Box mt={`${top ? top + 10 : 0}px`} bg="surface-subdued" zIndex={5}>
+        <Box mt={`${top ? top + 10 : 0}px`} bg="surface-subdued" zIndex={5}>
+          <DesktopDragZoneBox>
             <TabBarDesktop />
-            <ControllerBarDesktop />
-          </Box>
-        </DesktopDragZoneBox>
+          </DesktopDragZoneBox>
+          <ControllerBarDesktop />
+        </Box>
       )}
       {webHandler === 'tabbedWebview' ? (
         <TabbedWebContainer />

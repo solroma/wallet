@@ -36,6 +36,10 @@ export function LayoutHeaderDesktop({
               type="plain"
               circle
               m={-2}
+              style={{
+                // @ts-expect-error
+                '-webkit-app-region': 'no-drag',
+              }}
             />
           </HomeMoreMenu>
           {showUpdateBadge && (

@@ -36,7 +36,7 @@ const Header: FC<HeaderProps> = ({
   const { themeVariant } = useTheme();
 
   const PrimaryComponent = (
-    <DesktopDragZoneBox>
+    <DesktopDragZoneBox testID="Layout-desktop-drag-zone-box">
       <Box testID={testID}>
         <NavHeader
           style={{ height: headerHeight }}

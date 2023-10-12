@@ -1,5 +1,6 @@
 /* eslint-disable no-nested-ternary */
 import type { FC, ReactNode } from 'react';
+import { useMemo } from 'react';
 
 import { Menu } from 'native-base';
 
@@ -27,47 +28,60 @@ const CustomItem: FC<CustomItemProps> = ({
   icon,
   color,
   ...rest
-}) => (
-  <Menu.Item isDisabled={isDisabled} {...rest}>
-    <HStack
-      flex={1}
-      justifyContent="space-between"
-      alignItems="center"
-      space={3}
-    >
-      <Text
+}) => {
+  const styles = useMemo(() => {
+    if (platformEnv.isDesktop) {
+      const style = typeof rest.style === 'object' ? rest.style : {};
+      return {
+        ...style,
+        WebkitAppRegion: 'no-drag',
+      };
+    }
+    return rest.style;
+  }, [rest.style]);
+
+  return (
+    <Menu.Item isDisabled={isDisabled} {...rest} style={styles}>
+      <HStack
         flex={1}
-        typography={platformEnv.isNative ? 'Body1' : 'Body2'}
-        color={
-          variant === 'desctructive'
-            ? 'text-critical'
-            : variant === 'highlight'
-            ? 'icon-highlight'
-            : isDisabled
-            ? 'text-disabled'
-            : 'text-default'
-        }
+        justifyContent="space-between"
+        alignItems="center"
+        space={3}
       >
-        {children}
-      </Text>
-      {icon ? (
-        <Icon
-          name={icon}
-          size={20}
+        <Text
+          flex={1}
+          typography={platformEnv.isNative ? 'Body1' : 'Body2'}
           color={
             variant === 'desctructive'
-              ? 'icon-critical'
+              ? 'text-critical'
               : variant === 'highlight'
               ? 'icon-highlight'
               : isDisabled
-              ? 'icon-disabled'
-              : 'icon-default'
+              ? 'text-disabled'
+              : 'text-default'
           }
-        />
-      ) : null}
-      {extraChildren}
-    </HStack>
-  </Menu.Item>
-);
+        >
+          {children}
+        </Text>
+        {icon ? (
+          <Icon
+            name={icon}
+            size={20}
+            color={
+              variant === 'desctructive'
+                ? 'icon-critical'
+                : variant === 'highlight'
+                ? 'icon-highlight'
+                : isDisabled
+                ? 'icon-disabled'
+                : 'icon-default'
+            }
+          />
+        ) : null}
+        {extraChildren}
+      </HStack>
+    </Menu.Item>
+  );
+};
 
 export default CustomItem;

@@ -45,6 +45,8 @@ const AppStateUnlockButton: FC<AppStateUnlockButtonProps> = ({
     (s) => s.settings.enableLocalAuthentication,
   );
   const { isOk } = useLocalAuthentication();
+  console.log('=====>>>isOK: ', isOk);
+  console.log('======>enableLocalAuthentication: ', enableLocalAuthentication);
   if (!isOk || !enableLocalAuthentication) {
     return <WebAuthnButton />;
   }

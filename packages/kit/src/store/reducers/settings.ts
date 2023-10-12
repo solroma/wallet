@@ -277,6 +277,10 @@ export const settingsSlice = createSlice({
       state.enableLocalAuthentication = !state.enableLocalAuthentication;
     },
     setEnableLocalAuthentication: (state, action: PayloadAction<boolean>) => {
+      console.log(
+        '====>>>>setEnableLocalAuthentication:=====>>>: ',
+        action.payload,
+      );
       state.enableLocalAuthentication = action.payload;
     },
     setAppLockDuration: (state, action: PayloadAction<number>) => {

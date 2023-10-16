@@ -1,0 +1,130 @@
+diff --git a/node_modules/react-native-screens/lib/module/index.js b/node_modules/react-native-screens/lib/module/index.js
+index 2799d7c..810bb0f 100644
+--- a/node_modules/react-native-screens/lib/module/index.js
++++ b/node_modules/react-native-screens/lib/module/index.js
+@@ -1,6 +1,8 @@
+ function _extends() { _extends = Object.assign ? Object.assign.bind() : function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; }; return _extends.apply(this, arguments); }
+ import React from 'react';
+ import { Animated, View, Image } from 'react-native';
++import { Freeze } from 'react-freeze';
++import { version } from 'react-native/package.json';
+ export * from './types';
+ export { default as useTransitionProgress } from './useTransitionProgress';
+ export { isSearchBarAvailableForCurrentPlatform, isNewBackTitleImplementation, executeNativeBackPress } from './utils';
+@@ -12,13 +14,82 @@ export function enableScreens() {
+ export function screensEnabled() {
+   return ENABLE_SCREENS;
+ }
++let ENABLE_FREEZE = false;
+ 
+ // @ts-ignore function stub, freezing logic is located in index.native.tsx
+ // eslint-disable-next-line @typescript-eslint/no-unused-vars
+ export function enableFreeze() {
+   let shouldEnableReactFreeze = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : true;
+-} // noop
++  const minor = parseInt(version.split('.')[1]); // eg. takes 66 from '0.66.0'
+ 
++  // react-freeze requires react-native >=0.64, react-native from main is 0.0.0
++  if (!(minor === 0 || minor >= 64) && shouldEnableReactFreeze) {
++    console.warn('react-freeze library requires at least react-native 0.64. Please upgrade your react-native version in order to use this feature.');
++  }
++  ENABLE_FREEZE = shouldEnableReactFreeze;
++
++  // bottom-tabs warns about removing a child that doesn't exist
++  const originalWarn = console.warn;
++  console.warn = (message, ...args) => {
++    if (message.includes("Trying to remove a child that doesn't exist")) {
++      return;
++    }
++    originalWarn(message, ...args);
++  };
++}
++export function freezeEnabled() {
++  return ENABLE_FREEZE;
++}
++// This component allows one more render before freezing the screen.
++// Allows activityState to reach the native side and useIsFocused to work correctly.
++function DelayedFreeze(_ref) {
++  let {
++    freeze,
++    children
++  } = _ref;
++  // flag used for determining whether freeze should be enabled
++  const [freezeState, setFreezeState] = React.useState(false);
++  if (freeze !== freezeState) {
++    // setImmediate is executed at the end of the JS execution block.
++    // Used here for changing the state right after the render.
++    setImmediate(() => {
++      setFreezeState(freeze);
++    });
++  }
++  return /*#__PURE__*/React.createElement(Freeze, {
++    freeze: freeze ? freezeState : false
++  }, children);
++}
++function MaybeFreeze(_ref2) {
++  let {
++    freeze,
++    children
++  } = _ref2;
++  if (ENABLE_FREEZE) {
++    return /*#__PURE__*/React.createElement(DelayedFreeze, {
++      freeze: freeze
++    }, children);
++  } else {
++    return /*#__PURE__*/React.createElement(React.Fragment, null, children);
++  }
++}
++export class ScreenStack extends React.Component {
++  render() {
++    if (ENABLE_FREEZE) {
++      const {
++        children,
++        ...rest
++      } = this.props;
++      const size = React.Children.count(children);
++      // freezes all screens except the top one
++      const childrenWithFreeze = React.Children.map(children, (child, index) => /*#__PURE__*/React.createElement(DelayedFreeze, {
++        freeze: size - index > 1
++      }, child));
++      return /*#__PURE__*/React.createElement(View, rest, childrenWithFreeze);
++    }
++    return /*#__PURE__*/React.createElement(View, this.props);
++  }
++}
+ export class NativeScreen extends React.Component {
+   render() {
+     let {
+@@ -33,14 +104,16 @@ export class NativeScreen extends React.Component {
+         activityState = active !== 0 ? 2 : 0; // change taken from index.native.tsx
+       }
+ 
+-      return /*#__PURE__*/React.createElement(View
+-      // @ts-expect-error: hidden exists on web, but not in React Native
+-      , _extends({
+-        hidden: activityState === 0,
+-        style: [style, {
+-          display: activityState !== 0 ? 'flex' : 'none'
+-        }]
+-      }, rest));
++      return /*#__PURE__*/React.createElement(MaybeFreeze, {
++        freeze: activityState === 0
++      }, /*#__PURE__*/React.createElement(View
++        // @ts-expect-error: hidden exists on web, but not in React Native
++        , _extends({
++          hidden: activityState === 0,
++          style: [style, {
++            display: activityState !== 0 ? 'flex' : 'none'
++          }]
++        }, rest)));
+     }
+     return /*#__PURE__*/React.createElement(View, rest);
+   }
+@@ -51,7 +124,6 @@ export const ScreenContext = /*#__PURE__*/React.createContext(Screen);
+ export const ScreenContainer = View;
+ export const NativeScreenContainer = View;
+ export const NativeScreenNavigationContainer = View;
+-export const ScreenStack = View;
+ export const FullWindowOverlay = View;
+ export const ScreenStackHeaderBackButtonImage = props => /*#__PURE__*/React.createElement(View, null, /*#__PURE__*/React.createElement(Image, _extends({
+   resizeMode: "center",

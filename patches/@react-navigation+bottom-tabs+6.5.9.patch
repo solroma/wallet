@@ -1,12 +1,25 @@
 diff --git a/node_modules/@react-navigation/bottom-tabs/lib/module/views/BottomTabView.js b/node_modules/@react-navigation/bottom-tabs/lib/module/views/BottomTabView.js
-index 2b0dc1c..4d55161 100644
+index 2b0dc1c..2ea0eaa 100644
 --- a/node_modules/@react-navigation/bottom-tabs/lib/module/views/BottomTabView.js
 +++ b/node_modules/@react-navigation/bottom-tabs/lib/module/views/BottomTabView.js
-@@ -53,7 +53,14 @@ export default function BottomTabView(props) {
+@@ -7,6 +7,8 @@ import BottomTabBarHeightCallbackContext from '../utils/BottomTabBarHeightCallba
+ import BottomTabBarHeightContext from '../utils/BottomTabBarHeightContext';
+ import BottomTabBar, { getTabBarHeight } from './BottomTabBar';
+ import { MaybeScreen, MaybeScreenContainer } from './ScreenFallback';
++
++const RoutesHistory = [-1,-1]
+ export default function BottomTabView(props) {
+   const {
+     tabBar = props => /*#__PURE__*/React.createElement(BottomTabBar, props),
+@@ -53,7 +55,18 @@ export default function BottomTabView(props) {
    const {
      routes
    } = state;
 -  return /*#__PURE__*/React.createElement(SafeAreaProviderCompat, null, /*#__PURE__*/React.createElement(MaybeScreenContainer, {
++  if (state.index !== RoutesHistory[0]) {
++    RoutesHistory[1] = RoutesHistory[0]
++    RoutesHistory[0] = state.index
++  }
 +  const { tabBarPosition = 'bottom' } = descriptors[focusedRouteKey].options;
 +  return /*#__PURE__*/React.createElement(SafeAreaProviderCompat, {
 +    style: tabBarPosition === 'left'
@@ -18,7 +31,23 @@ index 2b0dc1c..4d55161 100644
      enabled: detachInactiveScreens,
      hasTwoStates: true,
      style: styles.container
-@@ -120,6 +127,12 @@ const styles = StyleSheet.create({
+@@ -71,6 +84,7 @@ export default function BottomTabView(props) {
+       // Don't render a lazy screen if we've never navigated to it
+       return null;
+     }
++    const activityState = isFocused ? 2 : RoutesHistory[1] === index ? 1 : 0;
+     const {
+       freezeOnBlur,
+       header = _ref => {
+@@ -93,6 +107,7 @@ export default function BottomTabView(props) {
+         zIndex: isFocused ? 0 : -1
+       }],
+       visible: isFocused,
++      activityState: activityState,
+       enabled: detachInactiveScreens,
+       freezeOnBlur: freezeOnBlur
+     }, /*#__PURE__*/React.createElement(BottomTabBarHeightContext.Provider, {
+@@ -120,6 +135,12 @@ const styles = StyleSheet.create({
    container: {
      flex: 1,
      overflow: 'hidden'
@@ -32,6 +61,24 @@ index 2b0dc1c..4d55161 100644
  });
  //# sourceMappingURL=BottomTabView.js.map
 \ No newline at end of file
+diff --git a/node_modules/@react-navigation/bottom-tabs/lib/module/views/ScreenFallback.js b/node_modules/@react-navigation/bottom-tabs/lib/module/views/ScreenFallback.js
+index 1d94a8d..37cee3c 100644
+--- a/node_modules/@react-navigation/bottom-tabs/lib/module/views/ScreenFallback.js
++++ b/node_modules/@react-navigation/bottom-tabs/lib/module/views/ScreenFallback.js
+@@ -26,11 +26,12 @@ export function MaybeScreen(_ref2) {
+   let {
+     visible,
+     children,
++    activityState,
+     ...rest
+   } = _ref2;
+   if ((_Screens2 = Screens) !== null && _Screens2 !== void 0 && (_Screens2$screensEnab = _Screens2.screensEnabled) !== null && _Screens2$screensEnab !== void 0 && _Screens2$screensEnab.call(_Screens2)) {
+     return /*#__PURE__*/React.createElement(Screens.Screen, _extends({
+-      activityState: visible ? 2 : 0
++      activityState: activityState
+     }, rest), children);
+   }
+   return /*#__PURE__*/React.createElement(ResourceSavingView, _extends({
 diff --git a/node_modules/@react-navigation/bottom-tabs/src/views/BottomTabView.tsx b/node_modules/@react-navigation/bottom-tabs/src/views/BottomTabView.tsx
 index f50d37a..bcb1093 100644
 --- a/node_modules/@react-navigation/bottom-tabs/src/views/BottomTabView.tsx

@@ -28,28 +28,37 @@ export const clearUpdateSettings = () => {
 };
 
 export const getSecureItem = (key: string) => {
+  const available = safeStorage.isEncryptionAvailable();
+  if (!available) {
+    logger.error('safeStorage is not available');
+    return undefined;
+  }
   const item = store.get(EncryptedData, {}) as Record<string, string>;
   const value = item[key];
   if (value) {
-    const isEncryptionAvailable = safeStorage.isEncryptionAvailable();
-    logger.debug(
-      '=>>>: getSecureItem isEncryptionAvailable : ',
-      isEncryptionAvailable,
-    );
-    const result = safeStorage.decryptString(Buffer.from(value, 'hex'));
-    return result;
+    try {
+      const result = safeStorage.decryptString(Buffer.from(value, 'hex'));
+      return result;
+    } catch (e) {
+      logger.error(`failed to decrypt ${key}`, e);
+      return undefined;
+    }
   }
 };
 
 export const setSecureItem = (key: string, value: string): void => {
-  const items = store.get(EncryptedData, {}) as Record<string, string>;
-  const isEncryptionAvailable = safeStorage.isEncryptionAvailable();
-  logger.debug(
-    '=>>>: setSecureItem isEncryptionAvailable : ',
-    isEncryptionAvailable,
-  );
-  items[key] = safeStorage.encryptString(value).toString('hex');
-  store.set(EncryptedData, items);
+  const available = safeStorage.isEncryptionAvailable();
+  if (!available) {
+    logger.error('safeStorage is not available');
+    return undefined;
+  }
+  try {
+    const items = store.get(EncryptedData, {}) as Record<string, string>;
+    items[key] = safeStorage.encryptString(value).toString('hex');
+    store.set(EncryptedData, items);
+  } catch (e) {
+    logger.error(`failed to encrypt ${key} ${value}`, e);
+  }
 };
 
 export const clearSecureItem = (key: string) => {

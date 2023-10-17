@@ -1,13 +1,5 @@
-import WebView from '@onekeyhq/kit/src/components/WebView';
+import Explorer from '@onekeyhq/kit/src/views/Discover/Explorer';
 
-const WebviewGallery = () => (
-  <WebView
-    src="https://dapp-example.onekeytest.com"
-    containerProps={{
-      w: '100%',
-      h: '100%',
-    }}
-  />
-);
+const WebviewGallery = () => <Explorer />;
 
 export default WebviewGallery;

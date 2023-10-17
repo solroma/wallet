@@ -3,6 +3,7 @@ import useSafeAreaInsets from '@onekeyhq/components/src/Provider/hooks/useSafeAr
 
 import { webHandler } from '../explorerUtils';
 
+import ControllerBarDesktop from './ControllerBarDesktop';
 import TabBarDesktop from './TabBarDesktop';
 
 const showExplorerBar = webHandler !== 'browser';
@@ -16,6 +17,7 @@ function ExplorerDesktop() {
       {!showExplorerBar && (
         <Stack mt={`${top ? top + 10 : 0}px`} bg={tabBarBgColor} zIndex={5}>
           <TabBarDesktop />
+          <ControllerBarDesktop />
         </Stack>
       )}
       <Stack>WebView Content</Stack>

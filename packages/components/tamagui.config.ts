@@ -131,6 +131,7 @@ const animations = createAnimations({
 
 const lightColors = {
   bg: '#ffffff',
+  background: '#ffffff',
   bgActive: '#0000001b',
   bgApp: '#ffffff',
   bgBackdrop: '#00000044',
@@ -285,6 +286,7 @@ const lightColors = {
 
 const darkColors: typeof lightColors = {
   bg: '#1b1b1b',
+  background: '#1b1b1b',
   bgActive: '#ffffff22',
   bgApp: '#0f0f0f',
   bgBackdrop: '#0000009b',
@@ -501,6 +503,7 @@ const mergedTokens = createTokens({
     80: 320,
     96: 384,
     100: 400,
+    160: 640,
   },
   radius: {
     0: 0,

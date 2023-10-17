@@ -1,5 +1,7 @@
 import { useState } from 'react';
 
+import { Input } from 'tamagui';
+
 import { Button, Dialog, Text, YStack } from '@onekeyhq/components';
 
 import { Layout } from './utils/Layout';
@@ -11,11 +13,59 @@ const ControlledDialogByText = () => {
       backdrop
       open={isOpen}
       title="Lorem ipsum"
-      description="Lorem ipsum dolor sit amet consectetur. Nisi in arcu ultrices neque vel nec. Eu quam nulla lectus faucibus senectus interdum iaculis egestas."
+      description="Lorem ipsum dolor sit amet consectetur. Nisi in arcu ultrices neque vel nec."
       onOpen={() => {
         changeIsOpen(true);
       }}
       renderTrigger={<Text>Open Modal by Text</Text>}
+      renderContent={<Text>Overlay Content by Text Trigger</Text>}
+      onClose={() => {
+        changeIsOpen(false);
+      }}
+    />
+  );
+};
+
+const ControlledDialogByTextOnButton = () => {
+  const [isOpen, changeIsOpen] = useState(false);
+  return (
+    <Dialog
+      backdrop
+      open={isOpen}
+      title="Lorem ipsum"
+      description="Lorem ipsum dolor sit amet consectetur. Nisi in arcu ultrices neque vel nec."
+      onOpen={() => {
+        changeIsOpen(true);
+      }}
+      renderTrigger={<Button>Trigger Modal by Button</Button>}
+      renderContent={<Text>Overlay Content by Text Trigger</Text>}
+      onClose={() => {
+        changeIsOpen(false);
+      }}
+    />
+  );
+};
+
+const ControlledDialogByTextOnButtonWithOnPress = () => {
+  const [isOpen, changeIsOpen] = useState(false);
+  return (
+    <Dialog
+      backdrop
+      open={isOpen}
+      title="Lorem ipsum"
+      description="Lorem ipsum dolor sit amet consectetur. Nisi in arcu ultrices neque vel nec."
+      onOpen={() => {
+        changeIsOpen(true);
+      }}
+      renderTrigger={
+        <Button
+          onPress={() => {
+            console.log('trigger');
+          }}
+        >
+          Trigger Modal by Button with onPress Event
+        </Button>
+      }
       renderContent={<Text>Overlay Content by Text Trigger</Text>}
       onClose={() => {
         changeIsOpen(false);
@@ -34,7 +84,7 @@ const ControlledDialogByButton = () => {
       <Dialog
         backdrop
         title="Lorem ipsum"
-        description="Lorem ipsum dolor sit amet consectetur. Nisi in arcu ultrices neque vel nec. Eu quam nulla lectus faucibus senectus interdum iaculis egestas."
+        description="Lorem ipsum dolor sit amet consectetur. Nisi in arcu ultrices neque vel nec."
         open={isOpen}
         onClose={() => {
           changeIsOpen(false);
@@ -59,6 +109,14 @@ const DialogGallery = () => (
         element: <ControlledDialogByText />,
       },
       {
+        title: 'open Modal by renderTrigger on Button',
+        element: <ControlledDialogByTextOnButton />,
+      },
+      {
+        title: 'open Modal by renderTrigger on Button with onPress event',
+        element: <ControlledDialogByTextOnButtonWithOnPress />,
+      },
+      {
         title: 'open Modal by Button',
         element: <ControlledDialogByButton />,
       },
@@ -71,7 +129,7 @@ const DialogGallery = () => (
                 Dialog.confirm({
                   title: 'Lorem ipsum',
                   description:
-                    'Lorem ipsum dolor sit amet consectetur. Nisi in arcu ultrices neque vel nec. Eu quam nulla lectus faucibus senectus interdum iaculis egestas.',
+                    'Lorem ipsum dolor sit amet consectetur. Nisi in arcu ultrices neque vel nec.',
                   onConfirm() {
                     alert('confirmed');
                   },
@@ -92,7 +150,7 @@ const DialogGallery = () => (
                 Dialog.confirm({
                   title: 'Lorem ipsum',
                   description:
-                    'Lorem ipsum dolor sit amet consectetur. Nisi in arcu ultrices neque vel nec. Eu quam nulla lectus faucibus senectus interdum iaculis egestas.',
+                    'Lorem ipsum dolor sit amet consectetur. Nisi in arcu ultrices neque vel nec.',
                   onConfirm() {
                     return new Promise((resolve) => {
                       setTimeout(() => {
@@ -112,7 +170,7 @@ const DialogGallery = () => (
                 Dialog.confirm({
                   title: 'Lorem ipsum',
                   description:
-                    'Lorem ipsum dolor sit amet consectetur. Nisi in arcu ultrices neque vel nec. Eu quam nulla lectus faucibus senectus interdum iaculis egestas.',
+                    'Lorem ipsum dolor sit amet consectetur. Nisi in arcu ultrices neque vel nec.',
                   onConfirm() {
                     return new Promise((resolve) => {
                       setTimeout(() => {
@@ -126,6 +184,73 @@ const DialogGallery = () => (
               }
             >
               <Button.Text>load remote data failed</Button.Text>
+            </Button>
+          </YStack>
+        ),
+      },
+      {
+        title: 'Dialog Form',
+        element: (
+          <YStack>
+            <Button
+              mt="$4"
+              onPress={() =>
+                Dialog.confirm({
+                  title: 'Password',
+                  description: 'input password',
+                  renderContent: (
+                    <Dialog.Form
+                      useFormProps={
+                        {
+                          defaultValues: {
+                            name: 'Nate Wienert',
+                            length: '1234567',
+                          },
+                        } as any
+                      }
+                    >
+                      <Dialog.FormField label="Name" name="name">
+                        <Input flex={1} />
+                      </Dialog.FormField>
+                      <Dialog.FormField
+                        label="MaxLength"
+                        name="length"
+                        rules={{
+                          maxLength: { value: 6, message: 'maxLength is 6' },
+                        }}
+                      >
+                        <Input placeholder="Max Length Limit" />
+                      </Dialog.FormField>
+                      <Dialog.FormField
+                        label="Required"
+                        name="required"
+                        rules={{
+                          required: {
+                            value: true,
+                            message: 'requied input text',
+                          },
+                        }}
+                      >
+                        <Input placeholder="Required" />
+                      </Dialog.FormField>
+                    </Dialog.Form>
+                  ),
+                  onConfirm: async ({ form }) => {
+                    if (form) {
+                      const isValid = await form.trigger();
+                      if (isValid) {
+                        alert(JSON.stringify(form.getValues()));
+                      } else {
+                        alert('请检查输入项');
+                      }
+                      return isValid;
+                    }
+                    return false;
+                  },
+                })
+              }
+            >
+              <Button.Text>Open Dialog Form</Button.Text>
             </Button>
           </YStack>
         ),

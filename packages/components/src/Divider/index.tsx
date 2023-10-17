@@ -1,14 +1,15 @@
-import { type FC } from 'react';
+import { StyleSheet } from 'react-native';
+import { Separator, styled } from 'tamagui';
 
-import { Stack } from '../Stack';
+export const Divider = styled(Separator, {
+  borderColor: '$borderSubdued',
+  borderBottomWidth: StyleSheet.hairlineWidth,
 
-type DividerProps = {
-  direction?: 'vertical' | 'horizontal';
-};
-
-export const Divider: FC<DividerProps> = ({ direction }) =>
-  direction === 'vertical' ? (
-    <Stack w="$px" h="100%" backgroundColor="$borderSubdued" />
-  ) : (
-    <Stack h="$px" w="100%" backgroundColor="$borderSubdued" />
-  );
+  variants: {
+    vertical: {
+      true: {
+        borderRightWidth: StyleSheet.hairlineWidth,
+      },
+    },
+  },
+});

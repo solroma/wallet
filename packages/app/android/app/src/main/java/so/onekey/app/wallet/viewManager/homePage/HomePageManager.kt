@@ -54,11 +54,19 @@ class HomePageManager : ViewGroupManager<HomePageView>() {
         view.setScrollEnabled(enable ?: false)
     }
 
+    @ReactProp(name = "spinnerColor")
+    fun setSpinnerColor(view: HomePageView, @Nullable spinnerColor: String?) {
+        view.setSpinnerColor(spinnerColor)
+    }
+
     @ReactProp(name = "tabViewStyle")
     fun setTabViewStyle(view: HomePageView?, style: ReadableMap?) {
         style?.apply {
             val paddingX = getIntOrNull("paddingX") ?: 0
-            val tabHeight = getInt("height")
+            val paddingY = getIntOrNull("paddingY") ?: 0
+            val itemPaddingX = getIntOrNull("itemPaddingX") ?: 0
+            val itemPaddingY = getIntOrNull("itemPaddingY") ?: 0
+            val tabHeight = getIntOrNull("height")
 
             val activeLabelColor = getString("activeLabelColor")
             val labelColor = getString("labelColor")
@@ -75,18 +83,21 @@ class HomePageManager : ViewGroupManager<HomePageView>() {
             val lineHeight = labelStyle?.getInt("lineHeight")
 
             view?.setTabViewStyle(
-                paddingX,
-                tabHeight,
-                tabSpaceEqual,
-                activeLabelColor,
-                labelColor,
-                indicatorColor,
-                backgroundColor,
-                bottomLineColor,
-                fontFamily,
-                fontWeight,
-                fontSize,
-                lineHeight
+                paddingX = paddingX,
+                paddingY = paddingY,
+                itemPaddingX = itemPaddingX,
+                itemPaddingY = itemPaddingY,
+                tabHeight = tabHeight,
+                tabSpaceEqual = tabSpaceEqual,
+                activeLabelColor = activeLabelColor,
+                labelColor = labelColor,
+                indicatorColor = indicatorColor,
+                backgroundColor = backgroundColor,
+                bottomLineColor = bottomLineColor,
+                fontFamily = fontFamily,
+                fontWeight = fontWeight,
+                fontSize = fontSize,
+                lineHeight = lineHeight
             )
         }
     }
@@ -167,6 +178,10 @@ class HomePageManager : ViewGroupManager<HomePageView>() {
     override fun addView(parent: HomePageView?, child: View?, index: Int) {
         if (parent == null) return
         parent.addChildView(child, index)
+        if(parent.currentIndex != index-1) {
+            refreshViewChildrenLayout(parent)
+            return
+        }
     }
 
     override fun addViews(parent: HomePageView?, views: MutableList<View>?) {
@@ -204,7 +219,8 @@ class HomePageManager : ViewGroupManager<HomePageView>() {
         view.post {
             view.measure(
                 View.MeasureSpec.makeMeasureSpec(view.width, View.MeasureSpec.EXACTLY),
-                View.MeasureSpec.makeMeasureSpec(view.height, View.MeasureSpec.EXACTLY))
+                View.MeasureSpec.makeMeasureSpec(view.height, View.MeasureSpec.EXACTLY)
+            )
             view.layout(view.left, view.top, view.right, view.bottom)
         }
     }

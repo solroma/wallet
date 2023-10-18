@@ -19,7 +19,7 @@ import { getAccountNameInfoByTemplate } from '../../../managers/impl';
 import { AccountType } from '../../../types/account';
 import { KeyringHardwareBase } from '../../keyring/KeyringHardwareBase';
 
-import { getAccountDefaultByPurpose } from './utils';
+import { getAccountDefaultByPurpose, isOpReturnOutput } from './utils';
 
 import type { DBUTXOAccount } from '../../../types/account';
 import type { IUnsignedMessageBtc } from '../../impl/btc/types';
@@ -339,7 +339,7 @@ export class KeyringHardware extends KeyringHardwareBase {
   ): Promise<Messages.TxOutputType> => {
     const { isCharge, bip44Path, opReturn } = output.payload || {};
 
-    if (opReturn && typeof opReturn === 'string' && opReturn.length > 0) {
+    if (isOpReturnOutput(output)) {
       return {
         script_type: 'PAYTOOPRETURN',
         amount: '0',

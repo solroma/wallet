@@ -103,14 +103,16 @@ export type IUTXOInput = Omit<IBtcUTXO, 'txid'> & {
 };
 export type IUTXOOutput = { address: string; value: number };
 
+export type IBtcOutput = {
+  address: string;
+  value: string;
+  payload?: { isCharge?: boolean; bip44Path?: string; opReturn?: string };
+  inscriptions?: NFTBTCAssetModel[];
+};
+
 export type IEncodedTxBtc = {
   inputs: IBtcUTXO[];
-  outputs: {
-    address: string;
-    value: string;
-    payload?: { isCharge?: boolean; bip44Path?: string; opReturn?: string };
-    inscriptions?: NFTBTCAssetModel[];
-  }[];
+  outputs: IBtcOutput[];
   feeRate: string;
   totalFee: string;
   totalFeeInNative: string;

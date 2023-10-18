@@ -86,6 +86,7 @@ import {
   coinSelectForOrdinal,
   getAccountDefaultByPurpose,
   getBIP44Path,
+  isOpReturnOutput,
 } from './utils';
 
 import type { ExportedPrivateKeyCredential } from '../../../dbs/base';
@@ -617,6 +618,7 @@ export default class VaultBtcFork extends VaultBase {
           balanceValue: output.value,
           symbol: network.symbol,
           isMine: output.address === dbAccount.address,
+          opReturn: output.payload?.opReturn,
         }));
       actions = utxoTo.map((utxo) => ({
         type: IDecodedTxActionType.NATIVE_TRANSFER,
@@ -638,6 +640,12 @@ export default class VaultBtcFork extends VaultBase {
       }));
     }
 
+    let extraInfo = null;
+    const opReturnOutput = outputs.find((o) => isOpReturnOutput(o));
+    if (opReturnOutput) {
+      extraInfo = { opReturn: opReturnOutput.payload?.opReturn };
+    }
+
     return {
       txid: '',
       owner: dbAccount.address,
@@ -647,7 +655,7 @@ export default class VaultBtcFork extends VaultBase {
       status: IDecodedTxStatus.Pending,
       networkId: this.networkId,
       accountId: this.accountId,
-      extraInfo: null,
+      extraInfo,
       encodedTx,
       totalFeeInNative: encodedTx.totalFeeInNative,
     };

@@ -1,3 +1,4 @@
+import type { LocaleIds } from '@onekeyhq/components/src/locale';
 import {
   COINTYPE_DOGE,
   INDEX_PLACEHOLDER,
@@ -38,6 +39,16 @@ const settings: IVaultSettings = Object.freeze({
   },
 
   isBtcForkChain: true,
+
+  txExtraInfo: [
+    {
+      key: 'opReturn',
+      title: 'content__description' as LocaleIds,
+      canCopy: false,
+      isShorten: false,
+      numberOfLines: 10,
+    },
+  ],
 });
 
 export default settings;

@@ -11,10 +11,11 @@ import { getImplByCoinType } from '../../../../managers/impl';
 import { Tx } from '../../../impl/btc/inscribe/sdk';
 import { allBtcForkNetworks } from '../provider/networks';
 import ecc from '../provider/nobleSecp256k1Wrapper';
-import { AddressEncodings } from '../types';
+import { AddressEncodings, IEncodedTxBtc } from '../types';
 
 import type { DBUTXOAccount } from '../../../../types/account';
 import type { Network } from '../provider/networks';
+import type { IBtcOutput, TxOutput } from '../types';
 import type { Networks } from '@cmdcode/tapscript';
 import type { BIP32API } from 'bip32/types/bip32';
 import type { TinySecp256k1Interface } from 'bitcoinjs-lib/src/types';
@@ -183,3 +184,7 @@ export function getBip32FromBase58({
   const bip32Api = getBitcoinBip32().fromBase58(key, newNetwork);
   return bip32Api;
 }
+
+export const isOpReturnOutput = (output: IBtcOutput | TxOutput) =>
+  typeof output.payload?.opReturn === 'string' &&
+  output.payload?.opReturn.length > 0;

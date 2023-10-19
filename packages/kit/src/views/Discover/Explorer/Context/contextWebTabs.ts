@@ -1,5 +1,6 @@
 import { nanoid } from 'nanoid';
 
+import simpleDb from '@onekeyhq/engine/src/dbs/simple/simpleDb';
 import {
   atom,
   createJotaiContext,
@@ -43,7 +44,7 @@ export const getCurrentTabId = () =>
   // }
   _currentTabId;
 
-function tabsToMap(tabs: WebTab[]) {
+export function tabsToMap(tabs: WebTab[]) {
   const map: Record<string, WebTab> = {};
   for (const tab of tabs) {
     map[tab.id] = tab;
@@ -51,9 +52,17 @@ function tabsToMap(tabs: WebTab[]) {
   return map;
 }
 
-export const atomWebTabs = atom<WebTab[]>([{ ...homeTab }]);
+export const atomWebTabs = atom<WebTab[]>([]);
 export const atomWebTabsMap = atom<Record<string, WebTab>>({
   [homeTab.id]: homeTab,
+});
+export const setWebTabsWriteAtom = atom(null, (_, set, newTabs: WebTab[]) => {
+  console.log('===>newTabs: ', newTabs);
+  set(atomWebTabs, () => newTabs);
+  set(atomWebTabsMap, () => tabsToMap(newTabs));
+  simpleDb.discoverWebTabs.setRawData({
+    tabs: newTabs,
+  });
 });
 export const addWebTabAtomWithWriteOnly = atom(
   null,
@@ -72,8 +81,7 @@ export const addWebTabAtomWithWriteOnly = atom(
       _currentTabId = payload.id;
     }
     payload.timestamp = Date.now();
-    set(atomWebTabs, () => [...tabs, payload as WebTab]);
-    set(atomWebTabsMap, () => tabsToMap([...tabs, payload as WebTab]));
+    set(setWebTabsWriteAtom, [...tabs, payload as WebTab]);
   },
 );
 export const addBlankWebTabAtomWithWriteOnly = atom(null, (_, set) => {
@@ -113,7 +121,7 @@ export const setWebTabDataAtomWithWriteOnly = atom(
         }
       });
       tabs[tabIndex] = tabToModify;
-      set(atomWebTabs, () => [...tabs]);
+      set(setWebTabsWriteAtom, tabs);
     }
   },
 );
@@ -132,7 +140,7 @@ export const closeWebTabAtomWithWriteOnly = atom(
         }
       }
       tabs.splice(targetIndex, 1);
-      set(atomWebTabs, () => [...tabs]);
+      set(setWebTabsWriteAtom, [...tabs]);
     }
   },
 );
@@ -172,8 +180,7 @@ export const setCurrentWebTabAtomWithWriteOnly = atom(
           break;
         }
       }
-      // set(atomWebTabs, () => tabs);
-      set(atomWebTabsMap, () => tabsToMap(tabs));
+      set(setWebTabsWriteAtom, tabs);
       // resumeDappInteraction(tabId);
       _currentTabId = tabId;
     }

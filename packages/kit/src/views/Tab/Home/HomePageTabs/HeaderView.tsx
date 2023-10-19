@@ -4,6 +4,8 @@ import { Button, Stack, Text } from '@onekeyhq/components';
 import type { PageNavigationProp } from '@onekeyhq/components/src/Navigation';
 
 import useAppNavigation from '../../../../hooks/useAppNavigation';
+import { GalleryRoutes } from '../../../../routes/Gallery';
+import { RootRoutes } from '../../../../routes/Root/Routes';
 import { TabHomeRoutes } from '../../../../routes/Root/Tab/Home/Routes';
 
 import type { TabHomeParamList } from '../../../../routes/Root/Tab/Home/Routes';
@@ -48,8 +50,26 @@ export default function HomePageHeaderView({
         <Button onPress={onNextPageCall}>
           <Button.Text>下一页</Button.Text>
         </Button>
+        <Button
+          onPress={() => {
+            navigation.push(RootRoutes.Gallery, {
+              screen: GalleryRoutes.Components,
+              params: {
+                ts: new Date().getTime(),
+              },
+            });
+          }}
+        >
+          <Button.Text>Gallery</Button.Text>
+        </Button>
       </Stack>
     ),
-    [headerHighMode, headerHeightCall, onNextPageCall, switchDemoVisibleCall],
+    [
+      headerHighMode,
+      headerHeightCall,
+      onNextPageCall,
+      switchDemoVisibleCall,
+      navigation,
+    ],
   );
 }

@@ -27,7 +27,7 @@ function Tab({
   onLayout?: (e: LayoutChangeEvent) => void;
 }) {
   const [map] = useAtomWebTabs(atomWebTabsMap);
-  const tab = map[tabId];
+  const tab = map[tabId] ?? {};
   const { isCurrent, title, favicon } = tab;
   const [, setCurrentWebTabAction] = useAtomWebTabs(
     setCurrentWebTabAtomWithWriteOnly,
@@ -100,6 +100,8 @@ function Tab({
 
 const AddTabButton = () => {
   const [, addBlankWebTab] = useAtomWebTabs(addBlankWebTabAtomWithWriteOnly);
+  // const [readOnlyTabs] = useAtomWebTabs(atomWebTabsReadWrite);
+  // console.log('tabs ===>: ', readOnlyTabs);
   return (
     <Button
       borderRadius={0}

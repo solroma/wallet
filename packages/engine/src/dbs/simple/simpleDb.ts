@@ -14,6 +14,7 @@ import { SimpleDbEntitySwap } from './entity/SimpleDbEntitySwap';
 import { SimpleDbEntityUrlInfo } from './entity/SimpleDbEntityUrlInfo';
 import { SimpleDbEntityUtxoAccounts } from './entity/SimpleDbEntityUtxoAccounts';
 import { SimpleDbEntityWalletConnect } from './entity/SimpleDbEntityWalletConnect';
+import { SimpleDbEntityDiscoverWebTabs } from './entity/SimpleDbEntityDiscoverWebTabs'
 
 class SimpleDb {
   history = new SimpleDbEntityHistory();
@@ -43,6 +44,8 @@ class SimpleDb {
   inscribe = new SimpleDbEntityInscribe();
 
   urlInfo = new SimpleDbEntityUrlInfo();
+
+  discoverWebTabs = new SimpleDbEntityDiscoverWebTabs();
 }
 
 // eslint-disable-next-line import/no-mutable-exports

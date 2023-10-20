@@ -6,10 +6,8 @@ import simpleDb from '@onekeyhq/engine/src/dbs/simple/simpleDb';
 
 import { usePromiseResult } from '../../../../hooks/usePromiseResult';
 import {
-  atomWebTabs,
-  atomWebTabsMap,
   homeTab,
-  tabsToMap,
+  setWebTabsWriteAtom,
   useAtomWebTabs,
   withProviderWebTabs,
 } from '../Context/contextWebTabs';
@@ -31,16 +29,14 @@ export function useTabBarDataFromSimpleDb() {
 
 function HandleRebuildTabBarData() {
   const result = useTabBarDataFromSimpleDb();
-  const [, setWebTabs] = useAtomWebTabs(atomWebTabs);
-  const [, setWebTabsMap] = useAtomWebTabs(atomWebTabsMap);
+  const [, setWebTabsData] = useAtomWebTabs(setWebTabsWriteAtom);
   useEffect(() => {
     const data = result.result;
     console.log('===>result: ', data);
     if (data && Array.isArray(data)) {
-      setWebTabs(data);
-      setWebTabsMap(tabsToMap(data));
+      setWebTabsData(data);
     }
-  }, [result.result, setWebTabs, setWebTabsMap]);
+  }, [result.result, setWebTabsData]);
 
   return null;
 }

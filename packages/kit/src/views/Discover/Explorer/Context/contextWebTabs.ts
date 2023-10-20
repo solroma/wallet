@@ -1,3 +1,4 @@
+import { isEqual } from 'lodash';
 import { nanoid } from 'nanoid';
 
 import simpleDb from '@onekeyhq/engine/src/dbs/simple/simpleDb';
@@ -44,22 +45,41 @@ export const getCurrentTabId = () =>
   // }
   _currentTabId;
 
-export function tabsToMap(tabs: WebTab[]) {
+export function buildWebTabData(tabs: WebTab[]) {
   const map: Record<string, WebTab> = {};
-  for (const tab of tabs) {
+  const keys: string[] = [];
+  tabs.forEach((tab) => {
+    keys.push(tab.id);
     map[tab.id] = tab;
-  }
-  return map;
+  });
+  return {
+    data: tabs,
+    keys,
+    map,
+  };
 }
 
-export const atomWebTabs = atom<WebTab[]>([]);
+interface IWebTabsAtom {
+  tabs: WebTab[];
+  keys: string[];
+}
+
+export const atomWebTabs = atom<IWebTabsAtom>({ tabs: [], keys: [] });
 export const atomWebTabsMap = atom<Record<string, WebTab>>({
   [homeTab.id]: homeTab,
 });
-export const setWebTabsWriteAtom = atom(null, (_, set, newTabs: WebTab[]) => {
-  console.log('===>newTabs: ', newTabs);
-  set(atomWebTabs, () => newTabs);
-  set(atomWebTabsMap, () => tabsToMap(newTabs));
+export const setWebTabsWriteAtom = atom(null, (get, set, payload: WebTab[]) => {
+  let newTabs = payload;
+  if (!newTabs) {
+    newTabs = [{ ...homeTab }];
+  }
+  const result = buildWebTabData(newTabs);
+  if (!isEqual(result.keys, get(atomWebTabs).keys)) {
+    console.log('===>refresh new data: ', result);
+    set(atomWebTabs, { keys: result.keys, tabs: result.data });
+  }
+
+  set(atomWebTabsMap, () => result.map);
   simpleDb.discoverWebTabs.setRawData({
     tabs: newTabs,
   });
@@ -67,7 +87,7 @@ export const setWebTabsWriteAtom = atom(null, (_, set, newTabs: WebTab[]) => {
 export const addWebTabAtomWithWriteOnly = atom(
   null,
   (get, set, payload: Partial<WebTab>) => {
-    const tabs = get(atomWebTabs);
+    const { tabs } = get(atomWebTabs);
     // TODO: Add limit for native
 
     if (!payload.id || payload.id === homeTab.id) {
@@ -90,7 +110,7 @@ export const addBlankWebTabAtomWithWriteOnly = atom(null, (_, set) => {
 export const setWebTabDataAtomWithWriteOnly = atom(
   null,
   (get, set, payload: Partial<WebTab>) => {
-    const tabs = get(atomWebTabs);
+    const { tabs } = get(atomWebTabs);
     const tabIndex = tabs.findIndex((t) => t.id === payload.id);
     if (tabIndex > -1) {
       const tabToModify = tabs[tabIndex];
@@ -129,7 +149,7 @@ export const closeWebTabAtomWithWriteOnly = atom(
   null,
   (get, set, tabId: string) => {
     delete webviewRefs[tabId];
-    const tabs = get(atomWebTabs);
+    const { tabs } = get(atomWebTabs);
     const targetIndex = tabs.findIndex((t) => t.id === tabId);
     if (targetIndex !== -1) {
       if (tabs[targetIndex].isCurrent) {
@@ -148,7 +168,7 @@ export const closeAllWebTabsAtomWithWriteOnly = atom(null, (_, set) => {
   for (const id of Object.getOwnPropertyNames(webviewRefs)) {
     delete webviewRefs[id];
   }
-  set(atomWebTabs, [{ ...homeTab }]);
+  set(setWebTabsWriteAtom, [{ ...homeTab }]);
   _currentTabId = homeTab.id;
 });
 export const setCurrentWebTabAtomWithWriteOnly = atom(
@@ -157,7 +177,7 @@ export const setCurrentWebTabAtomWithWriteOnly = atom(
     const currentTabId = getCurrentTabId();
     if (currentTabId !== tabId) {
       // pauseDappInteraction(currentTabId);
-      const tabs = get(atomWebTabs);
+      const { tabs } = get(atomWebTabs);
       let previousTabUpdated = false;
       let nextTabUpdated = false;
 

@@ -2,6 +2,7 @@
 /* eslint-disable import/order */
 const {
   markJsBundleLoadedTime,
+  getMeasureTime,
 } = require('@onekeyhq/shared/src/modules3rdParty/react-native-metrix');
 
 markJsBundleLoadedTime();
@@ -19,5 +20,6 @@ const { Text, View } = require('react-native');
 registerRootComponent(() => (
   <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
     <Text>Hello OneKey</Text>
+    <Text>{getMeasureTime().jsBundleLoadedTime}</Text>
   </View>
 ));

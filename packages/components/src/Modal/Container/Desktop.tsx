@@ -203,6 +203,7 @@ const DesktopModal = ({
                       onSecondaryActionPress?.({ close });
                       onClose?.();
                     }}
+                    testID="modal_button_secondary"
                     {...secondaryActionProps}
                   >
                     {secondaryActionProps?.children ??
@@ -214,6 +215,7 @@ const DesktopModal = ({
                 {!hidePrimaryAction && (
                   <Button
                     type="primary"
+                    testID="modal_button_primary"
                     onPress={() => {
                       onPrimaryActionPress?.({ onClose, close });
                     }}

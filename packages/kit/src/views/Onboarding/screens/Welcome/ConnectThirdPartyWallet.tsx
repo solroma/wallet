@@ -65,6 +65,7 @@ export function ConnectThirdPartyWallet({ onPress }: { onPress: () => void }) {
 
   return (
     <Pressable
+      testID="welcome_action__connect_3rd_party_wallet"
       flexDirection="row"
       alignSelf="center"
       flexWrap="wrap"

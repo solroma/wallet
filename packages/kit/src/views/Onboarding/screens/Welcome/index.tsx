@@ -177,6 +177,7 @@ const Welcome = () => {
           <Box flexDirection={{ sm: 'row' }} w={{ sm: '100%' }}>
             <PressableListItem
               icon="PlusCircleOutline"
+              testID="welcome_action__create_wallet"
               label={intl.formatMessage({
                 id: 'action__create_wallet',
               })}
@@ -188,6 +189,7 @@ const Welcome = () => {
             />
             <PressableListItem
               icon="ArrowDownCircleOutline"
+              testID="welcome_action__import_wallet"
               label={intl.formatMessage({
                 id: 'action__import_wallet',
               })}
@@ -201,6 +203,7 @@ const Welcome = () => {
             />
             <PressableListItem
               icon="UsbCableOutline"
+              testID="welcome_action__connect_hardware_wallet"
               label={intl.formatMessage({
                 id: 'action__connect_hardware_wallet',
               })}

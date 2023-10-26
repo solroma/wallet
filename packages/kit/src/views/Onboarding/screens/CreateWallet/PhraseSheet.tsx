@@ -48,6 +48,7 @@ const PhraseSheet: FC<PhraseSheetProps> = ({
         type="primary"
         size={isVerticalLayout ? 'xl' : 'base'}
         onPromise={onPressSavedPhrasePromise}
+        testID="phrase_sheet_i_have_saved_the_phrase"
       >
         {intl.formatMessage({ id: 'action__i_have_saved_the_phrase' })}
       </Button>

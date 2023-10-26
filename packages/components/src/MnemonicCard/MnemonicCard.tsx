@@ -60,6 +60,7 @@ const MnemonicCard: FC<{
       onPress={() => {
         copyMnemonicToClipboard(mnemonic);
       }}
+      testID="mnemonic_card_copy"
     >
       <Box flex={1}>{leftCol}</Box>
       <Box flex={1}>{rightCol}</Box>

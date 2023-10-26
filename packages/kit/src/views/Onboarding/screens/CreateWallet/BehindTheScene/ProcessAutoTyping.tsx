@@ -193,6 +193,7 @@ function ProcessAutoTyping({
           type={platformEnv.isExtension ? 'basic' : 'primary'}
           size="xl"
           minW={160}
+          testID="process_auto_typing_action__lets_go"
         >
           {intl.formatMessage({
             id: platformEnv.isExtension

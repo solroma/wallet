@@ -70,6 +70,7 @@ const SecondaryContent: FC<SecondaryContentProps> = ({
             type="primary"
             size={isVerticalLayout ? 'xl' : 'base'}
             alignSelf={isVerticalLayout ? 'stretch' : 'auto'}
+            testID="secondary_show_recovery_phrase"
             onPress={
               isVerticalLayout
                 ? onPressShowPhraseButton

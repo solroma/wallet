@@ -113,6 +113,7 @@ const MobileModal: FC<ModalProps> = ({
             {!hideSecondaryAction && (
               <Button
                 {...btnProps}
+                testID="modal_button_secondary"
                 onPress={() => {
                   onSecondaryActionPress?.({ close });
                   onClose?.();
@@ -129,6 +130,7 @@ const MobileModal: FC<ModalProps> = ({
               <Button
                 {...btnProps}
                 type="primary"
+                testID="modal_button_primary"
                 onPress={() => {
                   onPrimaryActionPress?.({ onClose, close });
                 }}

@@ -40,6 +40,7 @@ const Header: FC<HeaderProps> = ({
                 type="plain"
                 circle
                 onPress={onPressBackButton}
+                testID="modal_header_button_back"
                 alignSelf="flex-start"
               />
             ) : null}
@@ -91,7 +92,12 @@ const Header: FC<HeaderProps> = ({
         space="8px"
       >
         {!firstIndex && !hideBackButton ? (
-          <NavigationButton mr="4px" back onPress={onPressBackButton} />
+          <NavigationButton
+            mr="4px"
+            testID="modal_header_button_back"
+            back
+            onPress={onPressBackButton}
+          />
         ) : null}
         <Box flex={1}>
           <Typography.Heading>{header}</Typography.Heading>
@@ -110,7 +116,12 @@ const Header: FC<HeaderProps> = ({
         {rightContent ? (
           <HStack alignItems="center">{rightContent}</HStack>
         ) : null}
-        {closeable ? <NavigationButton onPress={onPressCloseButton} /> : null}
+        {closeable ? (
+          <NavigationButton
+            onPress={onPressCloseButton}
+            testID="modal_header_button_close"
+          />
+        ) : null}
       </HStack>
     ),
     [

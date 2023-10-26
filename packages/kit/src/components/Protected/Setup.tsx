@@ -149,6 +149,7 @@ const Setup: FC<SetupProps> = ({
             autoFocus
             // press enter key to submit
             onSubmitEditing={handleSubmit(onSubmit)}
+            testID="setup_password"
             placeholder={intl.formatMessage(
               {
                 id: 'form__rule_at_least_int_digits',
@@ -182,6 +183,7 @@ const Setup: FC<SetupProps> = ({
           <Form.PasswordInput
             // press enter key to submit
             onSubmitEditing={handleSubmit(onSubmit)}
+            testID="setup_confirm_password"
             placeholder={intl.formatMessage({
               id: 'Confirm_password',
             })}
@@ -208,6 +210,7 @@ const Setup: FC<SetupProps> = ({
           size="xl"
           onPress={handleSubmit(onSubmit)}
           isDisabled={submitDisabled}
+          testID="setup_continue"
         >
           {intl.formatMessage({
             id: 'action__continue',

@@ -187,13 +187,15 @@ function ProcessAutoTyping({
           scale: 1,
           transition: { duration: 300, delay: 150 },
         }}
+        testID="process_auto_typing_action__lets_go3"
       >
         <Button
           onPromise={onPressFinished}
           type={platformEnv.isExtension ? 'basic' : 'primary'}
           size="xl"
           minW={160}
-          testID="process_auto_typing_action__lets_go"
+          testID="process_auto_typing_action__lets_go2"
+          id="process_auto_typing_action__lets_go"
         >
           {intl.formatMessage({
             id: platformEnv.isExtension
@@ -289,7 +291,10 @@ function ProcessAutoTyping({
           ) : undefined}
           {/* process5 */}
           {lastProcessStatus.typingEnd && isAllProcessDone ? (
-            <Pressable onPress={onPressFinished}>
+            <Pressable
+              onPress={onPressFinished}
+              testID="process_auto_typing_action__lets_go_Pressable"
+            >
               <TypeWriter
                 isPending={!lastProcessStatus.done}
                 onTypingEnd={handleProcessFinalTypingEnd}

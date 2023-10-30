@@ -94,10 +94,7 @@ const Setup: FC<SetupProps> = ({
       : intl.formatMessage({ id: 'content__touch_id' });
 
   return (
-    <KeyboardDismissView
-      h={isAutoHeight ? { base: 'full', sm: 'auto' } : 'full'}
-      px={{ base: hideTitle ? 0 : 4, md: 0 }}
-    >
+    <>
       {!hideTitle ? (
         <Box mb="8">
           <Typography.DisplayLarge textAlign="center" mb={2}>
@@ -218,7 +215,7 @@ const Setup: FC<SetupProps> = ({
           })}
         </Button>
       </Form>
-    </KeyboardDismissView>
+    </>
   );
 };
 

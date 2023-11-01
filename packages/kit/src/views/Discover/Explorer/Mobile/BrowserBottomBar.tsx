@@ -1,6 +1,8 @@
 import { useEffect } from 'react';
 
-import { StyleSheet } from 'react-native';
+import { take } from 'lodash';
+import { Dimensions, StyleSheet } from 'react-native';
+import { captureScreen } from 'react-native-view-shot';
 
 import { Button, IconButton, Stack } from '@onekeyhq/components';
 import type { PageNavigationProp } from '@onekeyhq/components/src/Navigation';
@@ -26,6 +28,33 @@ function BrowserBottomBar({ showHome }: { showHome?: () => void }) {
       showHome?.();
     }
   }, [url, showHome]);
+  const takeSnapshoot = (tabId: string) =>
+    new Promise((resolve, reject) => {
+      const THUMB_WIDTH = Dimensions.get('window').width / 2 - 16 * 2;
+      captureScreen({
+        format: 'jpg',
+        quality: 0.2,
+        width: THUMB_WIDTH,
+        height: THUMB_WIDTH * 1.81,
+      })
+        .then(
+          (uri) => {
+            webTabsActions.setWebTabData({
+              id: tabId,
+              thumbnail: uri,
+            });
+            resolve(true);
+            console.log('Image saved to', uri);
+          },
+          (error) => {
+            console.error('Oops, snapshot failed', error);
+            reject(error);
+          },
+        )
+        .catch((e) => {
+          console.log('e===>: ', e);
+        });
+    });
 
   return (
     <Stack bg="$bgActiveDark" height="$14" zIndex={1} display="flex">
@@ -52,11 +81,12 @@ function BrowserBottomBar({ showHome }: { showHome?: () => void }) {
           onPress={() => webTabsActions.addBlankWebTab()}
         />
         <Button
-          onPress={() =>
+          onPress={async () => {
+            await takeSnapshoot(currentTab.id);
             navigation.pushModal(ModalRoutes.DiscoverModal, {
               screen: DiscoverModalRoutes.MobileTabList,
-            })
-          }
+            });
+          }}
         >
           {tabs.length}
         </Button>

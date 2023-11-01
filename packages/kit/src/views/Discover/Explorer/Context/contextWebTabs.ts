@@ -33,6 +33,7 @@ export const homeTab: WebTab = {
   canGoBack: false,
   loading: false,
   favicon: '',
+  thumbnail: '',
 };
 
 export const homeResettingFlags: Record<string, number> = {};

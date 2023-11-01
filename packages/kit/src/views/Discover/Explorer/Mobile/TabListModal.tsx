@@ -1,9 +1,15 @@
 import type { FC } from 'react';
 import { useCallback, useMemo } from 'react';
 
-import { FlatList } from 'react-native';
+import { Dimensions, FlatList, StyleSheet } from 'react-native';
 
-import { IconButton, ModalContainer, Stack, Text } from '@onekeyhq/components';
+import {
+  IconButton,
+  Image,
+  ModalContainer,
+  Stack,
+  Text,
+} from '@onekeyhq/components';
 import type { PageNavigationProp } from '@onekeyhq/components/src/Navigation';
 
 import useAppNavigation from '../../../../hooks/useAppNavigation';
@@ -16,7 +22,29 @@ import type { View } from 'react-native';
 
 export const tabGridRefs: Record<string, View> = {};
 
-const WebTabItem: FC<WebTab> = ({ isCurrent, title, favicon, id, url }) => {
+const styles = StyleSheet.create({
+  tab: {
+    flex: 1,
+    alignItems: 'flex-start',
+    justifyContent: 'flex-start',
+  },
+  tabImage: {
+    ...StyleSheet.absoluteFillObject,
+    // paddingTop: 400,
+    width: null,
+    height: null,
+    resizeMode: 'cover',
+  },
+});
+
+const WebTabItem: FC<WebTab> = ({
+  isCurrent,
+  title,
+  favicon,
+  id,
+  url,
+  thumbnail,
+}) => {
   const navigation =
     useAppNavigation<PageNavigationProp<DiscoverModalParamList>>();
   return (
@@ -82,6 +110,16 @@ const WebTabItem: FC<WebTab> = ({ isCurrent, title, favicon, id, url }) => {
               {url}
             </Text>
           </Stack>
+          {thumbnail && (
+            <Stack w="100%" h="$40">
+              <Image
+                source={{
+                  uri: thumbnail,
+                }}
+                style={styles.tabImage}
+              />
+            </Stack>
+          )}
           <IconButton
             size="small"
             variant="primary"

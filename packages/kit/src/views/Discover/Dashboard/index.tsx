@@ -1,4 +1,10 @@
+import { useNavigation } from '@react-navigation/core';
+
 import { Button, YStack } from '@onekeyhq/components';
+
+import { TabRoutes } from '../../../routes/Root/Tab/Routes';
+import { TabWebViewRoutes } from '../../../routes/Root/Tab/WebView/Routes';
+import { openMatchDApp } from '../Controller/gotoSite';
 
 import type { DAppItemType } from '../types';
 
@@ -57,12 +63,21 @@ const data = [
 type IProps = { onItemSelect: (item: DAppItemType) => void };
 
 function Dashboard({ onItemSelect }: IProps) {
+  const navigation = useNavigation();
   return (
     <YStack h="full" bg="$bgApp">
       {data.map((i) => (
         <Button
+          key={i._id}
           onPress={() => {
-            onItemSelect(i as DAppItemType);
+            // onItemSelect(i as DAppItemType);
+            openMatchDApp({
+              id: i._id,
+              dapp: i as DAppItemType,
+              isNewWindow: true,
+            });
+            // @ts-expect-error
+            navigation.navigate(TabRoutes.WebView);
           }}
         >
           {i.name}

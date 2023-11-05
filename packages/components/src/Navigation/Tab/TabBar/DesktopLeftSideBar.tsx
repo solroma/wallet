@@ -18,6 +18,7 @@ import {
 } from '@onekeyhq/components';
 import { DesktopDragZoneAbsoluteBar } from '@onekeyhq/components/src/DesktopDragZoneBox';
 import useSafeAreaInsets from '@onekeyhq/components/src/Provider/hooks/useSafeAreaInsets';
+import WebViewTabBarItem from '@onekeyhq/kit/src/routes/Root/Tab/WebView/WebViewTabBarItem';
 import platformEnv from '@onekeyhq/shared/src/platformEnv';
 
 import useProviderSideBarValue from '../../../Provider/hooks/useProviderSideBarValue';
@@ -142,6 +143,10 @@ const Sidebar: FC<BottomTabBarProps> = ({ navigation, state, descriptors }) => {
             });
           }
         };
+
+        if (route.name === 'WebView') {
+          return <WebViewTabBarItem key={route.key} isActive={focus} />;
+        }
 
         return (
           <TabItemView

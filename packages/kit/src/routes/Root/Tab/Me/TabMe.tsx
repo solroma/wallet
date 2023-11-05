@@ -40,7 +40,7 @@ const TabMe = () => {
         >
           <Button>切换到首页</Button>
         </Button>
-        <MeJotaiDemo />
+        {/* <MeJotaiDemo /> */}
       </YStack>
     </Screen>
   );

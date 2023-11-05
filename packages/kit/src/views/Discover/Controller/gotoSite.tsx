@@ -22,8 +22,8 @@ export const gotoSite = ({
   id?: string;
   userTriggered?: boolean;
 }) => {
-  const { tab } = getWebTabs(id);
-  if (url && tab) {
+  const { tabs } = getWebTabs(id);
+  if (url) {
     const validatedUrl = validateUrl(url);
     if (!validatedUrl) {
       return;
@@ -37,12 +37,17 @@ export const gotoSite = ({
     //   return openUrl(validatedUrl);
     // }
 
-    const tabId = tab.id;
+    const tab = tabs?.find(
+      (item) => item.id === id || item.url === validatedUrl,
+    );
+
+    const tabId = tab?.id;
     const isDeepLink =
       !validatedUrl.startsWith('http') && validatedUrl !== 'about:blank';
     const isNewTab =
+      !tab &&
       (isNewWindow || tabId === 'home' || isDeepLink) &&
-      webHandler === 'tabbedWebview';
+      (webHandler === 'tabbedWebview' || webHandler === 'browser');
 
     // const urls = bookmarks?.map((item) => item.url);
     // const isBookmarked = urls?.includes(url);
@@ -63,6 +68,9 @@ export const gotoSite = ({
         favicon,
         isBookmarked: false,
       });
+      if (tabId) {
+        webTabsActions.setCurrentWebTab(tabId);
+      }
     }
 
     if (!isNewTab && !isInPlace) {
@@ -76,7 +84,7 @@ export const gotoSite = ({
     if (isDeepLink) {
       if (webHandler === 'tabbedWebview') {
         setTimeout(() => {
-          webTabsActions.closeWebTab(tabId);
+          webTabsActions.closeWebTab(tabId as string);
         }, 1000);
       }
     }

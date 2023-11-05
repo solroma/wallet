@@ -30,9 +30,10 @@ export const getWebTabs = (id?: string) => {
   const map = webTabsActions.getTabsMap();
   const currentTabId = getCurrentTabId();
   const curId = id || currentTabId;
+  const tab = !curId ? tabs[0] : map[curId] ?? tabs[0];
   return {
     tabs,
-    tab: map[curId || ''] ?? tabs[0],
+    tab,
     currentTabId,
   };
 };

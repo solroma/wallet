@@ -50,6 +50,7 @@ export type IOnWebviewNavigation = ({
 export interface IWebTab {
   id: string;
   url: string;
+  isActive?: boolean;
   title?: string;
   favicon?: string;
   thumbnail?: string;

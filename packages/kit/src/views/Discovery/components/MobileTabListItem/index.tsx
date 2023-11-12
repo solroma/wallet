@@ -32,6 +32,9 @@ function MobileTabListItem({
   const { tab } = useWebTabData(id);
   const isActive = useMemo(() => activeTabId === id, [id, activeTabId]);
   return (
+    // <Stack>
+    //   <Text>{tab?.title}</Text>
+    // </Stack>
     <Stack
       w={TAB_LIST_CELL_WIDTH}
       h={TAB_LIST_CELL_HEIGHT}

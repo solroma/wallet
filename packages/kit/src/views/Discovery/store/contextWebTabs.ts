@@ -52,6 +52,7 @@ export const activeTabIdAtom = atom<string | null>(null);
 export const webTabsAtom = atom<IWebTabsAtom>({ tabs: [], keys: [] });
 export const webTabsMapAtom = atom<Record<string, IWebTab>>({});
 export const setWebTabsAtom = atom(null, (get, set, payload: IWebTab[]) => {
+  const startTime = performance.now();
   let newTabs = payload;
   if (!Array.isArray(payload)) {
     throw new Error('setWebTabsWriteAtom: payload must be an array');
@@ -76,10 +77,18 @@ export const setWebTabsAtom = atom(null, (get, set, payload: IWebTab[]) => {
   simpleDb.discoverWebTabs.setRawData({
     tabs: newTabs,
   });
+  const endTime = performance.now();
+  console.log(
+    `setWebTabsAtom took ${endTime - startTime} milliseconds. array.length: ${
+      result.data.length
+    }`,
+  );
 });
 export const addWebTabAtom = atom(
   null,
   (get, set, payload: Partial<IWebTab>) => {
+    const startTime = performance.now();
+
     const { tabs } = get(webTabsAtom);
     if (!payload.id || payload.id === homeTab.id) {
       // TODO: nanoid will crash on native
@@ -92,10 +101,16 @@ export const addWebTabAtom = atom(
     payload.timestamp = Date.now();
     set(setWebTabsAtom, [...tabs, payload as IWebTab]);
     set(activeTabIdAtom, payload.id);
+    const endTime = performance.now();
+    console.log(
+      `addWebTabAtom took ${endTime - startTime} milliseconds. array.length: ${
+        tabs.length
+      }`,
+    );
   },
 );
 export const addBlankWebTabAtom = atom(null, (_, set) => {
-  set(addWebTabAtom, { ...homeTab });
+  set(addWebTabAtom, { ...homeTab, isActive: true });
 });
 export const setWebTabDataAtom = atom(
   null,
@@ -144,6 +159,9 @@ export const closeWebTabAtom = atom(null, (get, set, tabId: string) => {
   if (targetIndex !== -1) {
     if (tabs[targetIndex].id === get(activeTabIdAtom)) {
       const prev = tabs[targetIndex - 1];
+      if (prev) {
+        prev.isActive = true;
+      }
       set(activeTabIdAtom, prev ? prev.id : null);
     }
     tabs.splice(targetIndex, 1);
@@ -157,10 +175,26 @@ export const closeAllWebTabsAtom = atom(null, (_, set) => {
   set(setWebTabsAtom, []);
   set(activeTabIdAtom, null);
 });
+// export const setCurrentWebTabAtom = atom(null, (get, set, tabId: string) => {
+//   const currentTabId = get(activeTabIdAtom);
+//   if (currentTabId !== tabId) {
+//     set(activeTabIdAtom, tabId);
+//   }
+// });
 export const setCurrentWebTabAtom = atom(null, (get, set, tabId: string) => {
   const currentTabId = get(activeTabIdAtom);
   if (currentTabId !== tabId) {
-    set(activeTabIdAtom, tabId);
+    // set isActive to true
+    const { tabs } = get(webTabsAtom);
+    const targetIndex = tabs.findIndex((t) => t.id === tabId);
+    if (targetIndex !== -1) {
+      tabs.forEach((t) => {
+        t.isActive = false;
+      });
+      tabs[targetIndex].isActive = true;
+      set(setWebTabsAtom, [...tabs]);
+      set(activeTabIdAtom, tabId);
+    }
   }
 });
 

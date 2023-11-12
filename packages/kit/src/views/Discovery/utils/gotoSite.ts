@@ -1,10 +1,6 @@
 import { openUrl } from '../../../utils/openUrl';
-import {
-  addWebTab,
-  closeWebTab,
-  setWebTabData,
-} from '../store/contextWebTabs';
 import { getWebTabs } from '../hooks/useWebTabs';
+import { addWebTab, closeWebTab, setWebTabData } from '../store/contextWebTabs';
 
 import {
   browserTypeHandler,

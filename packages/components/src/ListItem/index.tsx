@@ -141,6 +141,7 @@ function ListItem(props: IListItemProps) {
         focusable: true,
         focusStyle: {
           outlineWidth: 2,
+          outlineOffset: -2,
           outlineStyle: 'solid',
           outlineColor: '$focusRing',
         },

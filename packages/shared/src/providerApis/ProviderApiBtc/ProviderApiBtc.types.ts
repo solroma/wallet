@@ -21,7 +21,11 @@ export const NETWORK_TYPES = [
     validNames: ['testnet'],
   },
 ];
-
+export enum AddressPurpose {
+  Ordinals = 'ordinals',
+  Payment = 'payment',
+}
+export type SatsConnectParams = { purposes: AddressPurpose[] };
 export type SwitchNetworkParams = { network: NetworkType };
 export type GetInscriptionParams = { cursor: number; size: number };
 export type SendBitcoinParams = {
@@ -37,13 +41,14 @@ export type SendInscriptionParams = {
 export type SignMessageParams = {
   message: string;
   type: BtcMessageTypes;
+  address?: string;
 };
 export type PushTxParams = {
   rawTx: string;
 };
 export type SignPsbtParams = {
   psbtHex: string;
-  options: { autoFinalized: boolean };
+  options: { autoFinalized: boolean; toSignInputs?: InputToSign[] };
 };
 
 export type SignPsbtsParams = {

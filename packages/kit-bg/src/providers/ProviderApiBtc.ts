@@ -1,3 +1,4 @@
+import { bytesToHex } from '@noble/hashes/utils';
 import { web3Errors } from '@onekeyfe/cross-inpage-provider-errors';
 import { IInjectedProviderNames } from '@onekeyfe/cross-inpage-provider-types';
 import BigNumber from 'bignumber.js';
@@ -5,7 +6,13 @@ import { Psbt } from 'bitcoinjs-lib';
 import { isNil } from 'lodash';
 
 import { getFiatEndpoint } from '@onekeyhq/engine/src/endpoint';
+import { tweakPublicKey } from '@onekeyhq/engine/src/secret/bip340';
+import type {
+  DBAccount,
+  DBVariantAccount,
+} from '@onekeyhq/engine/src/types/account';
 import type { NFTBTCAssetModel } from '@onekeyhq/engine/src/types/nft';
+import type { Wallet } from '@onekeyhq/engine/src/types/wallet';
 import type VaultBtcFork from '@onekeyhq/engine/src/vaults/utils/btcForkChain/VaultBtcFork';
 import { getActiveWalletAccount } from '@onekeyhq/kit/src/hooks';
 import {
@@ -13,13 +20,20 @@ import {
   providerApiMethod,
 } from '@onekeyhq/shared/src/background/backgroundDecorators';
 import { OnekeyNetwork } from '@onekeyhq/shared/src/config/networkIds';
-import { IMPL_BTC, IMPL_TBTC } from '@onekeyhq/shared/src/engine/engineConsts';
+import {
+  COINTYPE_BTC,
+  IMPL_BTC,
+  IMPL_TBTC,
+  INDEX_PLACEHOLDER,
+} from '@onekeyhq/shared/src/engine/engineConsts';
 import debugLogger from '@onekeyhq/shared/src/logger/debugLogger';
+import { AddressPurpose } from '@onekeyhq/shared/src/providerApis/ProviderApiBtc/ProviderApiBtc.types';
 import type {
   DecodedPsbt,
   InscribeTransferParams,
   PushPsbtParams,
   PushTxParams,
+  SatsConnectParams,
   SendBitcoinParams,
   SendInscriptionParams,
   SignMessageParams,
@@ -120,6 +134,137 @@ class ProviderApiBtc extends ProviderApiBase {
     }
     const accountAddresses = accounts.map((account) => account.address);
     return Promise.resolve(accountAddresses);
+  }
+
+  private getAccountIndex(dbAccount: DBAccount) {
+    const pathComponents = dbAccount.path.split('/');
+    const templateComponents = dbAccount.template?.split('/');
+    if (Array.isArray(templateComponents)) {
+      for (let i = 0; i < templateComponents.length; i += 1) {
+        if (templateComponents[i] === `${INDEX_PLACEHOLDER}'`) {
+          const indexNumber = Number(pathComponents[i].replace(`'`, ''));
+          if (!Number.isNaN(indexNumber)) {
+            return indexNumber;
+          }
+        }
+      }
+    }
+    return -1;
+  }
+
+  private async findAccountByPurpose(
+    purpose: AddressPurpose,
+    wallet: Wallet,
+    accountIndex: number,
+  ) {
+    console.log(
+      '=====>>>>> findAccountByPurpose',
+      purpose,
+      wallet,
+      accountIndex,
+    );
+
+    let template;
+    let error;
+    if (purpose === AddressPurpose.Ordinals) {
+      template = `m/86'/${COINTYPE_BTC}'/${accountIndex}'`;
+      error = 'You need to create a Taproot account';
+    } else {
+      template = `m/49'/${COINTYPE_BTC}'/${accountIndex}'`;
+      error = 'You need to create a SegWit account';
+    }
+
+    // find ordinals account
+    for (const accountIdItem of wallet.accounts) {
+      if (accountIdItem.includes(template)) {
+        const result = await this.backgroundApi.serviceAccount.getAccount({
+          walletId: wallet.id,
+          accountId: accountIdItem,
+        });
+
+        if (!result) {
+          throw new Error(error);
+        }
+        console.log('=====>>>>> result', template, result);
+
+        return {
+          address: result.address,
+          pubkey: result.pubKey,
+          purpose: purpose === AddressPurpose.Ordinals ? 'payment' : 'ordinals',
+        };
+      }
+    }
+    throw new Error(error);
+  }
+
+  @providerApiMethod()
+  public async requestAccountsSatsConnect(
+    request: IJsBridgeMessagePayload,
+    params: SatsConnectParams,
+  ) {
+    // request promise
+    const accounts = await this.getAccounts(request);
+    const { purposes } = params;
+
+    // request btc accounts
+    const { networkId, accountId, walletId } = getActiveWalletAccount();
+    if (accounts && accounts.length) {
+      const vault = await this.backgroundApi.engine.getVault({
+        networkId,
+        accountId,
+      });
+      const account = (await vault.getDbAccount()) as DBAccount;
+      const resultAccounts = [];
+
+      // resultAccounts.push({
+      //   address: account.address,
+      //   pubkey: account.pub,
+      //   purpose: 'payment',
+      // });
+      // const tweakPublic = tweakPublicKey(
+      //   Buffer.from(account.pub ?? '0x00', 'hex').slice(1),
+      // );
+      // if (!tweakPublic) throw new Error('Public key tweak failed');
+      // const { parity, x } = tweakPublic;
+
+      // resultAccounts.push({
+      //   address: account.address,
+      //   // pubkey: parity === 0 ? `02${bytesToHex(x)}` : `03${bytesToHex(x)}`,
+      //   pubkey: bytesToHex(x),
+      //   purpose: 'ordinals',
+      // });
+
+      // return resultAccounts;
+      const accountIndex = this.getAccountIndex(account);
+      if (accountIndex < 0) {
+        throw new Error('Invalid account');
+      }
+      const wallet = await this.backgroundApi.engine.getWallet(walletId);
+
+      if (purposes.includes(AddressPurpose.Payment)) {
+        resultAccounts.push(
+          await this.findAccountByPurpose(
+            AddressPurpose.Payment,
+            wallet,
+            accountIndex,
+          ),
+        );
+      }
+
+      if (purposes.includes(AddressPurpose.Ordinals)) {
+        resultAccounts.push(
+          await this.findAccountByPurpose(
+            AddressPurpose.Ordinals,
+            wallet,
+            accountIndex,
+          ),
+        );
+      }
+
+      console.log('=====>>>>> resultAccounts', resultAccounts);
+
+      return resultAccounts;
+    }
   }
 
   @providerApiMethod()
@@ -342,7 +487,7 @@ class ProviderApiBtc extends ProviderApiBase {
     request: IJsBridgeMessagePayload,
     params: SignMessageParams,
   ) {
-    const { message, type } = params;
+    const { message, type, address } = params;
 
     const { network, account, wallet } = getActiveWalletAccount();
 
@@ -370,6 +515,7 @@ class ProviderApiBtc extends ProviderApiBase {
         unsignedMessage: {
           type,
           message,
+          address,
           sigOptions: {
             noScriptType: true,
           },
@@ -509,7 +655,6 @@ class ProviderApiBtc extends ProviderApiBase {
         message: `Can not get current account`,
       });
     }
-
     const decodedPsbt = (
       await httpPost<DecodedPsbt>({
         isTestnet: network.isTestnet,
@@ -518,11 +663,22 @@ class ProviderApiBtc extends ProviderApiBase {
       })
     ).result;
 
-    const inputsToSign = getInputsToSignFromPsbt({
-      psbt,
-      psbtNetwork,
-      account,
-    });
+    debugLogger.providerApi.info('=====>>>>> _signPsbt options ', options);
+
+    let inputsToSign;
+    if (options && options.toSignInputs) {
+      inputsToSign = options.toSignInputs;
+    } else {
+      inputsToSign = getInputsToSignFromPsbt({
+        psbt,
+        psbtNetwork,
+        account,
+      });
+    }
+
+    debugLogger.providerApi.info('=====>>>>> inputsToSign', inputsToSign);
+    debugLogger.providerApi.info('=====>>>>> decodedPsbt', decodedPsbt);
+    debugLogger.providerApi.info('=====>>>>> psbt', psbt.toHex());
 
     const resp = (await this.backgroundApi.serviceDapp.openSignAndSendModal(
       request,

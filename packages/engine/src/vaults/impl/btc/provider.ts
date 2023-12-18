@@ -75,8 +75,11 @@ export default class Provider extends BaseProvider {
   ): Promise<BitcoinSigner> {
     const publicKey = await signer.getPubkey(true);
 
+    console.log('=====>>>>> getBitcoinSigner', publicKey);
+
     // P2TR
     if (input.tapInternalKey) {
+      console.log('=====>>>>> getBitcoinSigner tapInternalKey', publicKey);
       const privateKey = await signer.getPrvkey();
       const tweakedSigner = tweakSigner(privateKey, publicKey, {
         network: this.network,

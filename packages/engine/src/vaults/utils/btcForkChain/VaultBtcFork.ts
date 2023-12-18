@@ -442,26 +442,32 @@ export default class VaultBtcFork extends VaultBase {
   }
 
   decodedTxToLegacy(decodedTx: IDecodedTx): Promise<IDecodedTxLegacy> {
-    const { type, nativeTransfer, inscriptionInfo } = decodedTx.actions[0];
-    if (type === IDecodedTxActionType.NATIVE_TRANSFER && nativeTransfer) {
-      return Promise.resolve({
-        txType: EVMDecodedTxType.NATIVE_TRANSFER,
-        symbol: 'UNKNOWN',
-        amount: nativeTransfer.amount,
-        value: nativeTransfer.amountValue,
-        fromAddress: nativeTransfer.from,
-        toAddress: nativeTransfer.to,
-        data: '',
-        totalFeeInNative: decodedTx.totalFeeInNative,
-        total: BigNumber.sum
-          .apply(
-            null,
-            (nativeTransfer.utxoFrom || []).map(
-              ({ balanceValue }) => balanceValue,
-            ),
-          )
-          .toFixed(),
-      } as IDecodedTxLegacy);
+    if (decodedTx.actions && decodedTx.actions.length > 0) {
+      const { type, nativeTransfer, inscriptionInfo } = decodedTx.actions[0];
+      if (
+        type &&
+        type === IDecodedTxActionType.NATIVE_TRANSFER &&
+        nativeTransfer
+      ) {
+        return Promise.resolve({
+          txType: EVMDecodedTxType.NATIVE_TRANSFER,
+          symbol: 'UNKNOWN',
+          amount: nativeTransfer.amount,
+          value: nativeTransfer.amountValue,
+          fromAddress: nativeTransfer.from,
+          toAddress: nativeTransfer.to,
+          data: '',
+          totalFeeInNative: decodedTx.totalFeeInNative,
+          total: BigNumber.sum
+            .apply(
+              null,
+              (nativeTransfer.utxoFrom || []).map(
+                ({ balanceValue }) => balanceValue,
+              ),
+            )
+            .toFixed(),
+        } as IDecodedTxLegacy);
+      }
     }
     return Promise.resolve({} as IDecodedTxLegacy);
   }

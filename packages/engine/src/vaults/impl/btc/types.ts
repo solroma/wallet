@@ -58,6 +58,7 @@ export type IBlockBookTransaction = {
 export type IUnsignedMessageBtc = {
   type: BtcMessageTypes;
   message: string;
+  address?: string;
   sigOptions?: (SignatureOptions & { noScriptType?: boolean }) | null;
   payload?: {
     isFromDApp?: boolean;

@@ -3,10 +3,12 @@ import bs58check from 'bs58check';
 
 import { batchGetPublicKeys } from '@onekeyhq/engine/src/secret';
 import type { SignedTx } from '@onekeyhq/engine/src/types/provider';
+import { log } from '@onekeyhq/shared/src/crashlytics/index.web';
 import {
   COINTYPE_BCH,
   COINTYPE_DOGE,
   IMPL_TBTC,
+  INDEX_PLACEHOLDER,
 } from '@onekeyhq/shared/src/engine/engineConsts';
 import debugLogger from '@onekeyhq/shared/src/logger/debugLogger';
 import { toPsbtNetwork } from '@onekeyhq/shared/src/providerApis/ProviderApiBtc/ProviderApiBtc.utils';
@@ -22,7 +24,7 @@ import { KeyringHdBase } from '../../keyring/KeyringHdBase';
 import { getAccountDefaultByPurpose, initBitcoinEcc } from './utils';
 
 import type { ExportedSeedCredential } from '../../../dbs/base';
-import type { DBUTXOAccount } from '../../../types/account';
+import type { DBUTXOAccount, DBVariantAccount } from '../../../types/account';
 import type { IUnsignedMessageBtc } from '../../impl/btc/types';
 import type {
   IPrepareAccountByAddressIndexParams,
@@ -39,6 +41,9 @@ export class KeyringHd extends KeyringHdBase {
     options: ISignCredentialOptions,
   ): Promise<SignedTx> {
     initBitcoinEcc();
+
+    console.log('=====>>>>> signTransaction', unsignedTx, options);
+
     const { password } = options;
     const { psbtHex, inputsToSign } = unsignedTx;
     if (typeof password === 'undefined') {
@@ -126,6 +131,24 @@ export class KeyringHd extends KeyringHdBase {
       }
       ret[address] = signer;
     }
+    return ret;
+  }
+
+  async getSignMessageSigner(password: string, address: string) {
+    const account = (await this.engine.dbApi.getAccountByAddress({
+      address,
+    })) as DBVariantAccount;
+    const { path } = account;
+
+    const suffix = '0/0';
+    const fullPath = `${path}/${suffix}`;
+
+    const privateKeys = await this.getPrivateKeys(password, [suffix]);
+
+    const signer = new Signer(privateKeys[fullPath], password, 'secp256k1');
+
+    const ret: Record<string, Signer> = {};
+    ret[address] = signer;
     return ret;
   }
 
@@ -342,10 +365,14 @@ export class KeyringHd extends KeyringHdBase {
     const result: Buffer[] = [];
 
     for (let i = 0, len = messages.length; i < len; i += 1) {
-      const { message, type, sigOptions } = messages[i];
+      const { message, type, sigOptions, address } = messages[i];
 
       if (type === BtcMessageTypes.BIP322_SIMPLE) {
-        const signers = await this.getSigners(password, [account.address]);
+        const signers = await this.getSignMessageSigner(
+          password,
+          address ?? account.address,
+        );
+
         const signature = await provider.signBip322MessageSimple({
           account,
           message,

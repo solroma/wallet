@@ -23,7 +23,10 @@ import type {
   UnsignedTx,
 } from '@onekeyhq/engine/src/vaults/utils/btcForkChain/types';
 import type { InputToSign } from '@onekeyhq/shared/src/providerApis/ProviderApiBtc/ProviderApiBtc.types';
-import { getInputsToSignFromPsbt } from '@onekeyhq/shared/src/providerApis/ProviderApiBtc/ProviderApiBtc.utils';
+import {
+  getInputsToSignFromPsbt,
+  toXOnly,
+} from '@onekeyhq/shared/src/providerApis/ProviderApiBtc/ProviderApiBtc.utils';
 import { isBRC20Token } from '@onekeyhq/shared/src/utils/tokenUtils';
 
 import {
@@ -846,6 +849,7 @@ class Provider {
         script: outputScript,
         value: 0,
       },
+      // tapInternalKey: toXOnly(Buffer.from(account.pubKey as string, 'hex')),
     });
     psbtToSign.addOutput({ script: Buffer.from('6a', 'hex'), value: 0 });
 

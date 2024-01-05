@@ -1,12 +1,11 @@
-import { memo, useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
-// eslint-disable-next-line spellcheck/spell-checker
-import makeBlockie from 'ethereum-blockies-base64';
 import { AnimatePresence } from 'tamagui';
 
 import {
   ActionList,
   Button,
+  Icon,
   IconButton,
   ListItem,
   SectionList,
@@ -35,8 +34,11 @@ import {
   useActiveAccount,
   useSelectedAccount,
 } from '../../../../states/jotai/contexts/accountSelector';
+import makeBlockieImageUri from '../../../../utils/makeBlockieImageUri';
 import { EOnboardingPages } from '../../../Onboarding/router/type';
 import { AccountRenameButton } from '../../AccountRename';
+
+import { WalletOptions } from './WalletOptions';
 
 import type { IAccountGroupProps, IAccountProps } from '../../types';
 
@@ -45,179 +47,6 @@ export interface IWalletDetailsProps {
   onAccountPress?: (id: IAccountProps['id']) => void;
   wallet?: IDBWallet;
 }
-
-function WalletDetailsSectionList({ num }: { num: number }) {
-  const [remember, setIsRemember] = useState(false);
-  const [editMode, setEditMode] = useAccountSelectorEditModeAtom();
-  const { selectedAccount } = useSelectedAccount({ num });
-  const { serviceAccount } = backgroundApiProxy;
-
-  const { result: accountsResult, run: reloadAccounts } =
-    usePromiseResult(async () => {
-      console.log(
-        'Perf: focusedWallet changed',
-        Date.now() - global.$$walletPressTS,
-      );
-      if (!selectedAccount?.focusedWallet) {
-        return Promise.resolve(undefined);
-      }
-      const now = Date.now();
-      const result = await serviceAccount.getAccountsOfWallet({
-        walletId: selectedAccount?.focusedWallet,
-      });
-      console.log(
-        'Perf: getAccountsOfWallet',
-        Date.now() - global.$$walletPressTS,
-        Date.now() - now,
-      );
-      return result;
-    }, [selectedAccount?.focusedWallet, serviceAccount]);
-  const accounts =
-    accountsResult?.accounts ?? (emptyArray as unknown as IDBIndexedAccount[]);
-
-  useEffect(() => {
-    const fn = async () => {
-      await reloadAccounts();
-    };
-    appEventBus.on(EAppEventBusNames.AccountUpdate, fn);
-    return () => {
-      appEventBus.off(EAppEventBusNames.AccountUpdate, fn);
-    };
-  }, [reloadAccounts]);
-
-  const sectionData = useMemo(() => {
-    console.log(
-      'Perf: sectionData update',
-      Date.now() - global.$$walletPressTS,
-    );
-    return [
-      {
-        title: '', // focusedWalletInfo?.name ?? '-',
-        isHiddenWalletData: false,
-        data: accounts,
-      },
-    ];
-  }, [accounts]);
-
-  return (
-    <SectionList
-      pb="$3"
-      estimatedItemSize="$14"
-      extraData={[editMode]}
-      // {...(wallet?.type !== 'others' && {
-      //   ListHeaderComponent: (
-      //     <WalletOptions editMode={editMode} wallet={wallet} />
-      //   ),
-      // })}
-      ListHeaderComponent={
-        null
-        // <WalletOptions wallet={focusedWalletInfo} />
-      }
-      sections={sectionData}
-      renderSectionHeader={({ section }: { section: IAccountGroupProps }) => (
-        <>
-          {/* If better performance is needed,  */
-          /*  a header component should be extracted and data updates should be subscribed to through context" */}
-          {section.title && (
-            <SectionList.SectionHeader title={section.title}>
-              {section.isHiddenWalletData && editMode && (
-                <ActionList
-                  title={section.title}
-                  renderTrigger={
-                    <IconButton
-                      icon="DotHorOutline"
-                      variant="tertiary"
-                      ml="$2"
-                    />
-                  }
-                  sections={[
-                    {
-                      items: [
-                        {
-                          icon: remember
-                            ? 'CheckboxSolid'
-                            : 'SuqarePlaceholderOutline',
-                          ...(remember && {
-                            iconProps: {
-                              color: '$iconActive',
-                            },
-                          }),
-                          label: 'Remember',
-                          onPress: () => setIsRemember(!remember),
-                        },
-                      ],
-                    },
-                    {
-                      items: [
-                        {
-                          icon: 'PencilOutline',
-                          label: 'Rename',
-                          onPress: () => alert('edit 1112'),
-                        },
-                        {
-                          destructive: true,
-                          icon: 'DeleteOutline',
-                          label: 'Remove',
-                          onPress: () => alert('edit 3332'),
-                        },
-                      ],
-                    },
-                  ]}
-                />
-              )}
-            </SectionList.SectionHeader>
-          )}
-          {section.data.length === 0 && section.emptyText && (
-            <ListItem
-              title={section.emptyText}
-              titleProps={{
-                size: '$bodyLg',
-              }}
-            />
-          )}
-        </>
-      )}
-      renderItem={({ item }: { item: IDBIndexedAccount }) => (
-        <ListItem
-          key={item.id}
-          avatarProps={{
-            // eslint-disable-next-line spellcheck/spell-checker
-            src: makeBlockie(item.idHash || item.id),
-            fallbackProps: {
-              children: <Skeleton w="$10" h="$10" />,
-            },
-            // cornerImageProps: item.networkImageSrc
-            //   ? {
-            //       src: item.networkImageSrc,
-            //       fallbackProps: {
-            //         children: <Skeleton w="$4" h="$4" />,
-            //       },
-            //     }
-            //   : undefined,
-          }}
-          title={item.name}
-          titleProps={{
-            numberOfLines: 1,
-          }}
-          // subtitle={item.address}
-          subtitle=""
-          {...(!editMode && {
-            onPress: () => {
-              //
-            },
-            checkMark: selectedAccount.indexedAccountId === item.id,
-          })}
-        >
-          <AnimatePresence>
-            {editMode && <AccountRenameButton indexedAccount={item} />}
-          </AnimatePresence>
-        </ListItem>
-      )}
-    />
-  );
-}
-
-const WalletDetailsSectionListMemo = memo(WalletDetailsSectionList);
 
 export function WalletDetails({ onAccountPress, num }: IWalletDetailsProps) {
   const [editMode, setEditMode] = useAccountSelectorEditModeAtom();
@@ -259,6 +88,46 @@ export function WalletDetails({ onAccountPress, num }: IWalletDetailsProps) {
       appEventBus.off(EAppEventBusNames.WalletUpdate, fn);
     };
   }, [reloadFocusedWalletInfo]);
+
+  const { result: accountsResult, run: reloadAccounts } =
+    usePromiseResult(async () => {
+      if (!selectedAccount?.focusedWallet) {
+        return Promise.resolve(undefined);
+      }
+      return serviceAccount
+        .getAccountsOfWallet({
+          walletId: selectedAccount?.focusedWallet,
+        })
+        .then(async (value) => {
+          for (const item of value?.accounts ?? []) {
+            item.avatar = await makeBlockieImageUri(item.idHash || item.id);
+          }
+          return value;
+        });
+    }, [selectedAccount?.focusedWallet, serviceAccount]);
+  const accounts =
+    accountsResult?.accounts ?? (emptyArray as unknown as IDBIndexedAccount[]);
+
+  useEffect(() => {
+    const fn = async () => {
+      await reloadAccounts();
+    };
+    appEventBus.on(EAppEventBusNames.AccountUpdate, fn);
+    return () => {
+      appEventBus.off(EAppEventBusNames.AccountUpdate, fn);
+    };
+  }, [reloadAccounts]);
+
+  const sectionData = useMemo(
+    () => [
+      {
+        title: '', // focusedWalletInfo?.name ?? '-',
+        isHiddenWalletData: false,
+        data: accounts,
+      },
+    ],
+    [accounts],
+  );
 
   const [remember, setIsRemember] = useState(false);
   const { bottom } = useSafeAreaInsets();
@@ -309,8 +178,172 @@ export function WalletDetails({ onAccountPress, num }: IWalletDetailsProps) {
           {editMode ? 'Done' : 'Edit'}
         </Button>
       </ListItem>
+      <SectionList
+        pb="$3"
+        estimatedItemSize="$14"
+        // extraData={[selectedAccountId, remember]}
+        // {...(wallet?.type !== 'others' && {
+        //   ListHeaderComponent: (
+        //     <WalletOptions editMode={editMode} wallet={wallet} />
+        //   ),
+        // })}
+        ListHeaderComponent={<WalletOptions wallet={focusedWalletInfo} />}
+        sections={sectionData}
+        renderSectionHeader={({ section }: { section: IAccountGroupProps }) => (
+          <>
+            {/* If better performance is needed,  */
+            /*  a header component should be extracted and data updates should be subscribed to through context" */}
+            {section.title && (
+              <SectionList.SectionHeader title={section.title}>
+                {section.isHiddenWalletData && editMode && (
+                  <ActionList
+                    title={section.title}
+                    renderTrigger={
+                      <IconButton
+                        icon="DotHorOutline"
+                        variant="tertiary"
+                        ml="$2"
+                      />
+                    }
+                    sections={[
+                      {
+                        items: [
+                          {
+                            icon: remember
+                              ? 'CheckboxSolid'
+                              : 'SuqarePlaceholderOutline',
+                            ...(remember && {
+                              iconProps: {
+                                color: '$iconActive',
+                              },
+                            }),
+                            label: 'Remember',
+                            onPress: () => setIsRemember(!remember),
+                          },
+                        ],
+                      },
+                      {
+                        items: [
+                          {
+                            icon: 'PencilOutline',
+                            label: 'Rename',
+                            onPress: () => alert('edit 1112'),
+                          },
+                          {
+                            destructive: true,
+                            icon: 'DeleteOutline',
+                            label: 'Remove',
+                            onPress: () => alert('edit 3332'),
+                          },
+                        ],
+                      },
+                    ]}
+                  />
+                )}
+              </SectionList.SectionHeader>
+            )}
+            {section.data.length === 0 && section.emptyText && (
+              <ListItem
+                title={section.emptyText}
+                titleProps={{
+                  size: '$bodyLg',
+                }}
+              />
+            )}
+          </>
+        )}
+        renderItem={({ item }: { item: IDBIndexedAccount }) => (
+          <ListItem
+            key={item.id}
+            avatarProps={{
+              // eslint-disable-next-line spellcheck/spell-checker
+              src: item.avatar,
+              fallbackProps: {
+                children: <Skeleton w="$10" h="$10" />,
+              },
+              // cornerImageProps: item.networkImageSrc
+              //   ? {
+              //       src: item.networkImageSrc,
+              //       fallbackProps: {
+              //         children: <Skeleton w="$4" h="$4" />,
+              //       },
+              //     }
+              //   : undefined,
+            }}
+            title={item.name}
+            titleProps={{
+              numberOfLines: 1,
+            }}
+            // subtitle={item.address}
+            subtitle=""
+            {...(onAccountPress &&
+              !editMode && {
+                onPress: () => {
+                  if (!focusedWalletInfo) {
+                    return;
+                  }
+                  actions.current.updateSelectedAccount({
+                    num,
+                    builder: (v) => ({
+                      ...v,
+                      walletId: focusedWalletInfo?.id,
+                      accountId: undefined,
+                      indexedAccountId: item.id,
+                    }),
+                  });
+                  navigation.popStack();
+                },
+                checkMark: selectedAccount.indexedAccountId === item.id,
+              })}
+          >
+            <AnimatePresence>
+              {editMode && <AccountRenameButton indexedAccount={item} />}
+            </AnimatePresence>
+          </ListItem>
+        )}
+        renderSectionFooter={() => (
+          <ListItem
+            onPress={async () => {
+              if (!focusedWalletInfo) {
+                return;
+              }
+              const c = await serviceAccount.addHDNextIndexedAccount({
+                walletId: focusedWalletInfo?.id,
+              });
+              console.log('addHDNextIndexedAccount>>>', c);
+              await reloadAccounts();
 
-      <WalletDetailsSectionListMemo num={num} />
+              actions.current.updateSelectedAccount({
+                num,
+                builder: (v) => ({
+                  ...v,
+                  indexedAccountId: c.indexedAccountId,
+                  walletId: focusedWalletInfo?.id,
+                }),
+              });
+            }}
+          >
+            <Stack
+              bg="$bgStrong"
+              borderRadius="$2"
+              p="$2"
+              style={{
+                borderCurve: 'continuous',
+              }}
+            >
+              <Icon name="PlusSmallOutline" />
+            </Stack>
+            {/* Add account */}
+            <ListItem.Text
+              userSelect="none"
+              primary="Add account"
+              primaryTextProps={{
+                size: '$bodyLg',
+              }}
+            />
+          </ListItem>
+        )}
+      />
     </Stack>
   );
 }

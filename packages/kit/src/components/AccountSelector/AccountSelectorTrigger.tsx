@@ -64,7 +64,7 @@ export function AccountSelectorTriggerHome({ num }: { num: number }) {
     >
       <Image size="$6" borderRadius="$1">
         <Image.Source src={accountAvatar} />
-        <Image.Fallback>
+        <Image.Fallback delayMs={150}>
           <Skeleton w="$6" h="$6" />
         </Image.Fallback>
       </Image>

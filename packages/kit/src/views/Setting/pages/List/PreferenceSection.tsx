@@ -41,6 +41,7 @@ const ThemeListItem = () => {
       icon="PaletteOutline"
       title={intl.formatMessage({ id: 'form__theme' })}
       drillIn
+      testID="setting-preference-theme"
     >
       <ListItem.Text primary={themes[theme]} align="right" />
     </ListItem>
@@ -72,8 +73,13 @@ const LocaleListItem = () => {
       icon="GlobusOutline"
       title={intl.formatMessage({ id: 'form__language' })}
       drillIn
+      testID="setting-preference-language"
     >
-      <ListItem.Text primary={labels[locale]} align="right" />
+      <ListItem.Text
+        primary={labels[locale]}
+        testID="setting-preference-language-current"
+        align="right"
+      />
     </ListItem>
   );
 };
@@ -95,6 +101,7 @@ const CurrencyListItem = () => {
       title={intl.formatMessage({ id: 'form__default_currency' })}
       drillIn
       onPress={onPress}
+      testID="setting-preference-currency"
     >
       <ListItem.Text primary={text.toUpperCase()} align="right" />
     </ListItem>

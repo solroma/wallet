@@ -33,7 +33,7 @@ const LockNowButton = () => {
     }
   }, [passwordSetting.isPasswordSet]);
   return (
-    <Button onPress={onLock}>
+    <Button onPress={onLock} testID="tabme-locknow">
       {intl.formatMessage({ id: 'action__lock_now' })}
     </Button>
   );
@@ -59,6 +59,7 @@ const TabMe = () => {
             onPress={() => {
               navigation.switchTab(ETabRoutes.Home);
             }}
+            testID="tabme-index"
           >
             切换到首页
           </Button>
@@ -68,10 +69,11 @@ const TabMe = () => {
                 screen: EOnboardingPages.GetStarted,
               });
             }}
+            testID="tabme-onboarding"
           >
             Onboarding
           </Button>
-          <Button onPress={onPress}>
+          <Button onPress={onPress} testID="tabme-settings">
             {intl.formatMessage({ id: 'title__settings' })}
           </Button>
           <LockNowButton />

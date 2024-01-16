@@ -29,6 +29,7 @@ function HeaderBackButton({
       return (
         <HeaderIconButton
           onPress={props.onPress}
+          testID="nav-header-back"
           icon="ChevronLeftOutline"
           {...(platformEnv.isNativeIOS && { pressStyle: undefined })}
         />
@@ -38,7 +39,7 @@ function HeaderBackButton({
       return (
         <HeaderIconButton
           onPress={props.onPress}
-          testID="header-button-close"
+          testID="nav-header-close"
           icon="CrossedLargeOutline"
         />
       );

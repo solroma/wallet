@@ -75,6 +75,7 @@ const ClearCacheOnApp = () => {
       onPress={onPress}
       icon="BroomOutline"
       title={intl.formatMessage({ id: 'action__clear_all_cache_on_app' })}
+      testID="setting-data-clear-cache-on-app"
     />
   );
 };
@@ -95,6 +96,7 @@ const CleanCacheOnWebBrowser = () => {
       onPress={onPress}
       icon="CompassOutline"
       title={intl.formatMessage({ id: 'action__clear_cache_of_web_browser' })}
+      testID="setting-data-clear-cache-on-browser"
     />
   );
 };
@@ -114,11 +116,12 @@ const EraseData = () => {
           }}
         >
           <Dialog.FormField name="text">
-            <Input autoFocus flex={1} />
+            <Input autoFocus flex={1} testID="erase-all-data" />
           </Dialog.FormField>
         </Dialog.Form>
       ),
       confirmButtonProps: {
+        testID: 'erase-data-confirm',
         disabledOn: ({ getForm }) => {
           const { getValues } = getForm() || {};
           if (getValues) {
@@ -141,6 +144,7 @@ const EraseData = () => {
       icon="DeleteOutline"
       title={intl.formatMessage({ id: 'action__erase_data' })}
       titleProps={{ color: '$textCritical' }}
+      testID="setting-data-erase_data"
     />
   );
 };
@@ -153,6 +157,7 @@ const DownloadStateLog = () => {
       onPress={onPress}
       icon="Document2Outline"
       title={intl.formatMessage({ id: 'content__state_logs' })}
+      testID="setting-data-download_log"
     >
       <ListItem.IconButton
         disabled

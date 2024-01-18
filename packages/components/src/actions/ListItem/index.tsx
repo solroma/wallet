@@ -135,6 +135,7 @@ const ListItemText = (props: IListItemTextProps) => {
     align = 'left',
     primaryTextProps,
     secondaryTextProps,
+    testID = '',
     ...rest
   } = props;
 
@@ -156,6 +157,7 @@ const ListItemText = (props: IListItemTextProps) => {
             primary
           ) : (
             <SizableText
+              testID={`${testID}-primary`}
               textAlign={align}
               size="$bodyLgMedium"
               {...primaryTextProps}
@@ -172,6 +174,7 @@ const ListItemText = (props: IListItemTextProps) => {
               color="$textSubdued"
               textAlign={align}
               {...secondaryTextProps}
+              testID={`${testID}-secondary`}
             >
               {secondary}
             </SizableText>
@@ -271,6 +274,7 @@ const ListItemComponent = Stack.styleable<IListItemProps>((props, ref) => {
     renderAvatar,
     renderIcon,
     renderItemText,
+    testID = '',
     ...rest
   } = props;
 
@@ -335,6 +339,7 @@ const ListItemComponent = Stack.styleable<IListItemProps>((props, ref) => {
             ...(props.onPress && { userSelect: 'none' }),
             ...subtitleProps,
           },
+          testID: `${testID}-title`,
         },
         renderItemText,
       )}

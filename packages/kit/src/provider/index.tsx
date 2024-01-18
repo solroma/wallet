@@ -8,6 +8,9 @@ import '../utils/axiosInterceptor';
 import { Container } from './Container';
 import { SplashProvider } from './SplashProvider';
 import { ThemeProvider } from './ThemeProvider';
+import { LogBox } from 'react-native';
+
+LogBox.ignoreAllLogs();
 
 import LazyLoad from '@onekeyhq/shared/src/lazyLoad';
 

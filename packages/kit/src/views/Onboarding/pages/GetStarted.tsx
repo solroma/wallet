@@ -111,6 +111,7 @@ export function GetStarted() {
               secondaryTextProps={{
                 color: '$textInverseSubdued',
               }}
+              testID="onboarding-hardware-wallet"
             />
             <ListItem.DrillIn
               color="$whiteA6"
@@ -149,6 +150,7 @@ export function GetStarted() {
                 flex={1}
                 primary="Create Wallet"
                 secondary="Create new recovery phrase"
+                testID="onboarding-create-wallet"
               />
             </ListItem>
             <ListItem
@@ -175,6 +177,7 @@ export function GetStarted() {
                 secondaryTextProps={{
                   numberOfLines: 1,
                 }}
+                testID="onboarding-import-wallet"
               />
             </ListItem>
           </Group>
@@ -187,6 +190,7 @@ export function GetStarted() {
                 size: 'large',
               } as IButtonProps
             }
+            testID="onboarding-3rd-party"
           >
             Connect 3rd-party Wallet
           </Button>
@@ -210,6 +214,7 @@ export function GetStarted() {
             color="$textSubdued"
             target="_blank"
             textDecorationLine="none"
+            testID="onboarding-agreement"
           >
             User Service Agreement
           </Anchor>{' '}
@@ -220,6 +225,7 @@ export function GetStarted() {
             color="$textSubdued"
             target="_blank"
             textDecorationLine="none"
+            testID="onboarding-privacy-policy"
           >
             Privacy Policy
           </Anchor>

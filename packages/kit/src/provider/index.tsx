@@ -1,7 +1,10 @@
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
+import LazyLoad from '@onekeyhq/shared/src/lazyLoad';
 import platformEnv from '@onekeyhq/shared/src/platformEnv';
 
+import { AccountSelectorProvidersAutoMount } from '../components/AccountSelector';
+import { GlobalJotaiReady } from '../components/GlobalJotaiReady';
 import PasswordVerifyPromptMount from '../components/Password/container/PasswordVerifyPromptMount';
 import '../utils/axiosInterceptor';
 
@@ -11,8 +14,6 @@ import { ThemeProvider } from './ThemeProvider';
 import { LogBox } from 'react-native';
 
 LogBox.ignoreAllLogs();
-
-import LazyLoad from '@onekeyhq/shared/src/lazyLoad';
 
 if (platformEnv.isRuntimeBrowser) {
   // FIXME need reanimated update, see https://github.com/software-mansion/react-native-reanimated/issues/3355
@@ -29,14 +30,17 @@ const flexStyle = { flex: 1 };
 
 export function KitProvider() {
   return (
-    <ThemeProvider>
-      <SplashProvider>
-        <GestureHandlerRootView style={flexStyle}>
-          <Container />
-        </GestureHandlerRootView>
-      </SplashProvider>
-      <PasswordVerifyPromptMount />
-      <LastActivityTracker />
-    </ThemeProvider>
+    <GlobalJotaiReady>
+      <ThemeProvider>
+        <AccountSelectorProvidersAutoMount />
+        <SplashProvider>
+          <GestureHandlerRootView style={flexStyle}>
+            <Container />
+          </GestureHandlerRootView>
+        </SplashProvider>
+        <PasswordVerifyPromptMount />
+        <LastActivityTracker />
+      </ThemeProvider>
+    </GlobalJotaiReady>
   );
 }

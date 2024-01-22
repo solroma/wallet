@@ -1,12 +1,15 @@
+/* eslint-disable spellcheck/spell-checker */
 import { isNil } from 'lodash';
 
-import { WALLET_TYPE_HD } from '@onekeyhq/kit-bg/src/dbs/local/consts';
+import {
+  WALLET_TYPE_HD,
+  WALLET_TYPE_HW,
+} from '@onekeyhq/kit-bg/src/dbs/local/consts';
 
-import { INDEX_PLACEHOLDER } from '../engine/engineConsts';
+import { EAccountSelectorSceneName } from '../../types';
+import { INDEX_PLACEHOLDER, SEPERATOR } from '../engine/engineConsts';
 
 import uriUtils from './uriUtils';
-
-import type { EAccountSelectorSceneName } from '../../types';
 
 function beautifyPathTemplate({ template }: { template: string }) {
   return template.replace(INDEX_PLACEHOLDER, '*');
@@ -21,6 +24,9 @@ function shortenAddress({ address }: { address: string }) {
 
 function isHdWallet({ walletId }: { walletId: string }) {
   return walletId.startsWith(`${WALLET_TYPE_HD}-`);
+}
+function isHwWallet({ walletId }: { walletId: string }) {
+  return walletId.startsWith(`${WALLET_TYPE_HW}-`);
 }
 
 function buildHDAccountId({
@@ -68,11 +74,14 @@ function buildAccountSelectorSceneId({
   sceneName: EAccountSelectorSceneName;
   sceneUrl?: string;
 }): string {
-  if (sceneName === 'discover') {
+  if (sceneName === EAccountSelectorSceneName.discover) {
     if (!sceneUrl) {
       throw new Error('buildSceneId ERROR: sceneUrl is required');
     }
     const origin = uriUtils.getOriginFromUrl({ url: sceneUrl });
+    if (origin !== sceneUrl) {
+      throw new Error('sceneUrl should be origin not full url');
+    }
     return `${sceneName}--${origin}`;
   }
   return sceneName;
@@ -88,16 +97,48 @@ function buildIndexedAccountId({
   return `${walletId}--${index}`;
 }
 
+function parseIndexedAccountId({
+  indexedAccountId,
+}: {
+  indexedAccountId: string;
+}) {
+  const arr = indexedAccountId.split(SEPERATOR);
+  const index = Number(arr[arr.length - 1]);
+  const walletIdArr = arr.slice(0, -1);
+  return {
+    walletId: walletIdArr.join(''),
+    index,
+  };
+}
+
 function buildHdWalletId({ nextHD }: { nextHD: number }) {
   return `${WALLET_TYPE_HD}-${nextHD}`;
+}
+
+function getDeviceIdFromWallet({ walletId }: { walletId: string }) {
+  return walletId.replace(`${WALLET_TYPE_HW}-`, '');
+}
+
+function getWalletIdFromAccountId({ accountId }: { accountId: string }) {
+  /*
+  external--60--0xf588ff00613814c3f86efc57059121c74eb237f1
+  hd-1--m/44'/118'/0'/0/0
+  hw-da2fb055-f3c8-4b55-922e-a04a6fea29cf--m/44'/0'/0'
+  hw-f5f9b539-2879-4811-bac2-8d143b08adef-mg2PbFeAMoms9Z7f5by1MscdP3RAhbrLUJ--m/49'/0'/0'
+  */
+  return accountId.split(SEPERATOR)[0] || '';
 }
 
 export default {
   buildHdWalletId,
   isHdWallet,
+  isHwWallet,
   buildHDAccountId,
   buildIndexedAccountId,
+  parseIndexedAccountId,
   shortenAddress,
   beautifyPathTemplate,
   buildAccountSelectorSceneId,
+  getDeviceIdFromWallet,
+  getWalletIdFromAccountId,
 };

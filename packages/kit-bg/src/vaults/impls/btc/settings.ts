@@ -1,6 +1,8 @@
 import { EAddressEncodings } from '@onekeyhq/core/src/types';
 import {
+  COINNAME_BTC,
   COINTYPE_BTC,
+  IMPL_BTC,
   INDEX_PLACEHOLDER,
 } from '@onekeyhq/shared/src/engine/engineConsts';
 
@@ -26,6 +28,7 @@ const accountDeriveInfo: IAccountDeriveInfoMapBtc = {
     label: 'Nested SegWit',
     template: `m/49'/${COINTYPE_BTC}'/${INDEX_PLACEHOLDER}'/0/0`,
     coinType: COINTYPE_BTC,
+    coinName: COINNAME_BTC,
     addressEncoding: EAddressEncodings.P2SH_P2WPKH,
   },
   BIP86: {
@@ -33,6 +36,7 @@ const accountDeriveInfo: IAccountDeriveInfoMapBtc = {
     label: 'Taproot',
     template: `m/86'/${COINTYPE_BTC}'/${INDEX_PLACEHOLDER}'/0/0`,
     coinType: COINTYPE_BTC,
+    coinName: COINNAME_BTC,
     addressEncoding: EAddressEncodings.P2TR,
   },
   BIP84: {
@@ -40,6 +44,7 @@ const accountDeriveInfo: IAccountDeriveInfoMapBtc = {
     label: 'Native SegWit',
     template: `m/84'/${COINTYPE_BTC}'/${INDEX_PLACEHOLDER}'/0/0`,
     coinType: COINTYPE_BTC,
+    coinName: COINNAME_BTC,
     addressEncoding: EAddressEncodings.P2WPKH,
   },
   BIP44: {
@@ -47,18 +52,23 @@ const accountDeriveInfo: IAccountDeriveInfoMapBtc = {
     label: 'Legacy',
     template: `m/44'/${COINTYPE_BTC}'/${INDEX_PLACEHOLDER}'/0/0`,
     coinType: COINTYPE_BTC,
+    coinName: COINNAME_BTC,
     addressEncoding: EAddressEncodings.P2PKH,
     // notRecommended: true,
   },
 };
 
 const settings: IVaultSettings = {
+  impl: IMPL_BTC,
+  coinTypeDefault: COINTYPE_BTC,
   accountType: EDBAccountType.UTXO,
 
   importedAccountEnabled: true,
   hardwareAccountEnabled: true,
   externalAccountEnabled: false,
   watchingAccountEnabled: true,
+
+  NFTEnabled: false,
 
   isUtxo: true,
 

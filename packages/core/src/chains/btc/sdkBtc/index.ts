@@ -219,5 +219,16 @@ export function validateBtcAddress({
       }
     : {
         isValid: false,
+        normalizedAddress: '',
+        displayAddress: '',
       };
+}
+
+export function checkBtcAddressIsUsed(query: {
+  xpub: string;
+  xpubSegwit?: string;
+  address: string;
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+}): Promise<{ isUsed: boolean }> {
+  return Promise.resolve({ isUsed: true });
 }

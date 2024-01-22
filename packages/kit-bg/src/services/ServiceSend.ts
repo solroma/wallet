@@ -1,6 +1,5 @@
 import { random } from 'lodash';
 
-import { encodePassword } from '@onekeyhq/core/src/secret';
 import {
   backgroundClass,
   backgroundMethod,
@@ -20,7 +19,8 @@ import type {
   IBroadcastTransactionParams,
   IBuildDecodedTxParams,
   IBuildUnsignedTxParams,
-  ISignTransactionParams,
+  ISignAndSendTransactionParams,
+  ISignTransactionParamsBase,
   ITransferInfo,
   IUpdateUnsignedTxParams,
 } from '../vaults/types';
@@ -43,9 +43,13 @@ class ServiceSend extends ServiceBase {
       networkId,
       accountId,
     });
+    const account = await this.backgroundApi.serviceAccount.getAccount({
+      accountId,
+      networkId,
+    });
     const transferInfo: ITransferInfo = {
-      from: '0x1959f5f4979c5cd87d5cb75c678c770515cb5e0e',
-      to: '0x1959f5f4979c5cd87d5cb75c678c770515cb5e0e',
+      from: account.address,
+      to: account.address,
       amount: `0.00000${random(1, 20)}`,
       token: '',
     };
@@ -60,22 +64,36 @@ class ServiceSend extends ServiceBase {
     unsignedTx = await vault.updateUnsignedTx({
       unsignedTx,
       feeInfo: {
+        common: {
+          nativeDecimals: 18,
+          nativeSymbol: 'ETH',
+          feeDecimals: 9,
+          feeSymbol: 'Gwei',
+          nativeTokenPrice: 2000,
+        },
         gas: {
-          gasLimit: '0x5208', // 21000
           gasPrice: '0x2a', // 42
+          gasLimit: '0x5208', // 21000
         },
       },
     });
+
+    // @ts-ignore
+    unsignedTx.encodedTx.nonce = '0x817'; // Nonce: 2071
 
     // PageSendConfirm -> password auth -> send tx
     const signedTxWithoutBroadcast = await this.signTransaction({
       networkId,
       accountId,
       unsignedTx,
-      password: encodePassword({ password: '11111111' }),
     });
 
-    const txid = await this.broadcastTransaction({
+    // const txid = await this.broadcastTransaction({
+    //   networkId,
+    //   signedTx: signedTxWithoutBroadcast,
+    // });
+    const txid = await this.broadcastTransactionLegacy({
+      accountId,
       networkId,
       signedTx: signedTxWithoutBroadcast,
     });
@@ -108,41 +126,24 @@ class ServiceSend extends ServiceBase {
       nonce: 1,
       actions: [
         {
-          type: EDecodedTxActionType.NATIVE_TRANSFER,
-          nativeTransfer: {
+          type: EDecodedTxActionType.ASSET_TRANSFER,
+          assetTransfer: {
             from: '0x1959f5f4979c5cd87d5cb75c678c770515cb5e0e',
             to: '0x1959f5f4979c5cd87d5cb75c678c770515cb5e0e',
-            amount: '0.0001',
-            amountValue: '1',
-            tokenInfo: {
-              name: 'Ethereum',
-              symbol: 'ETH',
-              decimals: 18,
-              logoURI:
-                'https://cdn.jsdelivr.net/gh/atomiclabs/cryptocurrency-icons@1a63530be6e374711a8554f31b17e4cb92c25fa5/128/color/eth.png',
-              address: '',
-              isNative: true,
-              riskLevel: 0,
-            },
-          },
-        },
-        {
-          type: EDecodedTxActionType.TOKEN_TRANSFER,
-          tokenTransfer: {
-            from: '0x1959f5f4979c5cd87d5cb75c678c770515cb5e0e',
-            to: '0x1959f5f4979c5cd87d5cb75c678c770515cb5e0e',
-            amount: '1',
-            amountValue: '1000000',
-            tokenInfo: {
-              name: 'Matic',
-              symbol: 'MATIC',
-              decimals: 6,
-              logoURI:
-                'https://cdn.jsdelivr.net/gh/atomiclabs/cryptocurrency-icons@1a63530be6e374711a8554f31b17e4cb92c25fa5/128/color/matic.png',
-              address: '',
-              isNative: false,
-              riskLevel: 0,
-            },
+            label: 'Send',
+            sends: [
+              {
+                from: '0x1959f5f4979c5cd87d5cb75c678c770515cb5e0e',
+                to: '0x1959f5f4979c5cd87d5cb75c678c770515cb5e0e',
+                token: '',
+                label: '',
+                amount: '1',
+                symbol: 'ETH',
+                image:
+                  'https://cdn.jsdelivr.net/gh/atomiclabs/cryptocurrency-icons@1a63530be6e374711a8554f31b17e4cb92c25fa5/128/color/eth.png',
+              },
+            ],
+            receives: [],
           },
         },
       ],
@@ -199,16 +200,43 @@ class ServiceSend extends ServiceBase {
   }
 
   @backgroundMethod()
-  public async signTransaction(
-    params: ISendTxBaseParams & ISignTransactionParams,
+  public async broadcastTransactionLegacy(
+    params: IBroadcastTransactionParams & { accountId: string },
   ) {
-    const { networkId, accountId, unsignedTx, password } = params;
+    const { networkId, accountId } = params;
     const vault = await vaultFactory.getVault({ networkId, accountId });
+    return vault.broadcastTransaction(params);
+  }
+
+  @backgroundMethod()
+  public async signTransaction(
+    params: ISendTxBaseParams & ISignTransactionParamsBase,
+  ) {
+    const { networkId, accountId, unsignedTx } = params;
+    const vault = await vaultFactory.getVault({ networkId, accountId });
+    const { password, deviceParams } =
+      await this.backgroundApi.servicePassword.promptPasswordVerifyByAccount({
+        accountId,
+      });
     const signedTx = await vault.signTransaction({
       unsignedTx,
       password,
+      deviceParams,
     });
-    return { ...signedTx, encodedTx: unsignedTx.encodedTx };
+    return signedTx;
+  }
+
+  @backgroundMethod()
+  public async signAndSendTransaction(
+    params: ISendTxBaseParams & ISignAndSendTransactionParams,
+  ) {
+    const { networkId, accountId, unsignedTx } = params;
+    const signedTx = await this.signTransaction({
+      networkId,
+      accountId,
+      unsignedTx,
+    });
+    return this.broadcastTransaction({ networkId, signedTx });
   }
 }
 

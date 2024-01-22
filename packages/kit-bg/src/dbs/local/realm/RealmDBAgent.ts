@@ -2,6 +2,8 @@ import { checkIsDefined } from '@onekeyhq/shared/src/utils/assertUtils';
 
 import { LocalDbAgentBase } from '../LocalDbAgentBase';
 
+import { realmDBSchemasMap } from './schemas';
+
 import type { RealmObjectBase } from './base/RealmObjectBase';
 import type { ELocalDBStoreNames } from '../localDBStoreNames';
 import type {
@@ -10,13 +12,17 @@ import type {
   ILocalDBGetAllRecordsResult,
   ILocalDBGetRecordByIdParams,
   ILocalDBGetRecordByIdResult,
+  ILocalDBGetRecordsCountParams,
+  ILocalDBGetRecordsCountResult,
   ILocalDBRecord,
   ILocalDBRecordPair,
   ILocalDBTxAddRecordsParams,
+  ILocalDBTxAddRecordsResult,
   ILocalDBTxGetAllRecordsParams,
   ILocalDBTxGetAllRecordsResult,
   ILocalDBTxGetRecordByIdParams,
   ILocalDBTxGetRecordByIdResult,
+  ILocalDBTxGetRecordsCountParams,
   ILocalDBTxRemoveRecordsParams,
   ILocalDBTxUpdateRecordsParams,
   ILocalDBWithTransactionOptions,
@@ -86,6 +92,18 @@ export class RealmDBAgent extends LocalDbAgentBase implements ILocalDBAgent {
     }
   }
 
+  async getRecordsCount<T extends ELocalDBStoreNames>(
+    params: ILocalDBGetRecordsCountParams<T>,
+  ): Promise<ILocalDBGetRecordsCountResult> {
+    return this.withTransaction(
+      async (tx) => {
+        const { count } = await this.txGetRecordsCount({ ...params, tx });
+        return { count };
+      },
+      { readOnly: true },
+    );
+  }
+
   async getAllRecords<T extends ELocalDBStoreNames>(
     params: ILocalDBGetAllRecordsParams<T>,
   ): Promise<ILocalDBGetAllRecordsResult<T>> {
@@ -110,16 +128,33 @@ export class RealmDBAgent extends LocalDbAgentBase implements ILocalDBAgent {
     );
   }
 
+  async txGetRecordsCount<T extends ELocalDBStoreNames>(
+    params: ILocalDBTxGetRecordsCountParams<T>,
+  ): Promise<ILocalDBGetRecordsCountResult> {
+    const { name } = params;
+    const objList = this.realm.objects<IRealmDBSchemaMap[T]>(name);
+    return Promise.resolve({
+      count: objList.length,
+    });
+  }
+
   async txGetAllRecords<T extends ELocalDBStoreNames>(
     params: ILocalDBTxGetAllRecordsParams<T>,
   ): Promise<ILocalDBTxGetAllRecordsResult<T>> {
-    const { name } = params;
-    const objList = this.realm.objects<IRealmDBSchemaMap[T]>(name);
+    const { name, ids } = params;
+    let objList: Array<{ record: any } | null | undefined> = [];
+
+    if (ids) {
+      objList = ids.map((id) => this._getObjectRecordById(name, id));
+    } else {
+      objList = this.realm.objects<IRealmDBSchemaMap[T]>(name) as any;
+    }
+
     const recordPairs: ILocalDBRecordPair<T>[] = [];
     const records: ILocalDBRecord<T>[] = [];
     objList.forEach((obj) => {
-      recordPairs.push([obj.record as any, obj]);
-      records.push(obj.record as any);
+      recordPairs.push([obj ? obj.record : null, obj as any]);
+      records.push(obj ? obj.record : null);
     });
 
     return Promise.resolve({
@@ -153,13 +188,42 @@ export class RealmDBAgent extends LocalDbAgentBase implements ILocalDBAgent {
     return Promise.resolve(undefined);
   }
 
+  checkSchemaPropertiesDefined({
+    name,
+    record,
+  }: {
+    name: ELocalDBStoreNames;
+    record: any;
+  }) {
+    if (process.env.NODE_ENV !== 'production') {
+      const schemaClass = realmDBSchemasMap[name];
+      const propertiesKeys = Object.keys(schemaClass.schema.properties);
+      const recordKeys = Object.keys(record || {});
+      recordKeys.forEach((key) => {
+        if (!propertiesKeys.includes(key)) {
+          throw new Error(`Realm schema properties missing: ${name} ${key}`);
+        }
+      });
+    }
+  }
+
   async txAddRecords<T extends ELocalDBStoreNames>(
     params: ILocalDBTxAddRecordsParams<T>,
-  ): Promise<void> {
+  ): Promise<ILocalDBTxAddRecordsResult> {
     const { name, records, skipIfExists } = params;
     checkIsDefined(params.tx);
     checkIsDefined(params.name);
 
+    this.checkSchemaPropertiesDefined({
+      name,
+      record: records?.[0] || {},
+    });
+
+    const result: ILocalDBTxAddRecordsResult = {
+      added: 0,
+      skipped: 0,
+      addedIds: [],
+    };
     records.forEach((r) => {
       let shouldAdd = true;
       if (skipIfExists) {
@@ -170,9 +234,13 @@ export class RealmDBAgent extends LocalDbAgentBase implements ILocalDBAgent {
       }
       if (shouldAdd) {
         this.realm.create(name, r);
+        result.added += 1;
+        result.addedIds.push(r.id);
+      } else {
+        result.skipped += 1;
       }
     });
-    return Promise.resolve(undefined);
+    return Promise.resolve(result);
   }
 
   async txRemoveRecords<T extends ELocalDBStoreNames>(

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 import { AnimatePresence } from 'tamagui';
 
@@ -23,13 +23,19 @@ import {
   useActiveAccount,
   useSelectedAccount,
 } from '@onekeyhq/kit/src/states/jotai/contexts/accountSelector';
-import makeBlockieImageUriList from '@onekeyhq/kit/src/utils/makeBlockieImageUriList';
 import { AccountRenameButton } from '@onekeyhq/kit/src/views/AccountManagerStacks/components/AccountRename';
 import { EOnboardingPages } from '@onekeyhq/kit/src/views/Onboarding/router/type';
+import {
+  WALLET_TYPE_IMPORTED,
+  WALLET_TYPE_WATCHING,
+} from '@onekeyhq/kit-bg/src/dbs/local/consts';
 import type {
+  IDBAccount,
+  IDBDevice,
   IDBIndexedAccount,
   IDBWallet,
 } from '@onekeyhq/kit-bg/src/dbs/local/types';
+import type { IAccountSelectorSectionData } from '@onekeyhq/kit-bg/src/dbs/simple/entity/SimpleDbEntityAccountSelector';
 import { emptyArray } from '@onekeyhq/shared/src/consts';
 import {
   EAppEventBusNames,
@@ -57,19 +63,48 @@ export function WalletDetails({ onAccountPress, num }: IWalletDetailsProps) {
 
   const navigation = useAppNavigation();
 
+  const isOthers = selectedAccount?.focusedWallet === '$$others';
+
+  const handleImportWatchingAccount = useCallback(() => {
+    navigation.pushModal(EModalRoutes.OnboardingModal, {
+      screen: EOnboardingPages.ImportAddress,
+    });
+  }, [navigation]);
+
+  const handleImportPrivatekeyAccount = useCallback(() => {
+    navigation.pushModal(EModalRoutes.OnboardingModal, {
+      screen: EOnboardingPages.ImportPrivateKey,
+    });
+  }, [navigation]);
+
   const { result: focusedWalletInfo, run: reloadFocusedWalletInfo } =
     usePromiseResult(
       async () => {
-        if (
-          selectedAccount?.focusedWallet &&
-          accountUtils.isHdWallet({
-            walletId: selectedAccount?.focusedWallet,
-          })
-        ) {
-          const wallet0 = await serviceAccount.getWallet({
+        if (!selectedAccount?.focusedWallet) {
+          return undefined;
+        }
+        const isHd = accountUtils.isHdWallet({
+          walletId: selectedAccount?.focusedWallet,
+        });
+        const isHw = accountUtils.isHwWallet({
+          walletId: selectedAccount?.focusedWallet,
+        });
+        if (isHd || isHw) {
+          const wallet = await serviceAccount.getWallet({
             walletId: selectedAccount?.focusedWallet,
           });
-          return wallet0;
+
+          let device: IDBDevice | undefined;
+          if (isHw) {
+            device = await serviceAccount.getWalletDevice({
+              walletId: selectedAccount?.focusedWallet,
+            });
+          }
+
+          return {
+            wallet,
+            device,
+          };
         }
       },
       [selectedAccount?.focusedWallet, serviceAccount],
@@ -82,34 +117,28 @@ export function WalletDetails({ onAccountPress, num }: IWalletDetailsProps) {
     const fn = async () => {
       await reloadFocusedWalletInfo();
     };
+    // TODO sync device features to DB and reload data
     appEventBus.on(EAppEventBusNames.WalletUpdate, fn);
     return () => {
       appEventBus.off(EAppEventBusNames.WalletUpdate, fn);
     };
   }, [reloadFocusedWalletInfo]);
 
-  const { result: accountsResult, run: reloadAccounts } =
-    usePromiseResult(async () => {
+  const { result: sectionData, run: reloadAccounts } = usePromiseResult(
+    async () => {
       if (!selectedAccount?.focusedWallet) {
         return Promise.resolve(undefined);
       }
-      return serviceAccount
-        .getAccountsOfWallet({
-          walletId: selectedAccount?.focusedWallet,
-        })
-        .then(async (value) => {
-          const accountList = value?.accounts ?? [];
-          const uriList = await makeBlockieImageUriList(
-            accountList.map((item) => item.idHash || item.id),
-          );
-          accountList.forEach(
-            (item, index) => (item.avatar = uriList?.[index]),
-          );
-          return value;
-        });
-    }, [selectedAccount?.focusedWallet, serviceAccount]);
-  const accounts =
-    accountsResult?.accounts ?? (emptyArray as unknown as IDBIndexedAccount[]);
+
+      return serviceAccount.getAccountSelectorAccountsListSectionData({
+        focusedWallet: selectedAccount?.focusedWallet,
+      });
+    },
+    [selectedAccount?.focusedWallet, serviceAccount],
+    {
+      checkIsFocused: false,
+    },
+  );
 
   useEffect(() => {
     const fn = async () => {
@@ -120,17 +149,6 @@ export function WalletDetails({ onAccountPress, num }: IWalletDetailsProps) {
       appEventBus.off(EAppEventBusNames.AccountUpdate, fn);
     };
   }, [reloadAccounts]);
-
-  const sectionData = useMemo(
-    () => [
-      {
-        title: '', // focusedWalletInfo?.name ?? '-',
-        isHiddenWalletData: false,
-        data: accounts,
-      },
-    ],
-    [accounts],
-  );
 
   const [remember, setIsRemember] = useState(false);
   const { bottom } = useSafeAreaInsets();
@@ -166,7 +184,7 @@ export function WalletDetails({ onAccountPress, num }: IWalletDetailsProps) {
     <Stack flex={1} pb={bottom}>
       <ListItem
         mt="$1.5"
-        title={focusedWalletInfo?.name}
+        title={isOthers ? 'Others' : focusedWalletInfo?.wallet?.name}
         titleProps={{
           animation: 'quick',
           opacity: editMode ? 0 : 1,
@@ -181,17 +199,20 @@ export function WalletDetails({ onAccountPress, num }: IWalletDetailsProps) {
           {editMode ? 'Done' : 'Edit'}
         </Button>
       </ListItem>
+
       <SectionList
         contentContainerStyle={{ pb: '$3' }}
         estimatedItemSize="$14"
-        extraData={[selectedAccount.indexedAccountId, editMode]}
+        extraData={[selectedAccount.indexedAccountId, editMode, remember]}
         // {...(wallet?.type !== 'others' && {
         //   ListHeaderComponent: (
         //     <WalletOptions editMode={editMode} wallet={wallet} />
         //   ),
         // })}
-        ListHeaderComponent={<WalletOptions wallet={focusedWalletInfo} />}
-        sections={sectionData}
+        ListHeaderComponent={
+          isOthers ? null : <WalletOptions wallet={focusedWalletInfo?.wallet} />
+        }
+        sections={sectionData ?? (emptyArray as any)}
         renderSectionHeader={({ section }: { section: IAccountGroupProps }) => (
           <>
             {/* If better performance is needed,  */
@@ -255,7 +276,7 @@ export function WalletDetails({ onAccountPress, num }: IWalletDetailsProps) {
             )}
           </>
         )}
-        renderItem={({ item }: { item: IDBIndexedAccount }) => (
+        renderItem={({ item }: { item: IDBIndexedAccount | IDBAccount }) => (
           <ListItem
             key={item.id}
             avatarProps={{
@@ -278,51 +299,82 @@ export function WalletDetails({ onAccountPress, num }: IWalletDetailsProps) {
             titleProps={{
               numberOfLines: 1,
             }}
-            // subtitle={item.address}
-            subtitle=""
+            subtitle={
+              (item as IDBAccount)?.address
+                ? accountUtils.shortenAddress({
+                    address: (item as IDBAccount)?.address,
+                  })
+                : undefined
+            }
             {...(onAccountPress &&
               !editMode && {
                 onPress: () => {
-                  if (!focusedWalletInfo) {
-                    return;
+                  if (isOthers) {
+                    actions.current.updateSelectedAccount({
+                      num,
+                      builder: (v) => ({
+                        ...v,
+                        walletId: accountUtils.getWalletIdFromAccountId({
+                          accountId: item.id,
+                        }),
+                        othersWalletAccountId: item.id,
+                        indexedAccountId: undefined,
+                      }),
+                    });
+                  } else if (focusedWalletInfo) {
+                    actions.current.updateSelectedAccount({
+                      num,
+                      builder: (v) => ({
+                        ...v,
+                        walletId: focusedWalletInfo?.wallet?.id,
+                        othersWalletAccountId: undefined,
+                        indexedAccountId: item.id,
+                      }),
+                    });
                   }
-                  actions.current.updateSelectedAccount({
-                    num,
-                    builder: (v) => ({
-                      ...v,
-                      walletId: focusedWalletInfo?.id,
-                      accountId: undefined,
-                      indexedAccountId: item.id,
-                    }),
-                  });
                   navigation.popStack();
                 },
-                checkMark: selectedAccount.indexedAccountId === item.id,
+                checkMark: isOthers
+                  ? selectedAccount.othersWalletAccountId === item.id
+                  : selectedAccount.indexedAccountId === item.id,
               })}
           >
             <AnimatePresence>
-              {editMode && <AccountRenameButton indexedAccount={item} />}
+              {editMode && <AccountRenameButton account={item} />}
             </AnimatePresence>
           </ListItem>
         )}
-        renderSectionFooter={() => (
+        renderSectionFooter={({
+          section,
+        }: {
+          section: IAccountSelectorSectionData;
+        }) => (
           <ListItem
             onPress={async () => {
+              if (isOthers) {
+                if (section.walletId === WALLET_TYPE_WATCHING) {
+                  handleImportWatchingAccount();
+                }
+                if (section.walletId === WALLET_TYPE_IMPORTED) {
+                  handleImportPrivatekeyAccount();
+                }
+                return;
+              }
+              console.log(section);
               if (!focusedWalletInfo) {
                 return;
               }
               const c = await serviceAccount.addHDNextIndexedAccount({
-                walletId: focusedWalletInfo?.id,
+                walletId: section.walletId,
               });
               console.log('addHDNextIndexedAccount>>>', c);
-              await reloadAccounts();
-
               actions.current.updateSelectedAccount({
                 num,
                 builder: (v) => ({
                   ...v,
+                  walletId: focusedWalletInfo?.wallet?.id,
+                  othersWalletAccountId: undefined,
                   indexedAccountId: c.indexedAccountId,
-                  walletId: focusedWalletInfo?.id,
                 }),
               });
             }}
@@ -348,6 +400,63 @@ export function WalletDetails({ onAccountPress, num }: IWalletDetailsProps) {
           </ListItem>
         )}
       />
+
+      {selectedAccount?.focusedWallet &&
+        !focusedWalletInfo?.wallet?.passphraseState &&
+        accountUtils.isHwWallet({
+          walletId: selectedAccount?.focusedWallet,
+        }) && (
+          <>
+            <ListItem
+              onPress={async () => {
+                if (!focusedWalletInfo) {
+                  return;
+                }
+                // features is not sync from device
+                // if (
+                //   !focusedWalletInfo.device?.featuresInfo?.passphrase_protection
+                // ) {
+                //   alert('硬件没有开启 passphrase');
+                //   return;
+                // }
+                await actions.current.createHWHiddenWallet({
+                  walletId: focusedWalletInfo?.wallet?.id,
+                });
+                await reloadAccounts();
+                console.log(
+                  'add hidden wallet from device: ',
+                  focusedWalletInfo,
+                );
+              }}
+            >
+              <Stack
+                bg="$bgStrong"
+                borderRadius="$2"
+                p="$2"
+                style={{
+                  borderCurve: 'continuous',
+                }}
+              >
+                <Icon name="PlusSmallOutline" />
+              </Stack>
+              {/* Add account */}
+              <ListItem.Text
+                userSelect="none"
+                primary="Add Hidden Wallet"
+                primaryTextProps={{
+                  size: '$bodyLg',
+                }}
+              />
+            </ListItem>
+            <Button
+              onPress={() => {
+                void backgroundApiProxy.serviceHardware.inputPassphraseOnDevice();
+              }}
+            >
+              在硬件输入passphrase
+            </Button>
+          </>
+        )}
     </Stack>
   );
 }

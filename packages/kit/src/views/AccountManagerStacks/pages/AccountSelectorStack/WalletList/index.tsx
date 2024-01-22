@@ -42,6 +42,30 @@ interface IWalletListProps {
   num: number;
 }
 
+function OthersWalletItem({
+  onWalletPress,
+  num,
+}: {
+  num: number;
+  onWalletPress: (focusedWallet: IAccountSelectorFocusedWallet) => void;
+}) {
+  const {
+    selectedAccount: { focusedWallet },
+  } = useSelectedAccount({ num });
+  return (
+    <WalletListItem
+      walletName="Others"
+      selected={focusedWallet === '$$others'}
+      wallet={undefined}
+      onPress={() => onWalletPress && onWalletPress('$$others')}
+      walletAvatarProps={{
+        img: 'cardDividers',
+        wallet: undefined,
+      }}
+    />
+  );
+}
+
 export function WalletList({ num }: IWalletListProps) {
   const navigation = useAppNavigation();
 
@@ -71,7 +95,7 @@ export function WalletList({ num }: IWalletListProps) {
   const { selectedAccount } = useSelectedAccount({ num });
 
   const { result: walletsResult, run: reloadWallets } = usePromiseResult(
-    () => serviceAccount.getHDWallets(),
+    () => serviceAccount.getHDAndHWWallets(),
     [serviceAccount],
     {
       checkIsFocused: false,
@@ -113,7 +137,9 @@ export function WalletList({ num }: IWalletListProps) {
       borderRightColor="$neutral3"
     >
       {/* Close action */}
-      {(platformEnv.isExtension || platformEnv.isNativeAndroid) && (
+      {(platformEnv.isExtension ||
+        platformEnv.isNativeAndroid ||
+        platformEnv.isWeb) && (
         <XStack px="$5" py="$3.5">
           <Page.Close>
             <HeaderIconButton icon="CrossedLargeOutline" />
@@ -175,16 +201,7 @@ export function WalletList({ num }: IWalletListProps) {
       />
       {/* Others */}
       <Stack pb={bottom}>
-        <WalletListItem
-          walletName="Others"
-          selected={false}
-          wallet={undefined}
-          onPress={() => onWalletPress && onWalletPress('$$others')}
-          walletAvatarProps={{
-            img: 'cardDividers',
-            wallet: undefined,
-          }}
-        />
+        <OthersWalletItem onWalletPress={onWalletPress} num={num} />
       </Stack>
     </Stack>
   );

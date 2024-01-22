@@ -6,12 +6,21 @@ import backgroundApiProxy from '@onekeyhq/kit/src/background/instance/background
 import type useAppNavigation from '@onekeyhq/kit/src/hooks/useAppNavigation';
 import { EModalRoutes } from '@onekeyhq/kit/src/routes/Modal/type';
 import { EAccountManagerStacksRoutes } from '@onekeyhq/kit/src/views/AccountManagerStacks/router/types';
+import {
+  WALLET_TYPE_EXTERNAL,
+  WALLET_TYPE_IMPORTED,
+  WALLET_TYPE_WATCHING,
+} from '@onekeyhq/kit-bg/src/dbs/local/consts';
 import type {
   IDBAccount,
+  IDBCreateHWWalletParamsBase,
   IDBIndexedAccount,
   IDBWallet,
 } from '@onekeyhq/kit-bg/src/dbs/local/types';
-import type { IAccountSelectorSelectedAccount } from '@onekeyhq/kit-bg/src/dbs/simple/entity/SimpleDbEntityAccountSelector';
+import type {
+  IAccountSelectorFocusedWallet,
+  IAccountSelectorSelectedAccount,
+} from '@onekeyhq/kit-bg/src/dbs/simple/entity/SimpleDbEntityAccountSelector';
 import { mockGetNetwork } from '@onekeyhq/kit-bg/src/mock';
 import { memoFn } from '@onekeyhq/shared/src/utils/cacheUtils';
 import type {
@@ -30,9 +39,21 @@ import {
   selectedAccountsAtom,
 } from './atoms';
 
-import type { IAccountSelectorActiveAccountInfo } from './atoms';
+import type {
+  IAccountSelectorActiveAccountInfo,
+  IAccountSelectorContextData,
+} from './atoms';
 
 const { serviceAccount } = backgroundApiProxy;
+
+// TODO move to utils
+function isOthersWallet({ walletId }: { walletId: string }) {
+  return (
+    walletId === WALLET_TYPE_WATCHING ||
+    walletId === WALLET_TYPE_EXTERNAL ||
+    walletId === WALLET_TYPE_IMPORTED
+  );
+}
 class AccountSelectorActions extends ContextJotaiActionsBase {
   refresh = contextAtomMethod((_, set, payload: { num: number }) => {
     const { num } = payload;
@@ -140,21 +161,53 @@ class AccountSelectorActions extends ContextJotaiActionsBase {
         activeWallet,
         navigation,
         num,
+        sceneName,
+        sceneUrl,
       }: {
         activeWallet: IDBWallet | undefined;
         navigation: ReturnType<typeof useAppNavigation>;
         num: number;
-      },
+      } & IAccountSelectorContextData,
     ) => {
       if (activeWallet?.id) {
+        let focusedWallet: IAccountSelectorFocusedWallet = activeWallet?.id;
+        if (isOthersWallet({ walletId: focusedWallet })) {
+          focusedWallet = '$$others';
+        }
         this.updateSelectedAccount.call(set, {
           num,
-          builder: (v) => ({ ...v, focusedWallet: activeWallet?.id }),
+          builder: (v) => ({ ...v, focusedWallet }),
         });
       }
       set(accountSelectorEditModeAtom(), false);
       navigation.pushModal(EModalRoutes.AccountManagerStacks, {
         screen: EAccountManagerStacksRoutes.AccountSelectorStack,
+        params: {
+          num,
+          sceneName,
+          sceneUrl,
+        },
+      });
+    },
+  );
+
+  autoSelectToCreatedWallet = contextAtomMethod(
+    (
+      _,
+      set,
+      {
+        wallet,
+        indexedAccount,
+      }: { wallet: IDBWallet; indexedAccount: IDBIndexedAccount },
+    ) => {
+      this.updateSelectedAccount.call(set, {
+        num: 0,
+        builder: (v) => ({
+          ...v,
+          indexedAccountId: indexedAccount.id,
+          walletId: wallet.id,
+          focusedWallet: wallet.id,
+        }),
       });
     },
   );
@@ -172,16 +225,38 @@ class AccountSelectorActions extends ContextJotaiActionsBase {
       const { wallet, indexedAccount } = await serviceAccount.createHDWallet({
         mnemonic,
       });
+      this.autoSelectToCreatedWallet.call(set, { wallet, indexedAccount });
+      return { wallet, indexedAccount };
+    },
+  );
 
-      this.updateSelectedAccount.call(set, {
-        num: 0,
-        builder: (v) => ({
-          ...v,
-          indexedAccountId: indexedAccount.id,
+  createHWWallet = contextAtomMethod(
+    async (_, set, params: IDBCreateHWWalletParamsBase) => {
+      const res = await serviceAccount.createHWWallet(params);
+      const { wallet, indexedAccount } = res;
+      this.autoSelectToCreatedWallet.call(set, { wallet, indexedAccount });
+      return res;
+    },
+  );
+
+  createHWHiddenWallet = contextAtomMethod(
+    async (_, set, { walletId }: { walletId: string }) => {
+      const res = await serviceAccount.createHWHiddenWallet({ walletId });
+      const { wallet, indexedAccount } = res;
+      this.autoSelectToCreatedWallet.call(set, { wallet, indexedAccount });
+      return res;
+    },
+  );
+
+  createHWWalletWithHidden = contextAtomMethod(
+    async (_, set, params: IDBCreateHWWalletParamsBase) => {
+      const { wallet, device } = await this.createHWWallet.call(set, params);
+      // add hidden wallet if device passphrase enabled
+      if (device && device.featuresInfo?.passphrase_protection) {
+        await this.createHWHiddenWallet.call(set, {
           walletId: wallet.id,
-          focusedWallet: wallet.id,
-        }),
-      });
+        });
+      }
     },
   );
 
@@ -199,12 +274,13 @@ class AccountSelectorActions extends ContextJotaiActionsBase {
       set(accountSelectorEditModeAtom(), false);
       const selectedAccountsInfo = get(selectedAccountsAtom())[0];
 
+      // auto change to next available wallet
       if (selectedAccountsInfo?.walletId === walletId) {
-        const { wallets } = await serviceAccount.getHDWallets();
+        const { wallets } = await serviceAccount.getHDAndHWWallets();
         const firstWallet: IDBWallet | undefined = wallets[0];
         let firstAccount: IDBIndexedAccount | undefined;
         if (firstWallet) {
-          const { accounts } = await serviceAccount.getAccountsOfWallet({
+          const { accounts } = await serviceAccount.getAccountsOfWalletLegacy({
             walletId: firstWallet?.id,
           });
           // eslint-disable-next-line prefer-destructuring
@@ -306,6 +382,9 @@ export function useAccountSelectorActions() {
   const showAccountSelector = actions.showAccountSelector.use();
   const removeWallet = actions.removeWallet.use();
   const createHDWallet = actions.createHDWallet.use();
+  const createHWWallet = actions.createHWWallet.use();
+  const createHWHiddenWallet = actions.createHWHiddenWallet.use();
+  const createHWWalletWithHidden = actions.createHWWalletWithHidden.use();
 
   return useRef({
     reloadActiveAccountInfo,
@@ -316,5 +395,8 @@ export function useAccountSelectorActions() {
     showAccountSelector,
     removeWallet,
     createHDWallet,
+    createHWWallet,
+    createHWHiddenWallet,
+    createHWWalletWithHidden,
   });
 }

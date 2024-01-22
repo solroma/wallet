@@ -1,16 +1,15 @@
 import type {
   EAddressEncodings,
+  ICoreApiGetAddressItem,
+  ICoreImportedCredentialEncryptHex,
   ICurveName,
   ISignedTxPro,
   IUnsignedMessage,
   IUnsignedTxPro,
 } from '@onekeyhq/core/src/types';
+import type { IDeviceSharedCallParams } from '@onekeyhq/shared/types/device';
 import type { IFeeInfoUnit } from '@onekeyhq/shared/types/gas';
-import type {
-  IAccountHistoryTx,
-  IOnChainHistoryTx,
-  IOnChainHistoryTxAsset,
-} from '@onekeyhq/shared/types/history';
+import type { IOnChainHistoryTx } from '@onekeyhq/shared/types/history';
 
 import type {
   IAccountDeriveInfoMapBtc,
@@ -20,11 +19,7 @@ import type {
   IAccountDeriveInfoMapEvm,
   IAccountDeriveTypesEvm,
 } from './impls/evm/settings';
-import type {
-  EDBAccountType,
-  WALLET_TYPE_EXTERNAL,
-  WALLET_TYPE_WATCHING,
-} from '../dbs/local/consts';
+import type { EDBAccountType } from '../dbs/local/consts';
 import type { IDBWalletId } from '../dbs/local/types';
 import type { MessageDescriptor } from 'react-intl';
 
@@ -46,6 +41,7 @@ export interface IAccountDeriveInfo {
 
   template: string; // template with INDEX_PLACEHOLDER
   coinType: string;
+  coinName?: string;
   addressEncoding?: EAddressEncodings;
 
   labelKey?: MessageDescriptor['id'];
@@ -87,11 +83,15 @@ export type IVaultSettingsNetworkInfo = {
   curve: ICurveName;
 };
 export type IVaultSettings = {
+  impl: string;
+  coinTypeDefault: string;
+
   importedAccountEnabled: boolean;
   watchingAccountEnabled: boolean;
   externalAccountEnabled: boolean;
   hardwareAccountEnabled: boolean;
   isUtxo: boolean;
+  NFTEnabled: boolean;
 
   accountType: EDBAccountType;
   accountDeriveInfo: IAccountDeriveInfoMap;
@@ -117,33 +117,42 @@ export type IGetPrivateKeysResult = {
   [path: string]: Buffer;
 };
 export type IPrepareWatchingAccountsParams = {
-  target: string; // address, xpub
+  // target: string; // address, xpub TODO remove
+  address: string;
+  pub?: string;
+  xpub?: string;
   name: string;
-  accountIdPrefix: typeof WALLET_TYPE_WATCHING | typeof WALLET_TYPE_EXTERNAL;
-  template?: string;
+  template?: string; // TODO use deriveInfo, for BTC taproot address importing
 };
 export type IPrepareImportedAccountsParams = {
-  privateKey: Buffer;
-  name: string;
-  template?: string;
-};
-export type IPrepareHdAccountsParams = {
   password: string;
+  importedCredential: ICoreImportedCredentialEncryptHex;
+  name: string;
+  template?: string; // TODO use deriveInfo
+  deriveInfo?: IAccountDeriveInfo;
+};
+export type IPrepareHdAccountsParamsBase = {
   indexes: Array<number>;
-  // purpose?: number; // TODO for what?
   names?: Array<string>; // custom names
   deriveInfo: IAccountDeriveInfo;
   skipCheckAccountExist?: boolean; // BTC required
 };
-export type IPrepareHardwareAccountsParams = {
-  // type: 'SEARCH_ACCOUNTS' | 'ADD_ACCOUNTS'; // for hardware?
-  indexes: Array<number>;
-  purpose?: number;
-  names?: Array<string>;
-  coinType: string;
-  template: string;
-  skipCheckAccountExist?: boolean;
-  confirmOnDevice?: boolean;
+export type IPrepareHdAccountsParams = IPrepareHdAccountsParamsBase & {
+  password: string;
+};
+export type IPrepareHdAccountsOptions = {
+  addressEncoding?: EAddressEncodings;
+  checkIsAccountUsed?: (query: {
+    xpub: string;
+    xpubSegwit?: string;
+    address: string;
+  }) => Promise<{ isUsed: boolean }>;
+  buildAddressesInfo: (payload: {
+    usedIndexes: number[];
+  }) => Promise<ICoreApiGetAddressItem[]>;
+};
+export type IPrepareHardwareAccountsParams = IPrepareHdAccountsParamsBase & {
+  deviceParams: IDeviceSharedCallParams;
 };
 export type IPrepareAccountsParams =
   | IPrepareWatchingAccountsParams
@@ -202,10 +211,16 @@ export interface IBroadcastTransactionParams {
   networkId: string;
   signedTx: ISignedTxPro;
 }
-export interface ISignTransactionParams {
+
+export interface ISignTransactionParamsBase {
   unsignedTx: IUnsignedTxPro;
-  password: string;
 }
+
+export type ISignAndSendTransactionParams = ISignTransactionParams;
+export type ISignTransactionParams = ISignTransactionParamsBase & {
+  password: string;
+  deviceParams: IDeviceSharedCallParams | undefined;
+};
 
 export interface ISignMessageParams {
   messages: IUnsignedMessage[];
@@ -215,7 +230,5 @@ export interface ISignMessageParams {
 export interface IBuildHistoryTxParams {
   accountId: string;
   networkId: string;
-  tokens: Record<string, IOnChainHistoryTxAsset>;
-  onChainHistoryTxs: IOnChainHistoryTx[];
-  localHistoryTxs: IAccountHistoryTx[];
+  onChainHistoryTx: IOnChainHistoryTx;
 }

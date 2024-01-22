@@ -300,6 +300,7 @@ function SelectFrame<T extends string | ISelectItem>({
   labelInValue = false,
   floatingPanelProps,
   placement = 'bottom-start',
+  testID = '',
 }: ISelectProps<T>) {
   const [openCounts, updateOpenCounts] = useState(0);
   const selectedItemRef = useRef<ISelectItem>(
@@ -356,7 +357,9 @@ function SelectFrame<T extends string | ISelectItem>({
   );
   return (
     <SelectContext.Provider value={context as IContextType}>
-      <Stack position="relative">{children}</Stack>
+      <Stack position="relative" testID={`${testID}-frame`}>
+        {children}
+      </Stack>
     </SelectContext.Provider>
   );
 }
@@ -374,6 +377,7 @@ function BasicSelect<T extends string | ISelectItem>({
           placeholder={placeholder}
           readonly
           flex={1}
+          testID={`${props.testID || ''}-input`}
         />
         <Icon
           name="ChevronBottomSolid"

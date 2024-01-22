@@ -107,6 +107,7 @@ export function ConnectWallet() {
                     flexBasis: '25%',
                   }}
                   p="$1"
+                  testID={`3rd-party-wallet-${name || ''}`}
                 >
                   <Stack
                     justifyContent="center"

@@ -59,6 +59,7 @@ const SetPasswordItem = () => {
       onPress={() => backgroundApiProxy.servicePassword.promptPasswordVerify()}
       icon="KeyOutline"
       title={intl.formatMessage({ id: 'title__set_password' })}
+      testID="setting-set-password"
     />
   );
 };

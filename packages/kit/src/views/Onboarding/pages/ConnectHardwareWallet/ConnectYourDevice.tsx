@@ -490,6 +490,7 @@ export function ConnectYourDevicePage() {
                 drillIn
                 onPress={item.onPress}
                 focusable={false}
+                testID={`hardware-wallet-${item.title}`}
               />
             ))}
           </Stack>
@@ -516,6 +517,7 @@ export function ConnectYourDevicePage() {
             target="_blank"
             size="$bodyMdMedium"
             p="$2"
+            testID="hardware-wallet-buy-one"
           >
             Buy One
           </Anchor>

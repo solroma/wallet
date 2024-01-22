@@ -81,6 +81,7 @@ export function BeforeShowRecoveryPhrase() {
       <Page.Footer
         onConfirmText="Show Recovery Phrase"
         onConfirm={handleShowRecoveryPhrasePress}
+        testID="show-recovery-phrase"
       />
     </Page>
   );

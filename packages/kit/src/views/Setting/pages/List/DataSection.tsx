@@ -75,7 +75,7 @@ const ClearCacheOnApp = () => {
       onPress={onPress}
       icon="BroomOutline"
       title={intl.formatMessage({ id: 'action__clear_all_cache_on_app' })}
-      testID="setting-data-clear-cache-on-app"
+      testID="setting-clear-all-cache"
     />
   );
 };
@@ -96,7 +96,7 @@ const CleanCacheOnWebBrowser = () => {
       onPress={onPress}
       icon="CompassOutline"
       title={intl.formatMessage({ id: 'action__clear_cache_of_web_browser' })}
-      testID="setting-data-clear-cache-on-browser"
+      testID="setting-clear-browser-cache"
     />
   );
 };
@@ -144,7 +144,7 @@ const EraseData = () => {
       icon="DeleteOutline"
       title={intl.formatMessage({ id: 'action__erase_data' })}
       titleProps={{ color: '$textCritical' }}
-      testID="setting-data-erase_data"
+      testID="setting-erase-data"
     />
   );
 };
@@ -157,7 +157,7 @@ const DownloadStateLog = () => {
       onPress={onPress}
       icon="Document2Outline"
       title={intl.formatMessage({ id: 'content__state_logs' })}
-      testID="setting-data-download_log"
+      testID="setting-download-log"
     >
       <ListItem.IconButton
         disabled

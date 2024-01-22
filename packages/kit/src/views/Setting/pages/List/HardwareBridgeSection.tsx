@@ -45,8 +45,12 @@ export const HardwareBridgeSection = () => {
       <ListItem
         onPress={onPressBridgeSdkUrl}
         icon="CodeOutline"
+        iconProps={{
+          testID: 'setting-bridge-sdk-url-icon',
+        }}
         title={intl.formatMessage({ id: 'form__hardware_bridge_sdk_url' })}
         drillIn
+        testID="setting-bridge-sdk-url"
       >
         <ListItem.Text
           primary={settings.hardwareConnectSrc}
@@ -56,12 +60,14 @@ export const HardwareBridgeSection = () => {
               // tone: 'subdued',
             }
           }
+          testID="setting-bridge-sdk-url"
         />
       </ListItem>
       <ListItem
         onPress={onPressBridgeStatus}
         icon="ChartTrendingOutline"
         title={intl.formatMessage({ id: 'form__hardware_bridge_status' })}
+        testID="setting-bridge-status"
       >
         <ListItem.IconButton
           disabled
@@ -69,6 +75,7 @@ export const HardwareBridgeSection = () => {
           iconProps={{
             color: '$iconActive',
           }}
+          testID="setting-bridge-status-icon"
         />
       </ListItem>
     </Section>

@@ -43,7 +43,11 @@ const ThemeListItem = () => {
       drillIn
       testID="setting-preference-theme"
     >
-      <ListItem.Text primary={themes[theme]} align="right" />
+      <ListItem.Text
+        primary={themes[theme]}
+        align="right"
+        testID="setting-preference-theme"
+      />
     </ListItem>
   );
 };
@@ -77,8 +81,8 @@ const LocaleListItem = () => {
     >
       <ListItem.Text
         primary={labels[locale]}
-        testID="setting-preference-language-current"
         align="right"
+        testID="setting-preference-language"
       />
     </ListItem>
   );
@@ -103,7 +107,11 @@ const CurrencyListItem = () => {
       onPress={onPress}
       testID="setting-preference-currency"
     >
-      <ListItem.Text primary={text.toUpperCase()} align="right" />
+      <ListItem.Text
+        primary={text.toUpperCase()}
+        testID="setting-preference-currency"
+        align="right"
+      />
     </ListItem>
   );
 };

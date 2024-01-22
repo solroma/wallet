@@ -84,6 +84,7 @@ export function GetStarted() {
             pressStyle={{
               bg: '$bgPrimaryActive',
             }}
+            testID="hardware-wallet"
           >
             <Stack
               alignSelf="flex-start"
@@ -111,7 +112,7 @@ export function GetStarted() {
               secondaryTextProps={{
                 color: '$textInverseSubdued',
               }}
-              testID="onboarding-hardware-wallet"
+              testID="hardware-wallet"
             />
             <ListItem.DrillIn
               color="$whiteA6"
@@ -135,6 +136,7 @@ export function GetStarted() {
               py="$3.5"
               drillIn
               onPress={handleCreateWalletPress}
+              testID="create-wallet"
             >
               <Stack
                 alignSelf="flex-start"
@@ -150,7 +152,7 @@ export function GetStarted() {
                 flex={1}
                 primary="Create Wallet"
                 secondary="Create new recovery phrase"
-                testID="onboarding-create-wallet"
+                testID="create-wallet"
               />
             </ListItem>
             <ListItem
@@ -159,6 +161,7 @@ export function GetStarted() {
               py="$3.5"
               drillIn
               onPress={handleImportWalletPress}
+              testID="import-wallet"
             >
               <Stack
                 alignSelf="flex-start"
@@ -177,7 +180,7 @@ export function GetStarted() {
                 secondaryTextProps={{
                   numberOfLines: 1,
                 }}
-                testID="onboarding-import-wallet"
+                testID="import-wallet"
               />
             </ListItem>
           </Group>
@@ -190,7 +193,7 @@ export function GetStarted() {
                 size: 'large',
               } as IButtonProps
             }
-            testID="onboarding-3rd-party"
+            testID="3rd-party-wallet"
           >
             Connect 3rd-party Wallet
           </Button>
@@ -214,7 +217,7 @@ export function GetStarted() {
             color="$textSubdued"
             target="_blank"
             textDecorationLine="none"
-            testID="onboarding-agreement"
+            testID="user-agreement"
           >
             User Service Agreement
           </Anchor>{' '}
@@ -225,7 +228,7 @@ export function GetStarted() {
             color="$textSubdued"
             target="_blank"
             textDecorationLine="none"
-            testID="onboarding-privacy-policy"
+            testID="privacy-policy"
           >
             Privacy Policy
           </Anchor>

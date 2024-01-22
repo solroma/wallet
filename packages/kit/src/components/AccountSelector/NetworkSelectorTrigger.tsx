@@ -129,6 +129,7 @@ export function ControlledNetworkSelectorTrigger({
       value={value}
       onChange={onChange}
       title="网络"
+      testID="network-selector"
     />
   );
 }

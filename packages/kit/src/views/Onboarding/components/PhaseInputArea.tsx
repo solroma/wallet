@@ -521,6 +521,7 @@ export function PhaseInputArea({
                   console.error(error);
                 }
               }}
+              testID="paste-all"
             >
               Paste All(Only in Dev)
             </Button>

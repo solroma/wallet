@@ -41,6 +41,7 @@ export const AboutSection = () => {
         icon="InfoCircleOutline"
         title={intl.formatMessage({ id: 'form__version' })}
         drillIn
+        testID="setting-version"
       >
         <ListItem.Text
           primary="4.15"
@@ -50,6 +51,7 @@ export const AboutSection = () => {
               // tone: 'subdued',
             }
           }
+          testID="setting-version"
         />
       </ListItem>
       <ListItem

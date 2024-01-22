@@ -53,6 +53,7 @@ export function FooterActions({
             }
             onPress={handleCancel}
             {...cancelButtonProps}
+            testID="footer-cancel"
           >
             {onCancelText || 'Cancel'}
           </Button>
@@ -68,6 +69,7 @@ export function FooterActions({
             variant="primary"
             onPress={handleConfirm}
             {...confirmButtonProps}
+            testID="footer-confirm"
           >
             {onConfirmText || 'Confirm'}
           </Button>

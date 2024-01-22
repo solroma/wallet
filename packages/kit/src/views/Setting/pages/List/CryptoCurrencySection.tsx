@@ -33,12 +33,14 @@ export const CryptoCurrencySection = () => {
         icon="CryptoCoinOutline"
         title={intl.formatMessage({ id: 'form__spend_dust_utxo' })}
         drillIn
+        testID="setting-spend-dust-utxo"
       />
       <ListItem
         onPress={onAccountDerivation}
         icon="AlbumsOutline"
         title="Account derivation"
         drillIn
+        testID="setting-account-derivation"
       />
     </Section>
   );

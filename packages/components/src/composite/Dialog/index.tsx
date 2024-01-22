@@ -171,6 +171,7 @@ function DialogFrame({
         }}
         size="small"
         onPress={handleCancelButtonPress}
+        testID={`dailog-close-${title || ''}`}
       />
 
       {/* extra children */}

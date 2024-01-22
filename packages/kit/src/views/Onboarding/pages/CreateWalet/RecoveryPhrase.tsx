@@ -116,6 +116,7 @@ export function RecoveryPhrase() {
               onPress={async () => {
                 await Clipboard.setStringAsync(mnemonic);
               }}
+              testID="copy-all"
             >
               Copy All(Only in Dev)
             </Button>
@@ -127,6 +128,7 @@ export function RecoveryPhrase() {
       <Page.Footer
         onConfirmText="I've Saved the Phrase"
         onConfirm={handleConfirmPress}
+        testID="saved-phrase"
       />
     </Page>
   );

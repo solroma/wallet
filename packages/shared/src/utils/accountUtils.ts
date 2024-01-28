@@ -15,18 +15,21 @@ function beautifyPathTemplate({ template }: { template: string }) {
   return template.replace(INDEX_PLACEHOLDER, '*');
 }
 
-function shortenAddress({ address }: { address: string }) {
+function shortenAddress({ address }: { address: string | undefined }) {
+  if (!address) {
+    return '';
+  }
   if (address.length <= 10) {
     return address;
   }
   return `${address.slice(0, 6)}...${address.slice(-4)}`;
 }
 
-function isHdWallet({ walletId }: { walletId: string }) {
-  return walletId.startsWith(`${WALLET_TYPE_HD}-`);
+function isHdWallet({ walletId }: { walletId: string | undefined }) {
+  return Boolean(walletId && walletId.startsWith(`${WALLET_TYPE_HD}-`));
 }
-function isHwWallet({ walletId }: { walletId: string }) {
-  return walletId.startsWith(`${WALLET_TYPE_HW}-`);
+function isHwWallet({ walletId }: { walletId: string | undefined }) {
+  return Boolean(walletId && walletId.startsWith(`${WALLET_TYPE_HW}-`));
 }
 
 function buildHDAccountId({
@@ -80,9 +83,15 @@ function buildAccountSelectorSceneId({
     }
     const origin = uriUtils.getOriginFromUrl({ url: sceneUrl });
     if (origin !== sceneUrl) {
-      throw new Error('sceneUrl should be origin not full url');
+      throw new Error(
+        'buildSceneId ERROR: sceneUrl should be equal to origin, full url is not allowed',
+      );
     }
     return `${sceneName}--${origin}`;
+  }
+
+  if (!sceneName) {
+    throw new Error('buildSceneId ERROR: sceneName is required');
   }
   return sceneName;
 }
@@ -129,7 +138,18 @@ function getWalletIdFromAccountId({ accountId }: { accountId: string }) {
   return accountId.split(SEPERATOR)[0] || '';
 }
 
+function buildLocalTokenId({
+  networkId,
+  tokenIdOnNetwork,
+}: {
+  networkId: string;
+  tokenIdOnNetwork: string;
+}) {
+  return `${networkId}__${tokenIdOnNetwork}`;
+}
+
 export default {
+  buildLocalTokenId,
   buildHdWalletId,
   isHdWallet,
   isHwWallet,

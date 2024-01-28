@@ -1,5 +1,6 @@
 module.exports = [
   'changelog',
+  'qrcode',
   'Eip',
   'subtype',
   'Eip1559',
@@ -348,7 +349,6 @@ module.exports = [
   'sendable',
   'Tryopen',
   'Icahost',
-  'Erc20',
   'Ibc',
   'txhash',
   'codespace',
@@ -590,7 +590,6 @@ module.exports = [
   'alg',
   'gitkeep',
   'COMMITHASH',
-  'dayjs',
   'swipeable',
   'nft',
   'dappradar',
@@ -599,4 +598,10 @@ module.exports = [
   'gt2xl',
   'calc',
   '100vw',
+  'Numberish',
+  'qrcode',
+  'Tarask',
+  'Hira',
+  'Latn',
+  'Cyrl',
 ];

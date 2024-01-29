@@ -19,13 +19,13 @@ export default function SettingLanguageModal() {
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ py: '$2' }}
-        testID="settinglanguagemodal-scrollview"
+        testID="setting-language-modal-scrollview"
       >
         <ListItemSelect
           onChange={onChange}
           value={settings.locale}
           options={options.map((o) => ({ title: o.label, value: o.value }))}
-          testID="settinglanguagemodal"
+          testID="setting-language-modal"
         />
       </ScrollView>
     </Page>

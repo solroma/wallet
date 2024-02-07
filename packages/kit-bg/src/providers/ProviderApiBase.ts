@@ -1,5 +1,7 @@
 /* eslint-disable @typescript-eslint/require-await,@typescript-eslint/no-unsafe-call,@typescript-eslint/no-unsafe-member-access,@typescript-eslint/no-unsafe-return */
 
+import { web3Errors } from '@onekeyfe/cross-inpage-provider-errors';
+
 import {
   PROVIDER_API_METHOD_PREFIX,
   backgroundClass,
@@ -14,7 +16,8 @@ import type {
 } from '@onekeyfe/cross-inpage-provider-types';
 
 export type IProviderBaseBackgroundNotifyInfo = {
-  send: (data: any) => void;
+  send: (data: any, targetOrigin: string) => void;
+  targetOrigin: string;
 };
 
 @backgroundClass()
@@ -63,6 +66,24 @@ abstract class ProviderApiBase {
     //  exists methods
     //  RPC methods
     //  throwMethodNotFound
+  }
+
+  async getConnectedAccountsInfo(request: IJsBridgeMessagePayload) {
+    if (!request.origin) {
+      throw web3Errors.provider.unauthorized('origin is required');
+    }
+    const accountsInfo =
+      await this.backgroundApi.serviceDApp.getConnectedAccounts({
+        origin: request.origin ?? '',
+        scope: request.scope ?? this.providerName,
+      });
+    if (
+      !accountsInfo ||
+      (Array.isArray(accountsInfo) && !accountsInfo.length)
+    ) {
+      return null;
+    }
+    return accountsInfo;
   }
 }
 

@@ -11,7 +11,7 @@ class ServiceBootstrap extends ServiceBase {
   public async init() {
     await Promise.all([
       this.backgroundApi.serviceSetting.refreshLocaleMessages(),
-      // this.backgroundApi.walletConnect.initialize(),
+      this.backgroundApi.walletConnect.initialize(),
     ]);
   }
 }

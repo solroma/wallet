@@ -50,17 +50,26 @@ class ProviderApiWalletConnect {
 
   @backgroundMethod()
   async initialize() {
+    alert('initializeinitializeinitialize');
     if (this.web3Wallet) {
       return;
     }
-    const core = new Core({
-      projectId: WALLET_CONNECT_V2_PROJECT_ID,
+    setTimeout(async () => {
+      try {
+        const core = new Core({
+          projectId: WALLET_CONNECT_V2_PROJECT_ID,
+        });
+        this.web3Wallet = await Web3Wallet.init({
+          core,
+          metadata: WALLET_CONNECT_CLIENT_META,
+        });
+        this.registerEvents();
+      } catch (error: any) {
+        console.log(error);
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+        alert(error.message);
+      }
     });
-    this.web3Wallet = await Web3Wallet.init({
-      core,
-      metadata: WALLET_CONNECT_CLIENT_META,
-    });
-    this.registerEvents();
   }
 
   registerEvents() {

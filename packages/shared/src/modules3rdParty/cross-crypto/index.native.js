@@ -8,18 +8,18 @@ if (global.crypto && global.crypto.getRandomValues) {
   delete global.crypto.getRandomValues;
 }
 // shim global.crypto.getRandomValues
-require('react-native-get-random-values');
+// require('react-native-get-random-values');
 
-if (process.env.NODE_ENV !== 'production') {
-  const getRandomValuesOld = global.crypto.getRandomValues;
-  global.crypto.getRandomValues = function (...args) {
-    console.log(
-      '------------ call global.crypto.getRandomValues (native)',
-      getRandomValuesOld,
-    );
-    return getRandomValuesOld.apply(global.crypto, args);
-  };
-}
+// if (process.env.NODE_ENV !== 'production') {
+//   const getRandomValuesOld = global.crypto.getRandomValues;
+//   global.crypto.getRandomValues = function (...args) {
+//     console.log(
+//       '------------ call global.crypto.getRandomValues (native)',
+//       getRandomValuesOld,
+//     );
+//     return getRandomValuesOld.apply(global.crypto, args);
+//   };
+// }
 
 const crypto = require('react-native-crypto');
 

@@ -3,6 +3,8 @@ import './polyfillsPlatform';
 
 import '../modules3rdParty/cross-crypto/verify';
 
+import '@walletconnect/react-native-compat';
+
 // import { normalizeRequestLibs } from '../request/normalize';
 import timerUtils from '../utils/timerUtils';
 // import { interceptConsoleErrorWithExtraInfo } from '../errors/utils/errorUtils';

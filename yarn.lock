@@ -5104,7 +5104,7 @@ __metadata:
     "@onekeyhq/components": "npm:*"
     "@onekeyhq/kit": "npm:*"
     "@onekeyhq/shared": "npm:*"
-    "@react-native-async-storage/async-storage": "npm:1.18.2"
+    "@react-native-async-storage/async-storage": "npm:1.22.0"
     "@react-native-community/netinfo": "npm:^9.4.1"
     "@react-native-community/slider": "npm:4.4.3"
     "@shopify/flash-list": "npm:^1.6.3"
@@ -5935,14 +5935,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@react-native-async-storage/async-storage@npm:1.18.2":
-  version: 1.18.2
-  resolution: "@react-native-async-storage/async-storage@npm:1.18.2"
+"@react-native-async-storage/async-storage@npm:1.22.0":
+  version: 1.22.0
+  resolution: "@react-native-async-storage/async-storage@npm:1.22.0"
   dependencies:
     merge-options: "npm:^3.0.4"
   peerDependencies:
-    react-native: ^0.0.0-0 || 0.60 - 0.72 || 1000.0.0
-  checksum: 3830828c608c9bdc36e147f7b8ff8632368eb8c97ee6f8dc30629a6ba802b99e5307202d86fe5ec37affcef225f82e331be6723921b91d500b935006da2e25ac
+    react-native: ^0.0.0-0 || >=0.60 <1.0
+  checksum: eadadbe1d6c59f5bd75fbe16fba7ec7ed2fd0d3786634fbe2af6d83b9a7371e79f42de3cd67129aa375b241a18f7538df9b026b5c0ad85cc6e1c6927543b1914
   languageName: node
   linkType: hard
 

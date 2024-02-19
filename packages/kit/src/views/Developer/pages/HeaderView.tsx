@@ -69,17 +69,87 @@ function HomeAccountSelectorInfoDemo() {
       </Button>
       <Button
         onPress={async () => {
-          const array = new Uint32Array(10);
-          global.crypto.getRandomValues(array);
-
-          const a = [];
-          for (const num of array) {
-            a.push(String(num));
-          }
-          alert(JSON.stringify(a));
+          global.stepTest = 1;
+          const core = new Core({
+            projectId: WALLET_CONNECT_V2_PROJECT_ID,
+          });
+          await Web3Wallet.init({
+            core,
+            metadata: WALLET_CONNECT_CLIENT_META,
+          });
         }}
       >
-        global.crypto.getRandomValues
+        @walletconnect/core--core.start
+      </Button>
+      <Button
+        onPress={async () => {
+          global.stepTest = 2;
+          const core = new Core({
+            projectId: WALLET_CONNECT_V2_PROJECT_ID,
+          });
+          await Web3Wallet.init({
+            core,
+            metadata: WALLET_CONNECT_CLIENT_META,
+          });
+        }}
+      >
+        @walletconnect/core--session.init
+      </Button>
+      <Button
+        onPress={async () => {
+          global.stepTest = 3;
+          const core = new Core({
+            projectId: WALLET_CONNECT_V2_PROJECT_ID,
+          });
+          await Web3Wallet.init({
+            core,
+            metadata: WALLET_CONNECT_CLIENT_META,
+          });
+        }}
+      >
+        @walletconnect/core--proposal.init
+      </Button>
+      <Button
+        onPress={async () => {
+          global.stepTest = 4;
+          const core = new Core({
+            projectId: WALLET_CONNECT_V2_PROJECT_ID,
+          });
+          await Web3Wallet.init({
+            core,
+            metadata: WALLET_CONNECT_CLIENT_META,
+          });
+        }}
+      >
+        @walletconnect/core--pendingRequest.init
+      </Button>
+      <Button
+        onPress={async () => {
+          global.stepTest = 5;
+          const core = new Core({
+            projectId: WALLET_CONNECT_V2_PROJECT_ID,
+          });
+          await Web3Wallet.init({
+            core,
+            metadata: WALLET_CONNECT_CLIENT_META,
+          });
+        }}
+      >
+        @walletconnect/core--engine.init
+      </Button>
+      <Button
+        onPress={async () => {
+          global.stepTest = 6;
+          const core = new Core({
+            projectId: WALLET_CONNECT_V2_PROJECT_ID,
+          });
+          await Web3Wallet.init({
+            core,
+            metadata: WALLET_CONNECT_CLIENT_META,
+          });
+        }}
+      >
+        @walletconnect/core--core.verify.init
       </Button>
       <Button
         onPress={async () => {

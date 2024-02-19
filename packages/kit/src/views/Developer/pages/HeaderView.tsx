@@ -45,6 +45,16 @@ function HomeAccountSelectorInfoDemo() {
         硬件输入 Passphrase
       </Button>
       <Button
+        onPress={() => {
+          // eslint-disable-next-line no-new
+          new Core({
+            projectId: WALLET_CONNECT_V2_PROJECT_ID,
+          });
+        }}
+      >
+        @walletconnect/core
+      </Button>
+      <Button
         onPress={async () => {
           const core = new Core({
             projectId: WALLET_CONNECT_V2_PROJECT_ID,
@@ -55,7 +65,7 @@ function HomeAccountSelectorInfoDemo() {
           });
         }}
       >
-        @walletconnect/core
+        @walletconnect/core--Web3Wallet.init
       </Button>
       <Button
         onPress={async () => {

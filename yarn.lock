@@ -4849,6 +4849,7 @@ __metadata:
     "@typescript-eslint/parser": "npm:^5.46.1"
     "@ungap/structured-clone": "npm:^1.2.0"
     "@vespaiach/axios-fetch-adapter": "npm:^0.3.1"
+    "@walletconnect/core": "npm:2.11.0"
     "@walletconnect/web3wallet": "npm:1.10.0"
     axios: "npm:^1.6.0"
     babel-loader: "npm:^9.1.3"
@@ -4998,7 +4999,6 @@ __metadata:
     jsrsasign: "npm:^10.8.6"
     near-api-js: "npm:^2.1.4"
     ripple-keypairs: "npm:^1.3.1"
-    tronweb: "npm:^5.3.1"
     xrpl: "npm:^2.13.0"
   languageName: unknown
   linkType: soft
@@ -16056,7 +16056,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"ethers@npm:^5.4.4, ethers@npm:^5.6.9, ethers@npm:^5.7.2":
+"ethers@npm:^5.6.9, ethers@npm:^5.7.2":
   version: 5.7.2
   resolution: "ethers@npm:5.7.2"
   dependencies:
@@ -28709,26 +28709,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"tronweb@npm:5.1.0":
-  version: 5.1.0
-  resolution: "tronweb@npm:5.1.0"
-  dependencies:
-    "@babel/runtime": "npm:^7.0.0"
-    "@tronweb3/google-protobuf": "npm:^3.21.2"
-    axios: "npm:^0.26.1"
-    bignumber.js: "npm:^9.0.1"
-    elliptic: "npm:^6.5.4"
-    ethers: "npm:^5.4.4"
-    eventemitter3: "npm:^3.1.0"
-    injectpromise: "npm:^1.0.0"
-    lodash: "npm:^4.17.21"
-    semver: "npm:^5.6.0"
-    validator: "npm:^13.7.0"
-  checksum: 9f2d2eeea378621e3aa0b6fa83e8ef3367cafb15d3ff0547fecdf30487978c6cbce786ea61901b12ea68a765221da955e260c4e15589959b5871324aee55d5c4
-  languageName: node
-  linkType: hard
-
-"tronweb@npm:^5.3.1":
+"tronweb@npm:^5.1.0":
   version: 5.3.1
   resolution: "tronweb@npm:5.3.1"
   dependencies:

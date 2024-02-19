@@ -38,6 +38,8 @@ PODS:
     - ZXingObjC/PDF417
   - ExpoClipboard (5.0.1):
     - ExpoModulesCore
+  - ExpoCrypto (12.8.1):
+    - ExpoModulesCore
   - ExpoDevice (5.9.3):
     - ExpoModulesCore
   - ExpoFileSystem (16.0.5):
@@ -1023,7 +1025,7 @@ PODS:
     - React-debug
   - react-native-ble-manager (10.1.5):
     - React-Core
-  - react-native-get-random-values (1.9.0):
+  - react-native-get-random-values (1.10.0):
     - React-Core
   - react-native-lite-card (1.0.1):
     - glog
@@ -1291,6 +1293,7 @@ DEPENDENCIES:
   - ExpoBlur (from `../../../node_modules/expo-blur/ios`)
   - ExpoCamera (from `../../../node_modules/expo-camera/ios`)
   - ExpoClipboard (from `../../../node_modules/expo-clipboard/ios`)
+  - ExpoCrypto (from `../../../node_modules/expo-crypto/ios`)
   - ExpoDevice (from `../../../node_modules/expo-device/ios`)
   - ExpoFileSystem (from `../../../node_modules/expo-file-system/ios`)
   - ExpoHaptics (from `../../../node_modules/expo-haptics/ios`)
@@ -1458,6 +1461,8 @@ EXTERNAL SOURCES:
     :path: "../../../node_modules/expo-camera/ios"
   ExpoClipboard:
     :path: "../../../node_modules/expo-clipboard/ios"
+  ExpoCrypto:
+    :path: "../../../node_modules/expo-crypto/ios"
   ExpoDevice:
     :path: "../../../node_modules/expo-device/ios"
   ExpoFileSystem:
@@ -1651,6 +1656,7 @@ SPEC CHECKSUMS:
   ExpoBlur: 2eb7f7ac50c0818ee7d596996e4c0112b3d225f6
   ExpoCamera: c50a4c67431540e86406e953dc189b850263e522
   ExpoClipboard: b597982124f067ff9f5b89093eb3d97898d5d877
+  ExpoCrypto: b6428f48599c007676dc81a9b5f72c07e62fdccc
   ExpoDevice: d204395e17fffdcefa7470bdef33b07719ac41b1
   ExpoFileSystem: 04795dd4d47e76eaf12e38c92091f77d794f9e7f
   ExpoHaptics: 604aca02e942d1d43c139cae7cf397b26f85476f
@@ -1705,7 +1711,7 @@ SPEC CHECKSUMS:
   React-logger: 66b168e2b2bee57bd8ce9e69f739d805732a5570
   React-Mapbuffer: 9ee041e1d7be96da6d76a251f92e72b711c651d6
   react-native-ble-manager: 09724bad4d06b86a85e0cd7bd97196fecca15e9a
-  react-native-get-random-values: dee677497c6a740b71e5612e8dbd83e7539ed5bb
+  react-native-get-random-values: 384787fd76976f5aec9465aff6fa9e9129af1e74
   react-native-lite-card: fbd9da7a3e47081aaf201ce1e9640d9cf293de89
   react-native-metrix: b1aab1cb911f555b57812eed5d38c5942c6d99af
   react-native-mmkv: 9ae7ca3977e8ef48dbf7f066974eb844c20b5fd7

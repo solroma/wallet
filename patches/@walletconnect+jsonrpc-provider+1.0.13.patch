@@ -1,0 +1,43 @@
+diff --git a/node_modules/@walletconnect/jsonrpc-provider/dist/cjs/provider.js b/node_modules/@walletconnect/jsonrpc-provider/dist/cjs/provider.js
+index 6737fd8..52d5c10 100644
+--- a/node_modules/@walletconnect/jsonrpc-provider/dist/cjs/provider.js
++++ b/node_modules/@walletconnect/jsonrpc-provider/dist/cjs/provider.js
+@@ -15,6 +15,7 @@ class JsonRpcProvider extends jsonrpc_utils_1.IJsonRpcProvider {
+         }
+     }
+     connect(connection = this.connection) {
++        alert('-----connect----jsonrpc-provider')
+         return tslib_1.__awaiter(this, void 0, void 0, function* () {
+             yield this.open(connection);
+         });
+@@ -91,6 +92,10 @@ class JsonRpcProvider extends jsonrpc_utils_1.IJsonRpcProvider {
+         this.events.emit("disconnect");
+     }
+     open(connection = this.connection) {
++        if (global.$$coreStart < 65) {
++          alert('----open----jsonrpc-provider')
++          return;
++        }
+         return tslib_1.__awaiter(this, void 0, void 0, function* () {
+             if (this.connection === connection && this.connection.connected)
+                 return;
+diff --git a/node_modules/@walletconnect/jsonrpc-provider/dist/esm/provider.js b/node_modules/@walletconnect/jsonrpc-provider/dist/esm/provider.js
+index 93d902d..bfd6fda 100644
+--- a/node_modules/@walletconnect/jsonrpc-provider/dist/esm/provider.js
++++ b/node_modules/@walletconnect/jsonrpc-provider/dist/esm/provider.js
+@@ -11,6 +11,7 @@ export class JsonRpcProvider extends IJsonRpcProvider {
+         }
+     }
+     async connect(connection = this.connection) {
++        alert('esm-----connect----jsonrpc-provider')
+         await this.open(connection);
+     }
+     async disconnect() {
+@@ -88,6 +89,7 @@ export class JsonRpcProvider extends IJsonRpcProvider {
+             connection = this.connection;
+         }
+         this.connection = this.setConnection(connection);
++        alert('esm-----open----jsonrpc-provider-open-connnection')
+         await this.connection.open();
+         this.registerEventListeners();
+         this.events.emit("connect");

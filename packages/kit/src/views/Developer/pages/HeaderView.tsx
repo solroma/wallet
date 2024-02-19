@@ -3,7 +3,7 @@ import { useCallback, useMemo, useState } from 'react';
 import { Core } from '@walletconnect/core';
 import { Web3Wallet } from '@walletconnect/web3wallet';
 
-import { Button, SizableText, YStack } from '@onekeyhq/components';
+import { Button, Input, SizableText, YStack } from '@onekeyhq/components';
 import type { IPageNavigationProp } from '@onekeyhq/components/src/layouts/Navigation';
 import {
   WALLET_CONNECT_CLIENT_META,
@@ -43,6 +43,18 @@ function HomeAccountSelectorInfoDemo() {
         }}
       >
         硬件输入 Passphrase
+      </Button>
+      <Input
+        onChangeText={(v) => {
+          global.$$coreStart = Number(v);
+        }}
+      />
+      <Button
+        onPress={() => {
+          alert(`${typeof global.$$coreStart} ${global.$$coreStart}`);
+        }}
+      >
+        $$coreStart
       </Button>
       <Button
         onPress={() => {

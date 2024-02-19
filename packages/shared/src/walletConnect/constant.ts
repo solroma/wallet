@@ -2,8 +2,7 @@ import { Platform } from 'react-native';
 
 import platformEnv from '../platformEnv';
 
-export const WALLET_CONNECT_V2_PROJECT_ID =
-  process.env.WALLETCONNECT_PROJECT_ID;
+export const WALLET_CONNECT_V2_PROJECT_ID = '5e21f5018bfdeb78af03187a432a301d';
 
 const platformName = [
   process.env.ONEKEY_PLATFORM ?? '',

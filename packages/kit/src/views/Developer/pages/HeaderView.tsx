@@ -49,10 +49,10 @@ function HomeAccountSelectorInfoDemo() {
           const core = new Core({
             projectId: WALLET_CONNECT_V2_PROJECT_ID,
           });
-          // await Web3Wallet.init({
-          //   core,
-          //   metadata: WALLET_CONNECT_CLIENT_META,
-          // });
+          await Web3Wallet.init({
+            core,
+            metadata: WALLET_CONNECT_CLIENT_META,
+          });
         }}
       >
         @walletconnect/core

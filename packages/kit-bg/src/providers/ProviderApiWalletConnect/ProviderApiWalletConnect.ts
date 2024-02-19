@@ -50,17 +50,17 @@ class ProviderApiWalletConnect {
 
   @backgroundMethod()
   async initialize() {
-    if (this.web3Wallet) {
-      return;
-    }
-    const core = new Core({
-      projectId: WALLET_CONNECT_V2_PROJECT_ID,
-    });
-    this.web3Wallet = await Web3Wallet.init({
-      core,
-      metadata: WALLET_CONNECT_CLIENT_META,
-    });
-    this.registerEvents();
+    // if (this.web3Wallet) {
+    //   return;
+    // }
+    // const core = new Core({
+    //   projectId: WALLET_CONNECT_V2_PROJECT_ID,
+    // });
+    // this.web3Wallet = await Web3Wallet.init({
+    //   core,
+    //   metadata: WALLET_CONNECT_CLIENT_META,
+    // });
+    // this.registerEvents();
   }
 
   registerEvents() {

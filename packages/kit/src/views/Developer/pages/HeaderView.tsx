@@ -3,7 +3,13 @@ import { useCallback, useMemo, useState } from 'react';
 import { Core } from '@walletconnect/core';
 import { Web3Wallet } from '@walletconnect/web3wallet';
 
-import { Button, Input, SizableText, YStack } from '@onekeyhq/components';
+import {
+  Button,
+  Input,
+  SizableText,
+  Stack,
+  YStack,
+} from '@onekeyhq/components';
 import type { IPageNavigationProp } from '@onekeyhq/components/src/layouts/Navigation';
 import {
   WALLET_CONNECT_CLIENT_META,
@@ -24,8 +30,10 @@ import { ETestModalPages } from '../../TestModal/router/type';
 import { ETabDeveloperRoutes } from '../type';
 
 import type { ITabDeveloperParamList } from '../type';
+import { TextArea } from 'tamagui';
 
 function HomeAccountSelectorInfoDemo() {
+  const [code, setCode] = useState('');
   return (
     <YStack mx="$2" my="$4">
       <AccountSelectorTriggerLegacy num={0} />
@@ -44,6 +52,17 @@ function HomeAccountSelectorInfoDemo() {
       >
         硬件输入 Passphrase
       </Button>
+      <Stack bg="red">
+        <TextArea multiline onChangeText={setCode} />
+        <Button
+          onPress={() => {
+            // eslint-disable-next-line no-eval
+            eval(code);
+          }}
+        >
+          执行代码
+        </Button>
+      </Stack>
       <Input
         onChangeText={(v) => {
           global.$$coreStart = Number(v);

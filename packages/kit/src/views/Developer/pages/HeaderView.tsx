@@ -49,13 +49,40 @@ function HomeAccountSelectorInfoDemo() {
           const core = new Core({
             projectId: WALLET_CONNECT_V2_PROJECT_ID,
           });
-          await Web3Wallet.init({
-            core,
-            metadata: WALLET_CONNECT_CLIENT_META,
-          });
+          // await Web3Wallet.init({
+          //   core,
+          //   metadata: WALLET_CONNECT_CLIENT_META,
+          // });
         }}
       >
         @walletconnect/core
+      </Button>
+      <Button
+        onPress={async () => {
+          const array = new Uint32Array(10);
+          global.crypto.getRandomValues(array);
+
+          const a = [];
+          for (const num of array) {
+            a.push(String(num));
+          }
+          alert(JSON.stringify(a));
+        }}
+      >
+        global.crypto.getRandomValues
+      </Button>
+      <Button
+        onPress={async () => {
+          const array = global.crypto.randomBytes(127);
+          global.crypto.getRandomValues(array);
+          const a = [];
+          for (const num of array) {
+            a.push(String(num));
+          }
+          alert(JSON.stringify(a));
+        }}
+      >
+        global.crypto.randomBytes
       </Button>
     </YStack>
   );

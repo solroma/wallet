@@ -5145,7 +5145,7 @@ __metadata:
     react-native-file-logger: "npm:^0.4.1"
     react-native-fs: "npm:^2.20.0"
     react-native-gesture-handler: "npm:2.14.1"
-    react-native-get-random-values: "npm:1.9.0"
+    react-native-get-random-values: "npm:1.10.0"
     react-native-keyboard-manager: "npm:^6.5.11-1"
     react-native-level-fs: "npm:^3.0.1"
     react-native-metrix: "npm:^0.6.3"
@@ -25108,14 +25108,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-native-get-random-values@npm:1.9.0":
-  version: 1.9.0
-  resolution: "react-native-get-random-values@npm:1.9.0"
+"react-native-get-random-values@npm:1.10.0":
+  version: 1.10.0
+  resolution: "react-native-get-random-values@npm:1.10.0"
   dependencies:
     fast-base64-decode: "npm:^1.0.0"
   peerDependencies:
     react-native: ">=0.56"
-  checksum: 8af3ee2de0b1f811088fb068e1caddb5ea0dd31c7f8f411854d95758b19c7380d4153e8ba6879e971a76fa84c0b5f933aad5342fc023fda3bc9b2e974e039505
+  checksum: 4dc702f46843120e3d3c493132d379f933f26defe8ad1ddd9e97116f320e660d5cf2e8ff914b9b17106598cf26c25ad83926aaf70e9ec7d549787f4e44574167
   languageName: node
   linkType: hard
 

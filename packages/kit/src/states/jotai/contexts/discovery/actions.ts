@@ -18,6 +18,8 @@ import type {
 import {
   browserTypeHandler,
   crossWebviewLoadUrl,
+  injectToPauseWebsocket,
+  injectToResumeWebsocket,
   validateUrl,
   webviewRefs,
 } from '@onekeyhq/kit/src/views/Discovery/utils/explorerUtils';
@@ -34,6 +36,9 @@ import {
   webTabsAtom,
   webTabsMapAtom,
 } from './atoms';
+
+import type { IElectronWebView } from '@onekeyfe/cross-inpage-provider-types';
+import type { WebView } from 'react-native-webview';
 
 export const homeResettingFlags: Record<string, number> = {};
 
@@ -607,6 +612,66 @@ class ContextJotaiActionsDiscovery extends ContextJotaiActionsBase {
       }
     },
   );
+
+  updateDappActivityInteraction = contextAtomMethod(
+    (get, _, payload: { id?: string | null; type: 'pause' | 'resume' }) => {
+      let tabId: string | undefined | null = payload.id;
+      if (!tabId) {
+        tabId = get(activeTabIdAtom());
+      }
+      const ref = tabId ? webviewRefs[tabId] : null;
+      if (ref) {
+        const shouldPause = payload.type === 'pause';
+        const injectCode = shouldPause
+          ? injectToPauseWebsocket
+          : injectToResumeWebsocket;
+        // update jsBridge interaction
+        if (ref.jsBridge) {
+          ref.jsBridge.globalOnMessageEnabled = !shouldPause;
+        }
+        // update wallet connect websocket
+        if (platformEnv.isNative) {
+          try {
+            (ref.innerRef as WebView)?.injectJavaScript(injectCode);
+          } catch (error) {
+            // ipad mini orientation changed cause injectJavaScript ERROR, which crash app
+            console.error(
+              `${
+                shouldPause ? 'pauseDappInteraction' : 'resumeDappInteraction'
+              } webview.injectJavaScript() ERROR >>>>> `,
+              error,
+            );
+          }
+        }
+        if (platformEnv.isDesktop) {
+          const deskTopRef = ref.innerRef as IElectronWebView;
+          if (deskTopRef) {
+            try {
+              deskTopRef.executeJavaScript(injectCode);
+            } catch (e) {
+              // if not dom ready, no need to pause websocket
+            }
+          }
+        }
+      }
+    },
+  );
+
+  pauseDappInteraction = contextAtomMethod((_, set, payload: string | null) => {
+    this.updateDappActivityInteraction.call(set, {
+      id: payload,
+      type: 'pause',
+    });
+  });
+
+  resumeDappInteraction = contextAtomMethod(
+    (_, set, payload: string | null) => {
+      this.updateDappActivityInteraction.call(set, {
+        id: payload,
+        type: 'resume',
+      });
+    },
+  );
 }
 
 const createActions = memoFn(() => {
@@ -682,6 +747,8 @@ export function useBrowserAction() {
   const handleOpenWebSite = actions.handleOpenWebSite.use();
   const onNavigation = actions.onNavigation.use();
   const addUrlToPhishingCache = actions.addUrlToPhishingCache.use();
+  const pauseDappInteraction = actions.pauseDappInteraction.use();
+  const resumeDappInteraction = actions.resumeDappInteraction.use();
 
   return useRef({
     gotoSite,
@@ -689,5 +756,7 @@ export function useBrowserAction() {
     handleOpenWebSite,
     onNavigation,
     addUrlToPhishingCache,
+    pauseDappInteraction,
+    resumeDappInteraction,
   });
 }

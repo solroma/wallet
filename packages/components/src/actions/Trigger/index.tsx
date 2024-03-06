@@ -1,4 +1,9 @@
-import type { ForwardedRef, PropsWithChildren } from 'react';
+import type {
+  ComponentType,
+  ForwardedRef,
+  PropsWithChildren,
+  ReactNode,
+} from 'react';
 import { Children, cloneElement, forwardRef, isValidElement } from 'react';
 
 import { debounce } from 'lodash';
@@ -22,7 +27,19 @@ const composeEventHandlers =
     }
   };
 
-type ITrigger = PropsWithChildren<{ onPress?: () => void; disabled?: boolean }>;
+export type ITriggerElement =
+  | ReactNode
+  | ComponentType<{
+      onPress?: () => void;
+      disabled?: boolean;
+      triggerRef: ForwardedRef<IView>;
+    }>;
+
+type ITrigger = {
+  onPress?: () => void;
+  disabled?: boolean;
+  children: ITriggerElement;
+};
 const noop = () => undefined;
 
 const stopPropagationPress = (onPress: (...params: any[]) => void) =>
@@ -42,6 +59,16 @@ function BasicTrigger(
   ref: ForwardedRef<IView>,
 ) {
   if (children) {
+    if (typeof children === 'function') {
+      const Component = children;
+      return (
+        <Component
+          triggerRef={ref}
+          onPress={onPressInTrigger}
+          disabled={disabled}
+        />
+      );
+    }
     const child = Children.only(children);
     if (isValidElement(child)) {
       const { onPress, ...props } = child.props as IButtonProps;

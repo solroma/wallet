@@ -6,6 +6,7 @@ import {
   Popover,
   SizableText,
   Stack,
+  YStack,
   usePopoverContext,
 } from '@onekeyhq/components';
 
@@ -85,6 +86,23 @@ const PopoverGallery = () => (
           <Popover
             title="Popover Demo"
             renderTrigger={<Button>Uncontrolled Open</Button>}
+            renderContent={<Content />}
+          />
+        ),
+      },
+      {
+        title: 'renderTrigger as function',
+        element: () => (
+          <Popover
+            title="Popover Demo"
+            renderTrigger={({ disabled, triggerRef, onPress }) => (
+              <YStack>
+                <Button>1</Button>
+                <Button ref={triggerRef} onPress={onPress} disabled={disabled}>
+                  2
+                </Button>
+              </YStack>
+            )}
             renderContent={<Content />}
           />
         ),

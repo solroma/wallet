@@ -20,6 +20,7 @@ import { Trigger } from '../Trigger';
 
 import { PopoverContent } from './PopoverContent';
 
+import type { ITriggerElement } from '../Trigger';
 import type {
   PopoverContentTypeProps,
   SheetProps,
@@ -29,7 +30,7 @@ import type {
 export interface IPopoverProps extends TMPopoverProps {
   title: string;
   usingSheet?: boolean;
-  renderTrigger: ReactNode;
+  renderTrigger: ITriggerElement;
   openPopover?: () => void;
   closePopover?: () => void;
   renderContent:

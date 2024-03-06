@@ -3,7 +3,7 @@ import { memo, useCallback, useEffect, useMemo, useRef } from 'react';
 import { Freeze } from 'react-freeze';
 import Animated from 'react-native-reanimated';
 
-import { Page, Stack } from '@onekeyhq/components';
+import { Page, Stack, XStack } from '@onekeyhq/components';
 import type { IPageNavigationProp } from '@onekeyhq/components/src/layouts/Navigation';
 import useAppNavigation from '@onekeyhq/kit/src/hooks/useAppNavigation';
 import { EModalRoutes } from '@onekeyhq/kit/src/routes/Modal/type';
@@ -75,16 +75,15 @@ function MobileBrowser() {
       screen: EDiscoveryModalRoutes.SearchModal,
     });
   }, [navigation]);
-  const headerTitle = useCallback(
-    () => <CustomHeaderTitle handleSearchBarPress={handleSearchBarPress} />,
-    [handleSearchBarPress],
-  );
-  const headerRight = useCallback(() => <HeaderRightToolBar />, []);
 
   return (
     <Page>
-      <Page.Header headerTitle={headerTitle} headerRight={headerRight} />
+      <Page.Header headerShown={false} />
       <Page.Body>
+        <XStack px="$6" pt="$16" pb="$4" alignItems="center">
+          <CustomHeaderTitle handleSearchBarPress={handleSearchBarPress} />
+          <HeaderRightToolBar />
+        </XStack>
         <Stack flex={1} zIndex={3}>
           <HandleRebuildBrowserData />
           {displayHomePage ? (

@@ -87,18 +87,20 @@ function AvatarStackTrigger({
   }, [accountsInfo]);
 
   return (
-    <XStack role="button" testID="multi-avatar">
-      {accounts?.slice(0, 2).map((account, index) => (
-        <Stack borderWidth={2} borderColor="$bgApp" ml="$-0.5">
-          <AccountAvatar
-            key={account?.account.id}
-            account={account.account}
-            size="small"
-            zIndex={-index}
-            networkId={account?.networkId}
-          />
-        </Stack>
-      ))}
+    <XStack role="button" testID="multi-avatar" flexDirection="row-reverse">
+      {accounts
+        ?.reverse()
+        ?.slice(0, 2)
+        .map((account, index) => (
+          <Stack borderWidth={2} borderColor="$bgApp" ml="$-0.5">
+            <AccountAvatar
+              key={account?.account.id}
+              account={account.account}
+              size="small"
+              networkId={account?.networkId}
+            />
+          </Stack>
+        ))}
       {accountsInfo.length > 2 && (
         <XStack
           w="$6"

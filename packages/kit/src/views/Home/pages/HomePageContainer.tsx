@@ -59,13 +59,13 @@ function HomePage({ onPressHide }: { onPressHide: () => void }) {
     // tabsViewRef?.current?.setRefreshing(true);
   }, []);
 
-  const isNFTEnabled = usePromiseResult(
-    () =>
-      backgroundApiProxy.serviceNetwork.getVaultSettings({
-        networkId: network?.id ?? '',
-      }),
-    [network],
-  ).result?.NFTEnabled;
+  const isNFTEnabled = usePromiseResult(async () => {
+    if (!network) return false;
+    const settings = await backgroundApiProxy.serviceNetwork.getVaultSettings({
+      networkId: network.id,
+    });
+    return settings?.NFTEnabled;
+  }, [network]);
 
   const tabs = useMemo(
     () =>

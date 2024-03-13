@@ -65,7 +65,7 @@ function HomePage({ onPressHide }: { onPressHide: () => void }) {
       networkId: network.id,
     });
     return settings?.NFTEnabled;
-  }, [network]);
+  }, [network]).result;
 
   const tabs = useMemo(
     () =>

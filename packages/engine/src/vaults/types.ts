@@ -318,6 +318,7 @@ export enum IEncodedTxUpdateType {
   cancel = 'cancel',
   advancedSettings = 'advancedSettings',
   customData = 'customData',
+  priorityFees = 'priorityFees',
 }
 
 export type IEncodedTxUpdateOptions = {

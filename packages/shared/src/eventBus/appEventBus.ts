@@ -2,6 +2,7 @@
 import { CrossEventEmitter } from '@onekeyfe/cross-inpage-provider-core';
 
 import type { IAccountSelectorSelectedAccount } from '@onekeyhq/kit-bg/src/dbs/simple/entity/SimpleDbEntityAccountSelector';
+import type { WalletConnectDappProvider } from '@onekeyhq/kit-bg/src/services/ServiceWalletConnect/WalletConnectDappProvider';
 
 import platformEnv from '../platformEnv';
 
@@ -63,6 +64,7 @@ export interface IAppEventBusPayload {
   };
   [EAppEventBusNames.WalletConnectOpenModal]: {
     uri: string;
+    provider?: WalletConnectDappProvider;
   };
   [EAppEventBusNames.WalletConnectCloseModal]: undefined;
   [EAppEventBusNames.WalletConnectModalState]: {

@@ -1,13 +1,7 @@
 /* eslint-disable import/order */
 import '@walletconnect/react-native-compat';
-import { useEffect, useRef, useState } from 'react';
 
-import { WalletConnectModal } from '@walletconnect/modal';
-
-import { ClientCtrl } from '@walletconnect/modal-react-native/src/controllers/ClientCtrl';
-import { useWalletConnectModal } from '@walletconnect/modal-react-native/src/hooks/useWalletConnectModal';
-import { WalletConnectModal as WalletConnectModalNative } from '@walletconnect/modal-react-native/src/modal/wcm-modal';
-
+import { Button } from '@onekeyhq/components';
 import type { IAppEventBusPayload } from '@onekeyhq/shared/src/eventBus/appEventBus';
 import {
   EAppEventBusNames,
@@ -19,26 +13,20 @@ import {
   WALLET_CONNECT_CLIENT_META,
   WALLET_CONNECT_V2_PROJECT_ID,
 } from '@onekeyhq/shared/src/walletConnect/constant';
+import {
+  WalletConnectModal,
+  useWalletConnectModal,
+} from '@walletconnect/modal-react-native';
+
+import { useEffect } from 'react';
 
 // https://docs.walletconnect.com/advanced/walletconnectmodal/usage
 // https://github.com/WalletConnect/react-native-examples/blob/main/dapps/ModalUProvider/src/App.tsx
-function NativeModal() {
+export function WalletConnectModalNative2() {
   const { open: openNativeModal } = useWalletConnectModal();
 
   // TODO call ClientCtrl.setProvider first, then render Modal, openNativeModal
   console.log('NativeModal openNativeModal: ', openNativeModal);
-  return (
-    <WalletConnectModalNative
-      projectId={WALLET_CONNECT_V2_PROJECT_ID}
-      providerMetadata={WALLET_CONNECT_CLIENT_META}
-    />
-  );
-}
-
-export function WalletConnectModalContainer() {
-  const modalRef = useRef<WalletConnectModal | null>(null);
-  const [shouldRenderNativeModal, setShouldRenderNativeModal] = useState(false);
-  const { open: openNativeModal } = useWalletConnectModal();
 
   useEffect(() => {
     const open = async (
@@ -58,33 +46,15 @@ export function WalletConnectModalContainer() {
             'WalletConnectModalNative init ERROR: provider is required',
           );
         }
-        ClientCtrl.setProvider(provider);
-        setShouldRenderNativeModal(true);
         await timerUtils.wait(600);
         await openNativeModal();
         // await openNativeModal({
         //   route: 'ConnectWallet',
         // });
-      } else {
-        if (!modalRef.current) {
-          modalRef.current = new WalletConnectModal({
-            projectId: WALLET_CONNECT_V2_PROJECT_ID,
-          });
-          modalRef.current.subscribeModal((state: { open: boolean }) =>
-            appEventBus.emit(EAppEventBusNames.WalletConnectModalState, state),
-          );
-        }
-        await modalRef.current.openModal({
-          uri,
-        });
       }
     };
     const close = async () => {
-      if (modalRef.current) {
-        modalRef.current.closeModal();
-      }
-      // do not set null, subscribeModal will trigger many times, there is no unsubscribe method
-      // modalRef.current = null;
+      //
     };
 
     appEventBus.on(EAppEventBusNames.WalletConnectOpenModal, open);
@@ -96,5 +66,13 @@ export function WalletConnectModalContainer() {
     };
   }, [openNativeModal]);
 
-  return shouldRenderNativeModal ? <NativeModal /> : null;
+  return (
+    <>
+      <WalletConnectModal
+        projectId={WALLET_CONNECT_V2_PROJECT_ID}
+        providerMetadata={WALLET_CONNECT_CLIENT_META}
+      />
+      <Button onPress={() => openNativeModal()}>Connect2</Button>
+    </>
+  );
 }

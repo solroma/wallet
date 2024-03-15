@@ -21,11 +21,13 @@ import { EAccountSelectorSceneName } from '@onekeyhq/shared/types';
 
 import backgroundApiProxy from '../../../background/instance/backgroundApiProxy';
 import { AccountSelectorProviderMirror } from '../../../components/AccountSelector';
+import { WalletConnectModalNative } from '../../../components/WalletConnect/WalletConnectModalNative';
 import useAppNavigation from '../../../hooks/useAppNavigation';
 import useCookie from '../../../hooks/useCookie';
 import { useActiveAccount } from '../../../states/jotai/contexts/accountSelector';
 import { StartTimePanel } from '../../Setting/pages/List/DevSettingsSection/StartTimePanel';
 import { ETabDeveloperRoutes, type ITabDeveloperParamList } from '../type';
+import { WalletConnectModalNative2 } from '../../../components/WalletConnect/WalletConnectModalNative2';
 
 const useStorage = platformEnv.isNative
   ? (key: EAppSettingKey, initialValue?: boolean) => {
@@ -222,6 +224,7 @@ const TabDeveloper = () => {
             <StartTimePanelContainer />
             <ConnectWalletConnectDapp />
             <ExternalAccountSign />
+            <WalletConnectModalNative2 />
           </ScrollView>
         </Page.Body>
       </Page>

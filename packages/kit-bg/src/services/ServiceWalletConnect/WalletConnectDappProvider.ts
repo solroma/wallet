@@ -79,3 +79,5 @@ export class WalletConnectDappProvider extends UniversalProvider {
 
   // TODO cleanup, remove event listeners
 }
+
+// TODO replace native node_modules/@walletconnect/modal-react-native/src/utils/ProviderUtil.ts

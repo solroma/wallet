@@ -58,6 +58,12 @@ export const WALLET_CONNECT_CLIENT_META = {
     'https://web.onekey-asset.com/portal/b688e1435d0d1e2e92581eb8dd7442c88da36049/icons/icon-256x256.png',
     'https://www.onekey.so/favicon.ico',
   ],
+  redirect: platformEnv.isNative
+    ? {
+        native: 'YOUR_APP_SCHEME://',
+        universal: 'YOUR_APP_UNIVERSAL_LINK.com',
+      }
+    : (undefined as any),
 };
 
 export const namespaceToImplsMap: Record<INamespaceUnion, string> = {

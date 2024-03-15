@@ -220,9 +220,18 @@ export class WalletConnectDappSide {
     return result as string;
   }
 
-  openModal({ uri }: { uri: string }) {
+  openModal({
+    uri,
+    provider,
+  }: {
+    uri: string;
+    provider?: WalletConnectDappProvider;
+  }) {
     // emit event
-    appEventBus.emit(EAppEventBusNames.WalletConnectOpenModal, { uri });
+    appEventBus.emit(EAppEventBusNames.WalletConnectOpenModal, {
+      uri,
+      provider,
+    });
   }
 
   closeModal() {
@@ -280,7 +289,7 @@ export class WalletConnectDappSide {
 
     const displayUriHandler = async (uri: string) => {
       console.log('uri', uri);
-      this.openModal({ uri });
+      this.openModal({ uri, provider });
     };
 
     const sessionDeleteHandler = async (

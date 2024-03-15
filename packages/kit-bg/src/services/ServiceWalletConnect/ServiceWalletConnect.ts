@@ -382,7 +382,7 @@ class ServiceWalletConnect extends ServiceBase {
       [networkId: string]: IWcChainAddress[];
     };
     addressMap: {
-      [networkId: string]: string[];
+      [networkId: string]: string; // join(',')
     };
     networkIds: string[];
   }> {
@@ -390,7 +390,7 @@ class ServiceWalletConnect extends ServiceBase {
       [networkId: string]: IWcChainAddress[];
     } = {};
     const addressMap: {
-      [networkId: string]: string[];
+      [networkId: string]: string; // join(',')
     } = {};
     const entries = Object.entries(namespaces);
     for (const [, value] of entries) {
@@ -404,7 +404,7 @@ class ServiceWalletConnect extends ServiceBase {
           accountsMap[chainInfo.networkId] =
             accountsMap[chainInfo.networkId] || [];
           addressMap[chainInfo.networkId] =
-            addressMap[chainInfo.networkId] || [];
+            addressMap[chainInfo.networkId] || '';
           if (
             !accountsMap[chainInfo.networkId].find(
               (item) => item.address === address,
@@ -415,7 +415,12 @@ class ServiceWalletConnect extends ServiceBase {
               address,
               wcAddress: fullAddress,
             });
-            addressMap[chainInfo.networkId].push(address);
+            if (address) {
+              const currentAddress = addressMap[chainInfo.networkId];
+              addressMap[chainInfo.networkId] = `${currentAddress || ''}${
+                currentAddress ? ',' : ''
+              }${address}`;
+            }
           }
         }
       }

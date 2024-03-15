@@ -25,6 +25,11 @@ export function WalletConnectModalContainer() {
           appEventBus.emit(EAppEventBusNames.WalletConnectModalState, state),
         );
       }
+      console.log(
+        'WalletConnectModalContainer show qrcode uri: ------------------------ ',
+      );
+      console.log(uri);
+      console.log('------------------------');
       await modalRef.current.openModal({
         uri,
       });

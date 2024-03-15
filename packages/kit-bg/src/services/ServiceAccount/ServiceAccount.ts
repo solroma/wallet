@@ -35,6 +35,7 @@ import { checkIsDefined } from '@onekeyhq/shared/src/utils/assertUtils';
 import { memoizee } from '@onekeyhq/shared/src/utils/cacheUtils';
 import deviceUtils from '@onekeyhq/shared/src/utils/deviceUtils';
 import { randomAvatar } from '@onekeyhq/shared/src/utils/emojiUtils';
+import stringUtils from '@onekeyhq/shared/src/utils/stringUtils';
 import timerUtils from '@onekeyhq/shared/src/utils/timerUtils';
 import {
   EWalletConnectNamespaceType,
@@ -58,6 +59,7 @@ import type {
   IDBCreateHWWalletParamsBase,
   IDBDevice,
   IDBExternalAccount,
+  IDBExternalAccountWalletConnectInfo,
   IDBGetWalletsParams,
   IDBIndexedAccount,
   IDBRemoveWalletParams,
@@ -515,7 +517,9 @@ class ServiceAccount extends ServiceBase {
           await this.backgroundApi.serviceWalletConnect.getChainData(wcChain);
         if (chainData) {
           const addresses =
-            account.connectedAddresses[chainData.networkId] || [];
+            account.connectedAddresses[chainData.networkId]
+              .split(',')
+              .filter(Boolean) || [];
           const eventAddress = (
             wcSessionEvent?.params?.event?.data as string[] | undefined
           )?.[0];
@@ -591,13 +595,19 @@ class ServiceAccount extends ServiceBase {
       wcSessionTopic: wcSession.topic,
     });
 
+    const wcInfo: IDBExternalAccountWalletConnectInfo = {
+      topic: wcSession.topic,
+      peerMeta: wcPeerMeta,
+      connectedAddresses: addressMap,
+      selectedAddress: {},
+    };
     const account: IDBExternalAccount = {
       id: accountId,
       type: EDBAccountType.VARIANT,
       name: accountName,
       networks: networkIds,
       wcTopic: wcSession.topic,
-      wcPeerMeta, // TODO remove
+      wcInfoRaw: stringUtils.safeStringify(wcInfo),
       addresses: {},
       connectedAddresses: addressMap, // TODO merge with addresses
       selectedAddress: {},

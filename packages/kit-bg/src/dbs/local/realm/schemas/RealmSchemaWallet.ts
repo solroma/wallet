@@ -1,8 +1,8 @@
 import { ELocalDBStoreNames } from '../../localDBStoreNames';
 import { RealmObjectBase } from '../base/RealmObjectBase';
 
-import type { IDBWallet, IDBWalletType } from '../../types';
 import type Realm from 'realm';
+import type { IDBWallet, IDBWalletType } from '../../types';
 
 class RealmSchemaWallet extends RealmObjectBase<IDBWallet> {
   public id!: string;
@@ -62,6 +62,7 @@ class RealmSchemaWallet extends RealmObjectBase<IDBWallet> {
       avatar: this.avatar,
       type: this.type,
       backuped: this.backuped || false,
+      // convert RealmDB list to array
       accounts: Array.from(this.accounts || []),
       nextIndex: this.nextIndex,
       walletNo: this.walletNo,

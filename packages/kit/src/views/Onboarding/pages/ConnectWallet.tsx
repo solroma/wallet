@@ -1,8 +1,9 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 import { StyleSheet } from 'react-native';
 
 import {
+  Button,
   Heading,
   Image,
   Page,
@@ -16,6 +17,7 @@ import {
   EAppEventBusNames,
   appEventBus,
 } from '@onekeyhq/shared/src/eventBus/appEventBus';
+import platformEnv from '@onekeyhq/shared/src/platformEnv';
 import accountUtils from '@onekeyhq/shared/src/utils/accountUtils';
 import { EAccountSelectorSceneName } from '@onekeyhq/shared/types';
 
@@ -120,6 +122,46 @@ function WalletItem({ logo, name }: { name?: string; logo: any }) {
     };
   }, [loading]);
 
+  const connectToWallet = useCallback(async () => {
+    try {
+      console.log('WalletItem onPress');
+      if (loading) {
+        return;
+      }
+      setLoading(true);
+
+      const session =
+        await backgroundApiProxy.serviceWalletConnect.connectToWallet();
+      console.log('connected', session?.namespaces);
+      if (!session) {
+        setLoading(false);
+        return;
+      }
+      const r = await backgroundApiProxy.serviceAccount.addExternalAccount({
+        wcSession: session,
+      });
+      const account = r.accounts[0];
+      const usedNetworkId = accountUtils.getAccountCompatibleNetwork({
+        account,
+        networkId: selectedAccount.networkId,
+      });
+      await actions.current.updateSelectedAccount({
+        num: 0,
+        builder: (v) => ({
+          ...v,
+          networkId: usedNetworkId,
+          focusedWallet: '$$others',
+          walletId: WALLET_TYPE_EXTERNAL,
+          othersWalletAccountId: account.id,
+          indexedAccountId: undefined,
+        }),
+      });
+      navigation.popStack();
+    } finally {
+      setLoading(false);
+    }
+  }, [actions, loading, navigation, selectedAccount.networkId]);
+
   return (
     <Stack
       flexBasis="50%"
@@ -127,44 +169,8 @@ function WalletItem({ logo, name }: { name?: string; logo: any }) {
         flexBasis: '25%',
       }}
       p="$1"
-      onPress={async () => {
-        try {
-          if (loading) {
-            return;
-          }
-          setLoading(true);
-
-          const session =
-            await backgroundApiProxy.serviceWalletConnect.connectToWallet();
-          console.log('connected', session?.namespaces);
-          if (!session) {
-            setLoading(false);
-            return;
-          }
-          const r = await backgroundApiProxy.serviceAccount.addExternalAccount({
-            wcSession: session,
-          });
-          const account = r.accounts[0];
-          const usedNetworkId = accountUtils.getAccountCompatibleNetwork({
-            account,
-            networkId: selectedAccount.networkId,
-          });
-          await actions.current.updateSelectedAccount({
-            num: 0,
-            builder: (v) => ({
-              ...v,
-              networkId: usedNetworkId,
-              focusedWallet: '$$others',
-              walletId: WALLET_TYPE_EXTERNAL,
-              othersWalletAccountId: account.id,
-              indexedAccountId: undefined,
-            }),
-          });
-          navigation.popStack();
-        } finally {
-          setLoading(false);
-        }
-      }}
+      // onPress on Stack not working on native app, use below Button instead
+      onPress={connectToWallet}
     >
       <Stack
         justifyContent="center"
@@ -211,6 +217,10 @@ function WalletItem({ logo, name }: { name?: string; logo: any }) {
             {name}
           </SizableText>
         </XStack>
+
+        {platformEnv.isNative ? (
+          <Button onPress={connectToWallet}>Connect</Button>
+        ) : null}
       </Stack>
     </Stack>
   );

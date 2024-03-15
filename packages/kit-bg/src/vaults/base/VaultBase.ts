@@ -460,7 +460,10 @@ export abstract class VaultBase extends VaultBaseChainOnly {
     let externalAccountAddress = '';
     if (externalAccount.connectedAddresses) {
       const index = externalAccount.selectedAddress?.[this.networkId] ?? 0;
-      const addresses = externalAccount.connectedAddresses?.[this.networkId];
+      const addresses =
+        externalAccount.connectedAddresses?.[this.networkId]
+          ?.split(',')
+          .filter(Boolean) || [];
       externalAccountAddress = addresses?.[index] || addresses?.[0] || '';
     }
 

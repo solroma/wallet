@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { Buffer } from 'buffer';
 
-import { isNil, max } from 'lodash';
+import { isNil, max, uniq } from 'lodash';
 import natsort from 'natsort';
 
 import {
@@ -1342,6 +1342,29 @@ ssphrase wallet
     });
   }
 
+  getNextAccountId({
+    nextAccountIds,
+    key,
+    defaultValue,
+  }: {
+    nextAccountIds: {
+      [key: string]: number;
+    };
+    key: string;
+    defaultValue: number;
+  }) {
+    const val = nextAccountIds[key];
+
+    // realmDB return NaN, indexedDB return undefined
+    if (Number.isNaN(val) || isNil(val)) {
+      // realmDB RangeError: number is not integral
+      // at BigInt (native)
+      // at numToInt
+      return defaultValue;
+    }
+    return val ?? defaultValue;
+  }
+
   async addAccountsToWallet({
     walletId,
     accounts,
@@ -1381,11 +1404,24 @@ ssphrase wallet
           walletId,
           updater: (w) => {
             w.nextAccountIds = w.nextAccountIds || {};
-            w.nextAccountIds.global = (w.nextAccountIds.global ?? 1) + added;
 
-            w.accounts = w.accounts || [];
-            // TODO uniq
-            w.accounts = [].concat(w.accounts as any, addedIds as any);
+            w.nextAccountIds.global =
+              // RealmDB return NaN, indexedDB return undefined
+              // RealmDB ERROR: RangeError: number is not integral
+              this.getNextAccountId({
+                nextAccountIds: w.nextAccountIds,
+                key: 'global',
+                defaultValue: 1,
+              }) + added;
+
+            // RealmDB Error: Expected 'accounts[0]' to be a string, got an instance of List
+            // w.accounts is List not Array in realmDB
+            w.accounts = Array.from(w.accounts || []);
+
+            w.accounts = uniq(
+              [].concat(Array.from(w.accounts) as any, addedIds as any),
+            ).filter(Boolean);
+
             return w;
           },
         });
@@ -1442,7 +1478,9 @@ ssphrase wallet
       ids: wallet.accounts, // filter by ids for better performance
     });
     return {
-      accounts: accounts.filter(Boolean),
+      accounts: accounts
+        .filter(Boolean)
+        .map((account) => this.refillAccountInfo({ account })),
     };
   }
 
@@ -1458,6 +1496,14 @@ ssphrase wallet
     // fix account name by indexedAccount name
     if (indexedAccount) {
       account.name = indexedAccount.name;
+    }
+    return this.refillAccountInfo({ account });
+  }
+
+  refillAccountInfo({ account }: { account: IDBAccount }) {
+    const externalAccount = account as IDBExternalAccount;
+    if (externalAccount && externalAccount.wcInfoRaw) {
+      externalAccount.wcInfo = JSON.parse(externalAccount.wcInfoRaw);
     }
     return account;
   }
@@ -1541,7 +1587,7 @@ ssphrase wallet
   }: {
     accountId: string;
     addressMap?: {
-      [networkId: string]: string[];
+      [networkId: string]: string; // multiple address join(',')
     };
     selectedMap?: {
       [networkId: string]: number;
@@ -1733,6 +1779,10 @@ ssphrase wallet
       name: ELocalDBStoreNames.Device,
       id: deviceId,
     });
+    return this.refillDeviceInfo({ device });
+  }
+
+  refillDeviceInfo({ device }: { device: IDBDevice }) {
     device.featuresInfo = JSON.parse(device.features) as IOneKeyDeviceFeatures;
     device.payloadJsonInfo = JSON.parse(device.payloadJson);
     return device;

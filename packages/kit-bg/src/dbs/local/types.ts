@@ -100,7 +100,7 @@ export type IDBWallet = IDBBaseObjectWithName & {
   backuped: boolean;
   nextIndex: number; // TODO optional, merge with nextAccountIds
   // only for singleton wallet
-  accounts: Array<string>;
+  accounts: string[];
   // only for singleton wallet
   nextAccountIds: {
     // 'global': 1, // imported, external, watching,
@@ -190,12 +190,23 @@ export type IDBVariantAccount = IDBBaseAccount & {
   // UTXO: relPath -> address
   addresses: Record<string, string>;
 };
+export type IDBExternalAccountWalletConnectInfo = {
+  topic: string;
+  peerMeta: SignClientTypes.Metadata | undefined;
+  connectedAddresses: {
+    [networkId: string]: string; // TODO change to string[]
+  };
+  selectedAddress: {
+    [networkId: string]: number;
+  };
+};
 export type IDBExternalAccount = IDBVariantAccount & {
   address: string; // always be empty if walletconnect account
+  wcInfoRaw?: string;
+  wcInfo?: IDBExternalAccountWalletConnectInfo; // readonly field, json parse from wcInfoRaw
   wcTopic?: string;
-  wcPeerMeta?: SignClientTypes.Metadata; // TODO move to simple DB
   connectedAddresses: {
-    [networkId: string]: string[]; // TODO use join(',')
+    [networkId: string]: string; // multiple address join(',')
   };
   selectedAddress: {
     [networkId: string]: number;

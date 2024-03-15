@@ -236,6 +236,8 @@ export class WalletConnectDappSide {
   }
 
   async connectToWallet() {
+    console.log('WalletConnectDappSide connectToWallet111');
+
     this.closeModal();
 
     const chains = await this.backgroundApi.serviceWalletConnect.getAllChains();
@@ -296,6 +298,7 @@ export class WalletConnectDappSide {
     );
 
     try {
+      console.log('WalletConnectDappSide connectToWallet');
       // call connect() to create new session
       await provider.connect({
         // optionalNamespaces

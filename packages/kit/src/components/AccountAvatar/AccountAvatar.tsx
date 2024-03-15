@@ -128,7 +128,8 @@ function BasicAccountAvatar({
     const finalAccount = account || dbAccount;
     if (finalAccount) {
       if (accountUtils.isExternalAccount({ accountId: finalAccount.id })) {
-        const wcPeerMeta = (finalAccount as IDBExternalAccount).wcPeerMeta;
+        const wcPeerMeta = (finalAccount as IDBExternalAccount).wcInfo
+          ?.peerMeta;
         const wcSrc = wcPeerMeta?.icons?.[0];
         if (wcSrc) {
           return <Image.Source src={wcSrc} />;

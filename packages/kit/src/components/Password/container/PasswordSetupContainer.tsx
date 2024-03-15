@@ -1,4 +1,7 @@
-import { Suspense, memo, useCallback, useState } from 'react';
+import { Suspense, memo, useCallback, useMemo, useState } from 'react';
+
+import { AuthenticationType } from 'expo-local-authentication';
+import { useIntl } from 'react-intl';
 
 import { SizableText, Stack, Toast, XStack } from '@onekeyhq/components';
 import backgroundApiProxy from '@onekeyhq/kit/src/background/instance/backgroundApiProxy';
@@ -17,12 +20,28 @@ interface IPasswordSetupProps {
 }
 
 const BiologyAuthContainer = () => {
-  const [{ isSupport: biologyAuthIsSupport }] =
+  const [{ isSupport: biologyAuthIsSupport, authType }] =
     usePasswordBiologyAuthInfoAtom();
   const [{ isSupport: webAuthIsSupport }] = usePasswordWebAuthInfoAtom();
+  const intl = useIntl();
+  const settingsTitle = useMemo(() => {
+    if (
+      biologyAuthIsSupport &&
+      authType.includes(AuthenticationType.FACIAL_RECOGNITION)
+    ) {
+      return intl.formatMessage(
+        { id: 'content__authentication_with' },
+        { 0: 'FaceID' },
+      );
+    }
+    return intl.formatMessage(
+      { id: 'content__authentication_with' },
+      { 0: 'TouchID' },
+    );
+  }, []);
   return biologyAuthIsSupport || webAuthIsSupport ? (
     <XStack justifyContent="space-between" alignItems="center">
-      <SizableText size="$bodyMdMedium">Authentication with FaceID</SizableText>
+      <SizableText size="$bodyMdMedium">{settingsTitle}</SizableText>
       <Stack>
         <UniversalContainerWithSuspense />
       </Stack>
@@ -51,7 +70,6 @@ const PasswordSetupContainer = ({ onSetupRes }: IPasswordSetupProps) => {
           onSetupRes(setUpPasswordRes);
           Toast.success({ title: 'password set success' });
         } catch (e) {
-          console.log('e', e);
           console.log('e.stack', (e as Error)?.stack);
           console.error(e);
           Toast.error({ title: 'password set failed' });

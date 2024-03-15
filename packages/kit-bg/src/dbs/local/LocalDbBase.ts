@@ -51,8 +51,8 @@ import type {
   IDBCredentialBase,
   IDBDevice,
   IDBDevicePayload,
-  IDBGetWalletsParams,
   IDBExternalAccount,
+  IDBGetWalletsParams,
   IDBIndexedAccount,
   IDBRemoveWalletParams,
   IDBSetAccountNameParams,
@@ -525,7 +525,6 @@ ssphrase wallet
     wallet: IDBWallet;
     hiddenWallets?: IDBWallet[];
   }): Promise<IDBWallet> {
-
     const db = await this.readyDb;
     let avatarInfo: IAvatarInfo | undefined;
     const parsedAvatar: IAvatarInfo = JSON.parse(wallet.avatar || '{}');

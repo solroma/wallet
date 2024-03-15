@@ -52,6 +52,7 @@ import type {
   IDBDevice,
   IDBDevicePayload,
   IDBGetWalletsParams,
+  IDBExternalAccount,
   IDBIndexedAccount,
   IDBRemoveWalletParams,
   IDBSetAccountNameParams,
@@ -505,6 +506,18 @@ ssphrase wallet
     return this.refillWalletInfo({ wallet });
   }
 
+  async getWalletSafe({
+    walletId,
+  }: {
+    walletId: string;
+  }): Promise<IDBWallet | undefined> {
+    try {
+      return await this.getWallet({ walletId });
+    } catch (error) {
+      return undefined;
+    }
+  }
+
   async refillWalletInfo({
     wallet,
     hiddenWallets,
@@ -512,6 +525,7 @@ ssphrase wallet
     wallet: IDBWallet;
     hiddenWallets?: IDBWallet[];
   }): Promise<IDBWallet> {
+
     const db = await this.readyDb;
     let avatarInfo: IAvatarInfo | undefined;
     const parsedAvatar: IAvatarInfo = JSON.parse(wallet.avatar || '{}');
@@ -572,17 +586,22 @@ ssphrase wallet
     return undefined;
   }
 
-  async getIndexedAccounts({ walletId }: { walletId?: string } = {}) {
+  async getIndexedAccounts({ walletId }: { walletId: string }) {
     const db = await this.readyDb;
-    // TODO performance
-    const { records } = await db.getAllRecords({
-      name: ELocalDBStoreNames.IndexedAccount,
+    let accounts: IDBIndexedAccount[] = [];
+
+    const wallet = await this.getWalletSafe({
+      walletId,
     });
-    console.log('getIndexedAccountsOfWallet', records);
-    let accounts = records;
-    if (walletId) {
-      accounts = accounts.filter((item) => item.walletId === walletId);
+    if (wallet) {
+      // TODO performance
+      const { records } = await db.getAllRecords({
+        name: ELocalDBStoreNames.IndexedAccount,
+      });
+      console.log('getIndexedAccountsOfWallet', records);
+      accounts = records.filter((item) => item.walletId === walletId);
     }
+
     return {
       accounts: accounts.sort((a, b) =>
         // indexedAccount sort by index
@@ -1160,14 +1179,16 @@ ssphrase wallet
           accountId,
         });
 
-        if (!account.impl) {
+        const isExternal = accountUtils.isExternalWallet({ walletId });
+
+        if (!account.impl && !isExternal) {
           throw new Error(
             'validateAccountsFields ERROR: account.impl is missing',
           );
         }
 
         if (account.type === EDBAccountType.VARIANT) {
-          if (account.address) {
+          if (account.address && !isExternal) {
             throw new Error('VARIANT account should not set account address');
           }
         }
@@ -1432,9 +1453,6 @@ ssphrase wallet
       name: ELocalDBStoreNames.Account,
       id: accountId,
     });
-    if (!account.impl) {
-      throw new Error(`account.impl is missing: ${accountId}`);
-    }
     const indexedAccount = await this.getIndexedAccountByAccount({
       account,
     });
@@ -1512,6 +1530,45 @@ ssphrase wallet
         tx,
         name: ELocalDBStoreNames.IndexedAccount,
         ids: [indexedAccountId],
+      });
+    });
+  }
+
+  async updateExternalAccount({
+    accountId,
+    addressMap,
+    selectedMap,
+    networkIds,
+  }: {
+    accountId: string;
+    addressMap?: {
+      [networkId: string]: string[];
+    };
+    selectedMap?: {
+      [networkId: string]: number;
+    };
+    networkIds?: string[];
+  }) {
+    const db = await this.readyDb;
+    await db.withTransaction(async (tx) => {
+      await this.txUpdateRecords({
+        tx,
+        name: ELocalDBStoreNames.Account,
+        ids: [accountId],
+        updater: (item) => {
+          const updatedAccount = item as IDBExternalAccount;
+          if (addressMap) {
+            updatedAccount.connectedAddresses = addressMap;
+          }
+          if (selectedMap) {
+            updatedAccount.selectedAddress = selectedMap;
+          }
+          if (networkIds) {
+            updatedAccount.networks = networkIds;
+          }
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+          return updatedAccount as any;
+        },
       });
     });
   }

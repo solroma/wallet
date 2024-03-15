@@ -44,6 +44,10 @@ class RealmSchemaAccount extends RealmObjectBase<IDBAccount> {
 
   public customAddresses?: Realm.Dictionary<string>;
 
+  public connectedAddresses?: Realm.Dictionary<string[]>;
+
+  public selectedAddress?: Realm.Dictionary<number>;
+
   public template?: string;
 
   public static override schema: Realm.ObjectSchema = {

@@ -1,6 +1,12 @@
 import type { ReactElement } from 'react';
 import { memo, useMemo } from 'react';
 
+import type {
+  IImageFallbackProps,
+  IImageProps,
+  ISkeletonProps,
+  SizeTokens,
+} from '@onekeyhq/components';
 import {
   Image,
   Skeleton,
@@ -8,15 +14,12 @@ import {
   withStaticProperties,
 } from '@onekeyhq/components';
 import type {
-  IImageFallbackProps,
-  IImageProps,
-  ISkeletonProps,
-  SizeTokens,
-} from '@onekeyhq/components';
-import type {
   IDBAccount,
+  IDBExternalAccount,
   IDBIndexedAccount,
 } from '@onekeyhq/kit-bg/src/dbs/local/types';
+import accountUtils from '@onekeyhq/shared/src/utils/accountUtils';
+import type { INetworkAccount } from '@onekeyhq/shared/types/account';
 
 import backgroundApiProxy from '../../background/instance/backgroundApiProxy';
 import { usePromiseResult } from '../../hooks/usePromiseResult';
@@ -46,7 +49,8 @@ export interface IAccountAvatarProps extends IImageProps {
   address?: string;
   size?: IKeyOfVariantSize | SizeTokens;
   networkId?: string;
-  account?: IDBAccount;
+  account?: INetworkAccount;
+  dbAccount?: IDBAccount;
   indexedAccount?: IDBIndexedAccount;
   fallback?: ReactElement;
   fallbackProps?: IImageFallbackProps;
@@ -96,6 +100,7 @@ function BasicAccountAvatar({
   source,
   account,
   indexedAccount,
+  dbAccount,
   fallback,
   fallbackProps,
   circular,
@@ -119,11 +124,29 @@ function BasicAccountAvatar({
         <MemoHashImageSource id={indexedAccount.idHash || indexedAccount.id} />
       );
     }
-    if (account) {
-      return <MemoHashImageSource id={account.address} />;
+    // dbAccount exists, but network not compatible, so account is undefined
+    const finalAccount = account || dbAccount;
+    if (finalAccount) {
+      if (accountUtils.isExternalAccount({ accountId: finalAccount.id })) {
+        const wcPeerMeta = (finalAccount as IDBExternalAccount).wcPeerMeta;
+        const wcSrc = wcPeerMeta?.icons?.[0];
+        if (wcSrc) {
+          return <Image.Source src={wcSrc} />;
+        }
+        // some dapps don't provide icons, fallback to walletconnect icon
+        // TODO use wcPeerMeta.name or wcPeerMeta.url to find wallet icon
+        if (wcPeerMeta) {
+          return (
+            <Image.Source
+              source={require('@onekeyhq/kit/assets/onboarding/logo_walletconnect.png')}
+            />
+          );
+        }
+      }
+      return <MemoHashImageSource id={finalAccount.address} />;
     }
     return <Image.Source src={src} source={source} />;
-  }, [account, address, indexedAccount, source, src]);
+  }, [account, address, dbAccount, indexedAccount, source, src]);
   return (
     <Stack
       w={containerSize}

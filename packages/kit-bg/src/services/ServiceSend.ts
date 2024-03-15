@@ -8,6 +8,7 @@ import {
 } from '@onekeyhq/shared/src/background/backgroundDecorators';
 import { HISTORY_CONSTS } from '@onekeyhq/shared/src/engine/engineConsts';
 import { PendingQueueTooLong } from '@onekeyhq/shared/src/errors';
+import accountUtils from '@onekeyhq/shared/src/utils/accountUtils';
 import { getValidUnsignedMessage } from '@onekeyhq/shared/src/utils/messageUtils';
 import { EReasonForNeedPassword } from '@onekeyhq/shared/types/setting';
 import {
@@ -100,6 +101,7 @@ class ServiceSend extends ServiceBase {
       networkId,
       accountId,
       unsignedTx,
+      signOnly: false,
     });
 
     // const txid = await this.broadcastTransaction({
@@ -247,7 +249,7 @@ class ServiceSend extends ServiceBase {
   public async signTransaction(
     params: ISendTxBaseParams & ISignTransactionParamsBase,
   ) {
-    const { networkId, accountId, unsignedTx } = params;
+    const { networkId, accountId, unsignedTx, signOnly } = params;
     const vault = await vaultFactory.getVault({ networkId, accountId });
     const { password, deviceParams } =
       await this.backgroundApi.servicePassword.promptPasswordVerifyByAccount({
@@ -261,6 +263,7 @@ class ServiceSend extends ServiceBase {
           unsignedTx,
           password,
           deviceParams,
+          signOnly,
         });
         console.log('signTx@vault.signTransaction', signedTx);
         return signedTx;
@@ -276,7 +279,7 @@ class ServiceSend extends ServiceBase {
   public async signAndSendTransaction(
     params: ISendTxBaseParams & ISignTransactionParamsBase,
   ) {
-    const { networkId, accountId, unsignedTx } = params;
+    const { networkId, accountId, unsignedTx, signOnly } = params;
 
     const account = await this.backgroundApi.serviceAccount.getAccount({
       accountId,
@@ -287,13 +290,24 @@ class ServiceSend extends ServiceBase {
       networkId,
       accountId,
       unsignedTx,
+      signOnly, // external account should send tx here
     });
-    const txid = await this.broadcastTransaction({
-      networkId,
-      accountAddress: account.address,
-      signedTx,
-    });
-    return { ...signedTx, txid };
+
+    // skip external account send, as rawTx is empty
+    if (
+      !signOnly &&
+      !accountUtils.isExternalAccount({
+        accountId,
+      })
+    ) {
+      const txid = await this.broadcastTransaction({
+        networkId,
+        accountAddress: account.address,
+        signedTx,
+      });
+      return { ...signedTx, txid };
+    }
+    return signedTx;
   }
 
   @backgroundMethod()
@@ -328,11 +342,17 @@ class ServiceSend extends ServiceBase {
     for (let i = 0, len = newUnsignedTxs.length; i < len; i += 1) {
       const unsignedTx = newUnsignedTxs[i];
       const signedTx = signOnly
-        ? await this.signTransaction({ unsignedTx, accountId, networkId })
+        ? await this.signTransaction({
+            unsignedTx,
+            accountId,
+            networkId,
+            signOnly: true,
+          })
         : await this.signAndSendTransaction({
             unsignedTx,
             networkId,
             accountId,
+            signOnly: false,
           });
 
       signedTxs.push(signedTx);

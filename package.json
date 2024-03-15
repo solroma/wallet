@@ -64,6 +64,8 @@
     "@tamagui/toast": "1.79.7",
     "@ungap/structured-clone": "^1.2.0",
     "@vespaiach/axios-fetch-adapter": "^0.3.1",
+    "@walletconnect/modal": "2.6.2",
+    "@walletconnect/universal-provider": "2.11.2",
     "@walletconnect/web3wallet": "1.10.0",
     "bignumber.js": "9.1.2",
     "browserify-zlib": "^0.2.0",

@@ -13,6 +13,7 @@ const jsRules = {
   'react/function-component-definition': 'off',
   'react/jsx-props-no-spreading': 'off',
   'react/no-unused-prop-types': 'off',
+  'prefer-destructuring': 'off',
   'react/no-unstable-nested-components': 'warn',
   'react/jsx-no-useless-fragment': 'off',
   'use-effect-no-deps/use-effect-no-deps': 'error',

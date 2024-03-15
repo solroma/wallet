@@ -32,6 +32,7 @@ import type {
 import type { IBackgroundApi } from '../apis/IBackgroundApi';
 import type { EDBAccountType } from '../dbs/local/consts';
 import type { IDBAccount, IDBWalletId } from '../dbs/local/types';
+import type { SignClientTypes } from '@walletconnect/types';
 import type { MessageDescriptor } from 'react-intl';
 
 export enum EVaultKeyringTypes {
@@ -39,6 +40,7 @@ export enum EVaultKeyringTypes {
   hardware = 'hardware',
   imported = 'imported',
   watching = 'watching',
+  external = 'external',
 }
 
 // AccountNameInfo
@@ -139,6 +141,12 @@ export type IGetPrivateKeysParams = {
 export type IGetPrivateKeysResult = {
   [path: string]: Buffer;
 };
+export type IPrepareExternalAccountsParams = {
+  name: string;
+  networks?: string[];
+  wcTopic?: string;
+  wcPeerMeta?: SignClientTypes.Metadata;
+};
 export type IPrepareWatchingAccountsParams = {
   // target: string; // address, xpub TODO remove
   address: string;
@@ -184,7 +192,8 @@ export type IPrepareAccountsParams =
   | IPrepareWatchingAccountsParams
   | IPrepareImportedAccountsParams
   | IPrepareHdAccountsParams
-  | IPrepareHardwareAccountsParams;
+  | IPrepareHardwareAccountsParams
+  | IPrepareExternalAccountsParams;
 
 // PrepareAccountByAddressIndex
 export type IPrepareAccountByAddressIndexParams = {
@@ -212,6 +221,7 @@ export type IBuildAccountAddressDetailParams = {
   networkId: string;
   networkInfo: IVaultSettingsNetworkInfo;
   account: IDBAccount;
+  externalAccountAddress?: string;
 };
 
 // Internal txInfo ----------------------------------------------
@@ -318,6 +328,8 @@ export interface IBroadcastTransactionParams {
 
 export interface ISignTransactionParamsBase {
   unsignedTx: IUnsignedTxPro;
+  // TODO rename externalSignOnly
+  signOnly: boolean; // external account use this field to indicate sign only or sign and send
 }
 
 export type ISignAndSendTransactionParams = ISignTransactionParams;

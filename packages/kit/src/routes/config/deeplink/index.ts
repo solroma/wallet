@@ -106,8 +106,7 @@ const processDeepLinkUrl = memoizee(
       if (wcUri) {
         console.log('Create walletConnect connection by DeepLink: ', wcUri);
 
-        await backgroundApiProxy.walletConnect.initialize();
-        await backgroundApiProxy.walletConnect.connect(wcUri);
+        await backgroundApiProxy.walletConnect.connectToDapp(wcUri);
         return {
           type: 'walletConnect',
           url,

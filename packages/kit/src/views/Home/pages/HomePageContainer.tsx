@@ -64,12 +64,16 @@ function HomePage({ onPressHide }: { onPressHide: () => void }) {
   const [isHide, setIsHide] = useState(false);
 
   const isNFTEnabled = usePromiseResult(
-    () =>
-      backgroundApiProxy.serviceNetwork.getVaultSettings({
-        networkId: network?.id ?? '',
-      }),
+    async () =>
+      network
+        ? (
+            await backgroundApiProxy.serviceNetwork.getVaultSettings({
+              networkId: network?.id ?? '',
+            })
+          )?.NFTEnabled
+        : Promise.resolve(undefined),
     [network],
-  ).result?.NFTEnabled;
+  ).result;
 
   const tabs = useMemo(
     () =>

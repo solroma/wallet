@@ -23,6 +23,7 @@ import type { RealmSchemaDevice } from './realm/schemas/RealmSchemaDevice';
 import type { RealmSchemaIndexedAccount } from './realm/schemas/RealmSchemaIndexedAccount';
 import type { RealmSchemaWallet } from './realm/schemas/RealmSchemaWallet';
 import type { SearchDevice } from '@onekeyfe/hd-core';
+import type { SignClientTypes } from '@walletconnect/types';
 import type { DBSchema, IDBPObjectStore } from 'idb';
 
 // ---------------------------------------------- base
@@ -169,6 +170,7 @@ export type IDBBaseAccount = IDBBaseObjectWithName & {
   createAtNetwork?: string;
   template?: string;
 };
+
 export type IDBSimpleAccount = IDBBaseAccount & {
   pub: string;
   address: string;
@@ -179,16 +181,31 @@ export type IDBUtxoAccount = IDBBaseAccount & {
   xpubSegwit?: string; // wrap regular xpub into bitcoind native descriptor
   address: string; // Display/selected address
   addresses: Record<string, string>;
-  customAddresses?: Record<string, string>; // for btc custom address
+  customAddresses?: Record<string, string>; // for btc dynamic custom address
 };
 export type IDBVariantAccount = IDBBaseAccount & {
   pub: string;
   address: string; // Base address
-  // VARIANT: Network -> address
+  // VARIANT: networkId -> address
   // UTXO: relPath -> address
   addresses: Record<string, string>;
 };
-export type IDBAccount = IDBSimpleAccount | IDBUtxoAccount | IDBVariantAccount;
+export type IDBExternalAccount = IDBVariantAccount & {
+  address: string; // always be empty if walletconnect account
+  wcTopic?: string;
+  wcPeerMeta?: SignClientTypes.Metadata; // TODO move to simple DB
+  connectedAddresses: {
+    [networkId: string]: string[]; // TODO use join(',')
+  };
+  selectedAddress: {
+    [networkId: string]: number;
+  };
+};
+export type IDBAccount =
+  | IDBSimpleAccount
+  | IDBUtxoAccount
+  | IDBVariantAccount
+  | IDBExternalAccount;
 export type IDBIndexedAccount = IDBBaseObjectWithName & {
   walletId: string;
   index: number;

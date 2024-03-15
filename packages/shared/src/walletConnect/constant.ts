@@ -11,12 +11,15 @@ import platformEnv from '../platformEnv';
 
 import type {
   ICaipsInfo,
-  INamespaceNetworkImplMapping,
   INamespaceUnion,
-  INetworkImplNamespaceMapping,
+  IWalletConnectLoggerLevel,
 } from './types';
 
 export const WALLET_CONNECT_V2_PROJECT_ID = '5e21f5018bfdeb78af03187a432a301d';
+// checkIsDefined(process.env.WALLETCONNECT_PROJECT_ID); // not working
+
+export const WALLET_CONNECT_RELAY_URL = 'wss://relay.walletconnect.com';
+export const WALLET_CONNECT_LOGGER_LEVEL: IWalletConnectLoggerLevel = 'error';
 
 const platformName = [
   process.env.ONEKEY_PLATFORM ?? '',
@@ -57,7 +60,7 @@ export const WALLET_CONNECT_CLIENT_META = {
   ],
 };
 
-export const namespaceToImplsMap: INamespaceNetworkImplMapping = {
+export const namespaceToImplsMap: Record<INamespaceUnion, string> = {
   eip155: IMPL_EVM,
   solana: IMPL_SOL,
   cosmos: IMPL_COSMOS,
@@ -65,7 +68,9 @@ export const namespaceToImplsMap: INamespaceNetworkImplMapping = {
   tron: IMPL_TRON,
 };
 
-export const implToNamespaceMap: INetworkImplNamespaceMapping = {
+export const implToNamespaceMap: {
+  [impl: string]: INamespaceUnion;
+} = {
   [IMPL_EVM]: 'eip155',
   [IMPL_SOL]: 'solana',
   [IMPL_COSMOS]: 'cosmos',
